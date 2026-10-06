@@ -201,8 +201,8 @@ export const useJourney = create<JourneyStore>()(
         const score = task.knowledgeScore
         const taskStates = { ...s.taskStates, [taskId]: { status: 'completed' as const, attempts, score } }
         const events = [...s.events, makeEvent('task', `完成任务：${task.title}（知识分 +${score}）`)]
-        let inventory = [...s.inventory]
-        let unlockedCodex = [...s.unlockedCodex]
+        const inventory = [...s.inventory]
+        const unlockedCodex = [...s.unlockedCodex]
 
         if (task.rewardClueId && !inventory.includes(task.rewardClueId)) {
           inventory.push(task.rewardClueId)
@@ -217,7 +217,7 @@ export const useJourney = create<JourneyStore>()(
 
         // 点位完成判定 → 解锁下一点位
         const spot = spotById.get(task.spotId)
-        let spotStatus = { ...s.spotStatus }
+        const spotStatus = { ...s.spotStatus }
         let state: JourneyState = 'TASK_ACTIVE'
         if (spot && spot.taskIds.every((tid) => taskStates[tid]?.status === 'completed')) {
           spotStatus[task.spotId] = 'completed'
@@ -272,8 +272,8 @@ export const useJourney = create<JourneyStore>()(
         }
         let newThread = [...thread, npcMsg]
         const events = [...s.events]
-        let inventory = [...s.inventory]
-        let unlockedCodex = [...s.unlockedCodex]
+        const inventory = [...s.inventory]
+        const unlockedCodex = [...s.unlockedCodex]
 
         // 动作校验（Mock approved_actions）
         if (reply.task_action === 'grant_clue' && reply.clue_id && !inventory.includes(reply.clue_id)) {
@@ -316,7 +316,7 @@ export const useJourney = create<JourneyStore>()(
           makeEvent('choice', `尾声选择：${choiceKey === 'hang' ? '把灯挂上长廊' : '把灯收进行囊'}`),
           makeEvent('ending', `达成结局：${ending?.name ?? endingId}`),
         ]
-        let unlockedCodex = [...s.unlockedCodex]
+        const unlockedCodex = [...s.unlockedCodex]
         if (!unlockedCodex.includes('codex-shouyuandeng')) unlockedCodex.push('codex-shouyuandeng')
         set({
           flags: { ...s.flags, finalChoice: choiceKey },
