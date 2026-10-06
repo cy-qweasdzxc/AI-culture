@@ -1,0 +1,38 @@
+# ===== 密钥与环境（红线：禁止提交真实密钥）=====
+.env
+.env.*
+!.env.example
+
+# ===== Node / 前端 =====
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+
+# ===== Python / 后端 =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+
+# ===== 数据库与向量索引 =====
+*.db
+*.sqlite3
+data/processed/chroma/
+*.parquet
+
+# ===== 日志与系统 =====
+*.log
+.DS_Store
+Thumbs.db
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.swp

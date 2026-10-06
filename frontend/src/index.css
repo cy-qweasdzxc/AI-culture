@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   城迹入戏 · 设计令牌（OKLCH）
+   主色取自技术方案：朱砂红 / 墨绿 / 宣纸米白；辅助：青灰 / 古铜金
+   ============================================================ */
+:root {
+  --paper: oklch(0.962 0.012 95); /* 宣纸米白：页面背景 */
+  --paper-deep: oklch(0.935 0.016 92); /* 米白加深：次级表面 */
+  --surface: oklch(0.985 0.006 95); /* 卡片表面 */
+  --ink: oklch(0.27 0.025 155); /* 墨色正文 */
+  --ink-soft: oklch(0.4 0.028 155); /* 次级正文 */
+  --cinnabar: oklch(0.46 0.135 33); /* 朱砂红：主行动色 */
+  --cinnabar-deep: oklch(0.4 0.12 33);
+  --inkgreen: oklch(0.36 0.055 158); /* 墨绿：完成、标题 */
+  --inkgreen-deep: oklch(0.3 0.05 158);
+  --bronze: oklch(0.58 0.075 78); /* 古铜金：文化标签 */
+  --bluegray: oklch(0.45 0.025 235); /* 青灰：提示文字（对比度达标） */
+  --line: oklch(0.87 0.012 90); /* 分隔线 */
+  --danger: oklch(0.5 0.16 25);
+  --warning: oklch(0.62 0.12 70);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  /* 宣纸纹理：极淡的纸纤维噪点，近看有质感，远看不抢内容 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--cinnabar) 22%, transparent);
+}
+
+@layer components {
+  /* 印章标记：朱砂方印，仅用于承载真实文化信息处（技术方案视觉元素） */
+  .seal {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-cinnabar font-serif text-sm leading-none text-white shadow-sm;
+    font-weight: 700;
+  }
+
+  /* 主按钮：朱砂；次按钮：墨绿描边 */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-cinnabar text-white hover:bg-cinnabar-deep active:bg-cinnabar-deep;
+  }
+  .btn-secondary {
+    @apply btn border border-inkgreen bg-transparent text-inkgreen hover:bg-inkgreen hover:text-white;
+  }
+  .btn-ghost {
+    @apply btn text-ink-soft hover:bg-paper-deep;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-[0_1px_2px_color-mix(in_oklch,var(--ink)_6%,transparent)];
+  }
+
+  .input {
+    @apply min-h-11 w-full rounded-md border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-bluegray/70 focus:border-cinnabar focus:outline-none focus:ring-2 focus:ring-cinnabar/20;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-paper-deep px-2.5 py-0.5 text-xs;
+  }
+}
+
+/* 对话渐显 / 路线点亮 / 解锁动效：仅服务状态反馈，均提供降级 */
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pulse-once {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--cinnabar) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+@keyframes dash-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes unlock-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.anim-fade-rise {
+  animation: fade-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-pulse-once {
+  animation: pulse-once 0.9s ease-out 1;
+}
+.anim-unlock-pop {
+  animation: unlock-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.route-line-draw {
+  stroke-dasharray: 6 8;
+  animation: dash-draw 1.2s linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .anim-fade-rise,
+  .anim-pulse-once,
+  .anim-unlock-pop,
+  .route-line-draw {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,22 @@
+# 文化知识条目录入模板（V0.1）
+# 规则：
+#  - review_status 默认为 pending，只有 reviewed 才允许进入生产 RAG 索引
+#  - content_type 四级：fact / disputed / legend / fiction，输出时必须标注
+#  - 无来源或授权不明的条目不得提交（用【待补充】占位并在评审中说明）
+
+- id: kn-example-001            # 全局唯一，kebab-case
+  title: 【待补充】条目标题
+  spot_id: 【待补充】            # 关联点位 id
+  content_type: fact             # fact / disputed / legend / fiction
+  content: |
+    【待补充】正文。要求：写明出处可考的表述；传说与争议必须显式措辞
+    （如"相传""说法不一"）。
+  source: 【待补充】             # 来源名称（书籍 / 官网 / 访谈等）
+  source_url: 【待补充】         # 可公开访问的来源链接（如有）
+  license: 【待补充】            # 授权说明（公有领域 / CC / 已获授权）
+  era: 【待补充】                # 年代（如：南宋 / 明正德年间）
+  location: 【待补充】           # 地点
+  tags: []                       # 检索标签
+  review_status: pending         # pending / reviewed / rejected
+  reviewer: 【待补充】           # 审核人
+  reviewed_at: null              # 审核时间（ISO 日期）
