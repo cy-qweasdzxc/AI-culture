@@ -65,6 +65,7 @@ docker compose up --build
 
 ## 文档索引
 
+- **[开发交接说明（DEVELOPMENT.md）](DEVELOPMENT.md)** —— 新成员从这里开始：环境搭建、架构红线、进度与待办、贡献指南
 - [需求规格](docs/requirements.md) · [总体架构](docs/architecture.md) · [API 契约](docs/api-contract.md)
 - [数据库设计](docs/database-schema.md) · [剧情状态机](docs/story-state-machine.md) · [RAG 与 NPC Agent](docs/rag-agent.md)
 - [测试与验收](docs/testing.md) · [部署要求](docs/deployment.md)
