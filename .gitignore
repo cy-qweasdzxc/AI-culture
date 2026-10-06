@@ -7,6 +7,7 @@
 node_modules/
 dist/
 .vite/
+*.timestamp-*.mjs
 coverage/
 playwright-report/
 test-results/
