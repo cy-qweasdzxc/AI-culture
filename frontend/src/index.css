@@ -126,6 +126,31 @@ body {
   animation: dash-draw 1.2s linear forwards;
 }
 
+/* 对话画布：宣纸底 + 极淡水墨晕染。近看有层次，远看不抢文字；
+   叠加的噪点与 body 的纸纤维质感一致，保持整站统一的纸面观感。 */
+.chat-canvas {
+  background-color: var(--paper-deep);
+  background-image:
+    radial-gradient(
+      85% 55% at 50% 0%,
+      color-mix(in oklch, var(--bronze) 10%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      60% 45% at 100% 100%,
+      color-mix(in oklch, var(--inkgreen) 7%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      55% 40% at 0% 92%,
+      color-mix(in oklch, var(--ink) 5%, transparent),
+      transparent 70%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-size: auto, auto, auto, 180px 180px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

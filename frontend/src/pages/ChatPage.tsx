@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
+import PersonaAvatar from '@/components/PersonaAvatar'
 import TypeTag from '@/components/TypeTag'
 import { suggestedChoices } from '@/data/chatChoices'
 import { useJourney } from '@/engine/journeyStore'
@@ -32,6 +33,8 @@ export default function ChatPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   const currentSpotId = useJourney((s) => s.currentSpotId)
+  const roleId = useJourney((s) => s.roleId)
+  const roleName = useJourney((s) => s.roles.find((r) => r.id === s.roleId)?.name ?? '你')
   const spot =
     spots.find((item) => item.id === currentSpotId && item.npcId === npcId) ??
     spots.find((item) => item.id === npc?.spotId)
@@ -75,9 +78,7 @@ export default function ChatPage() {
   const profilePanel = (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <span className="seal h-12 w-12 text-base" aria-hidden>
-          {npc.name.slice(0, 1)}
-        </span>
+        <PersonaAvatar id={npc.id} name={npc.name} size="lg" />
         <div>
           <p className="font-serif text-lg font-bold text-ink">{npc.name}</p>
           <p className="text-xs text-bluegray">{npc.title}</p>
@@ -159,16 +160,20 @@ export default function ChatPage() {
 
         {/* 中：对话区 */}
         <section className="card flex h-[70vh] min-h-[480px] flex-col">
-          <header className="flex items-center justify-between border-b border-line px-4 py-3">
-            <div>
-              <h1 className="font-serif text-base font-bold text-ink">
-                与{npc.name}对话
-                {spot ? (
-                  <span className="ml-2 text-xs font-normal text-bluegray">{spot.name}</span>
-                ) : null}
-              </h1>
+          <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <PersonaAvatar id={npc.id} name={npc.name} />
+              <div className="min-w-0">
+                <h1 className="truncate font-serif text-base font-bold text-ink">
+                  与{npc.name}对话
+                </h1>
+                <p className="truncate text-xs text-bluegray">
+                  {npc.title}
+                  {spot ? ` · ${spot.name}` : ''}
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2 lg:hidden">
+            <div className="flex shrink-0 gap-2 lg:hidden">
               <button
                 type="button"
                 className="btn-ghost min-h-9 px-2 py-1 text-xs"
@@ -188,11 +193,12 @@ export default function ChatPage() {
 
           <div
             ref={listRef}
-            className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
+            className="chat-canvas flex-1 space-y-4 overflow-y-auto px-4 py-4"
             aria-live="polite"
           >
-            <div className="anim-fade-rise flex justify-start">
-              <div className="max-w-[85%] rounded-lg rounded-tl-none bg-paper-deep px-3.5 py-2.5 text-sm leading-relaxed text-ink">
+            <div className="anim-fade-rise flex items-end gap-2.5">
+              <PersonaAvatar id={npc.id} name={npc.name} />
+              <div className="max-w-[85%] rounded-lg rounded-tl-none border border-line/70 bg-surface px-3.5 py-2.5 text-sm leading-relaxed text-ink shadow-sm">
                 {npc.greeting}
               </div>
             </div>
@@ -209,14 +215,18 @@ export default function ChatPage() {
               return (
                 <div
                   key={m.id}
-                  className={cn('anim-fade-rise flex', isUser ? 'justify-end' : 'justify-start')}
+                  className={cn(
+                    'anim-fade-rise flex items-end gap-2.5',
+                    isUser ? 'justify-end' : 'justify-start',
+                  )}
                 >
+                  {!isUser ? <PersonaAvatar id={npc.id} name={npc.name} /> : null}
                   <div
                     className={cn(
-                      'max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed',
+                      'max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
                       isUser
                         ? 'rounded-tr-none bg-cinnabar text-white'
-                        : 'rounded-tl-none bg-paper-deep text-ink',
+                        : 'rounded-tl-none border border-line/70 bg-surface text-ink',
                     )}
                   >
                     <p className="whitespace-pre-wrap">{m.text}</p>
@@ -263,14 +273,16 @@ export default function ChatPage() {
                       </button>
                     ) : null}
                   </div>
+                  {isUser ? <PersonaAvatar id={roleId} name={roleName} kind="user" /> : null}
                 </div>
               )
             })}
 
             {thinking ? (
-              <div className="anim-fade-rise flex justify-start">
+              <div className="anim-fade-rise flex items-end gap-2.5 justify-start">
+                <PersonaAvatar id={npc.id} name={npc.name} />
                 <div
-                  className="rounded-lg rounded-tl-none bg-paper-deep px-3.5 py-2.5 text-sm text-bluegray"
+                  className="rounded-lg rounded-tl-none border border-line/70 bg-surface px-3.5 py-2.5 text-sm text-bluegray shadow-sm"
                   role="status"
                 >
                   正在检索文化资料<span className="animate-pulse">…</span>
