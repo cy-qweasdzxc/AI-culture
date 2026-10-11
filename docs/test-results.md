@@ -427,3 +427,131 @@ docker exec citystory-maintenance-backend-1 python scripts/evaluate_live_ai.py \
 | 生成消融实验 | 退出码 0，105 次真实模型调用 |
 | 依赖审计 | 生产 0 项；全量 5 high（Tailwind 构建链） |
 | 浏览器 E2E | **10/10 通过（第二次运行）**，0 skipped |
+
+## 2026-10-11 隔离全栈验收轮次（Docker + PostgreSQL + 真实 AI + 备份恢复）
+
+本轮全部在**项目外的隔离验收环境**中进行：目录 `D:\Code\AIC-acceptance\`、Compose 项目名
+`aic-acceptance`、独立数据卷 `aic-acceptance_pgdata`、独立网络、端口 **8090**（避开本机既有的
+8080 部署）、新生成的随机密钥。**未触碰本机既有容器、数据卷与 `.env`。**
+
+### 1. 环境与构建
+
+| 项 | 值 |
+|---|---|
+| Node / npm | v24.15.0 / 11.12.1 |
+| Python | 3.12.5（项目 `.venv`） |
+| Docker / Compose | 29.8.2 / v5.5.1（WSL2 后端） |
+| 镜像 | `pgvector/pgvector:pg16`、`node:22-alpine`、`nginx:alpine`、`python:3.12-slim` |
+| 构建 | `docker compose up --build -d` 退出 0；三容器 healthy |
+
+Docker Hub 首次拉取失败（`auth.docker.io` 连接超时），重试即成功，属瞬时网络问题。
+
+### 2. 数据库、pgvector 与迁移
+
+| 验收项 | 结果 |
+|---|---|
+| 迁移版本 | `0002` |
+| pgvector | 扩展 `0.8.7` |
+| 表数量 | 20 张公共表 |
+| `knowledge_vectors` | 11 行，`vector_dims(embedding) = 1024` |
+| 已审核语料 | 11 条 reviewed + 3 条 pending |
+| 索引块 | 11 个，全部带 1024 维向量 |
+
+### 3. 状态机、并发与幂等（真实 PostgreSQL）
+
+| 场景 | 结果 |
+|---|---|
+| 同版本 8 并发写 | `1×200 + 7×409`（CAS 只允许一个赢家） |
+| 同 `request_id` 重放 | 两次均 200，返回**相同**状态版本 |
+| 其他会话访问该旅程 | 404（会话隔离） |
+| 管理端未登录 / 错误凭据 | 401 / 401 |
+| 恶意 Origin / 同源 Origin | 403 / 200 |
+| 越级到达未发现点位 | 409 `LOCATION_LOCKED` |
+
+### 4. 完整业务旅程（真实后端 API）
+
+pingjiang → ouyuan → shizilin → zhuozhengyuan → subo 依次到达均 200；6 个任务全部答对
+（quiz/password/combine/sorting 四种题型）；结局提交 200，`ending = cheng-huai`，**知识分
+140/140**，图鉴 13 项、线索 5 项、点位完成 5/5，终态 `COMPLETED`。
+
+线索依赖链实测成立：平江路与周伯对话发放 `clue-shaoding` 才能答 `task-pingjiangtu`；拙政园任务
+奖励 `clue-pianshi` 后苏博 `task-pianshi` 才可提交。
+
+### 5. 容器重启与持久化
+
+重启 `db`、`backend`、`frontend`（**不删数据卷**）后：15 用户、8 个旅程、14 个已完成任务、
+18 件物品、对话日志逐项保留；服务全部恢复 200。数据卷未被改动。
+
+### 6. 备份与恢复（隔离库）
+
+`pg_dump --clean --if-exists` 备份 2.0 MB，恢复到独立库 `restore_check` 后 **ERROR 0**，且
+`cultural_knowledge`(14)、reviewed(11)、`knowledge_chunks`(11)、`user_story_state`(22)、
+`user_task_state`(132)、`user_inventory`(63)、`dialogue_logs`(53)、pgvector 扩展、迁移 `0002`
+与源库**逐项一致**。演练后立即删除临时库与备份文件。
+
+### 7. 语料导入幂等与原子性（真实 Embedding）
+
+| 场景 | 修复前 | 修复后 |
+|---|---|---|
+| 连续两次导入 | 每次都 `updated: 11`，版本持续增长，重复调用付费 Embedding | 第二次 `skipped: 11`、`chunks: 0`、零调用 |
+| 嵌入配置变化 | 不触发重建，索引与配置不一致而静默失效 | 报 `embedding_config_changed` 并重建 |
+| 部分条目失败 | 行已提交、索引缺失，留下不一致状态 | 整体回滚并列出 `failures`，非零退出码 |
+
+嵌入配置变化实测：11 条中 2 条遇瞬时 `EMBEDDING_UNAVAILABLE` 时正确回滚并保留原版本，
+重试仅补做这 2 条（`updated: 2, skipped: 9`）。
+
+### 8. 浏览器 E2E（对容器栈）
+
+| 运行 | 结果 |
+|---|---|
+| 旅程用例 8 项（desktop + mobile） | 8 passed（1.1 分钟） |
+| 完整套件 10 项（含后台治理） | **10 passed**（1.2 分钟） |
+| 真实 AI 用例 | passed（13.2 秒） |
+
+### 9. 浏览器真实 AI 端到端（DeepSeek + 通义）
+
+链路：浏览器输入 → Nginx → FastAPI → 匿名会话 → 剧情状态 → 已审核语料检索 → 真实 Embedding
+→ 真实 DeepSeek → 引用校验 → 界面展示。
+
+| 提问 | 提供方 / 模型 | 检索模式 | 结果 | 引用 |
+|---|---|---|---|---|
+| 《平江图》碑刻年份 | **deepseek / deepseek-chat** | hybrid | 作答 | `kn-pingjiangtu` |
+| 平江路古城格局 | **deepseek / deepseek-chat** | hybrid | 作答 | `kn-shuangqipan` |
+| 冰箱贴磁铁材料 | none（本地拒答） | hybrid | `EVIDENCE_INSUFFICIENT` | 空 |
+| 提示词注入 | **none（未触达模型）** | keyword | `PROMPT_INJECTION` | 空 |
+| 虚假前提（1888 年） | none | hybrid | `PREMISE_UNCONFIRMED` | 空 |
+
+界面核对：回答标注「模型提供方: deepseek · 资料范围: reviewed_only」，带 `【史实】` 等级标签与
+可点击的「证据 · 《平江图》碑」徽章，抽屉内显示来源与审核状态。故障注入（中断 `chat/message`
+请求）后界面给出明确错误，**旅程状态版本 7 → 7 保持不变**，页面无脚本错误。
+
+**拒绝路径均为本地拦截**，提供方字段为 `none`，不产生付费调用。
+
+### 10. 本轮修复的缺陷（均有回归测试）
+
+| # | 缺陷 | 影响 |
+|---|---|---|
+| 1 | Secure Cookie 与明文 HTTP 部署自相矛盾 | 登录后所有接口 401，而健康检查 200，故障静默 |
+| 2 | 语料导入不幂等（含时间戳重新生成与签名归一化缺失） | 每次复跑增长版本并重复调用付费 Embedding |
+| 3 | 嵌入配置变化不触发重建 | 检索继续用旧模型向量，阈值判断失效 |
+| 4 | 行变更与索引重建非原子 | 索引失败留下"已审核但索引不完整" |
+| 5 | Nginx 缓存上游 IP | 后端重建后网关持续 502，须重启前端才能恢复 |
+| 6 | E2E 断言耦合知识库状态 | 导入已审核语料后必然失败，且检查的不是关键性质 |
+
+### 11. 自动化测试汇总
+
+| 执行 | 结果 |
+|---|---|
+| 后端 `pytest tests -q` | **114 passed, 1 skipped**（新增 13 项回归） |
+| `ruff check app tests scripts` | All checks passed |
+| 合成 AI 评测 | 12/12，`network_calls = 0` |
+| 前端 lint / 单元 / 构建 | 0 报错 / 9 passed / 构建通过 |
+| 依赖审计（生产） | critical 0 / high 0 / moderate 0 / low 0 |
+
+### 12. 本轮未执行或无法执行
+
+- **HTTPS 与 Secure Cookie 的生产形态**：验收栈为明文 HTTP，TLS 终止应由部署环境配置。
+- **多实例共享限流**：当前部署为单 worker，限流为进程内实现；水平扩展需共享存储。
+- **人工文化事实评分**：引用有效性不等于逐句事实一致性，`human_fact_accuracy` 仍为未知。
+- **pgvector 原生 ANN 检索**：原生表已写入且可查询（已验证维度与排序一致），但检索排序仍由
+  应用执行精确余弦，未声明 HNSW 索引。

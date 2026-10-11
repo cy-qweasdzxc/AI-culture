@@ -50,3 +50,32 @@ DeepSeek/Qwen使用 /chat/completions + response_format=json_object；Ollama用 
 现有evaluate_retrieval_arms.py与evaluate_live_ai.py已复用并修复；默认CLI只做preflight/dry plan，程序evaluate默认也拒绝远程调用。黄金集须reviewed并登记真实审核人/日期，知识须已审核发布且不是演示。需要调用时，先核实提供方计价、查看计划请求上界，再取得该次用户明确授权后传--allow-paid-calls。本轮用户选择无费用审查，没有真实调用；未知token估算和成本保留null，实际usage仅取提供方返回值。
 
 三臂固定同一语料、作用域、K、模型及维度，每问题只计算一次query Embedding。指标按knowledge_id计数，按分数去重后取K个独立知识，保留实际chunk ID供追溯。Precision@K分母为配置K，答案型空召回为0且计入均值；precision_of_returned另按实际返回量计算。没有相关证据的拒答案例不混进Recall/Precision均值。混合与向量统计分开记录共享Embedding耗时、检索耗时和实际失败。普通LLM/RAG/证据/剧情约束四组生成消融尚未实验；事实准确性与角色一致性必须人工评分。详细失败→修复记录见[evaluation-tool审查](evaluation-tool-audit-2026-10-10.md)。
+
+## 2026-10-11 真实配置与实测
+
+| 项 | 实际值 |
+|---|---|
+| Embedding 提供方 / 模型 / 维度 | 通义 `text-embedding-v3` / **1024** |
+| 聊天提供方 / 模型 | DeepSeek `deepseek-chat` |
+| 提示词版本 | `npc-evidence-v2`（v1 未声明枚举取值，真实模型返回 `emotion="平静"` 被 schema 拒绝） |
+| 已审核语料 | 11 条（另有 3 条 pending 未入库） |
+| 索引 | 11 个块，全部带 1024 维向量；pgvector 原生表 11 行且 `vector_dims=1024` |
+
+**导入幂等性**：`build_reviewed_corpus.py --apply` 重复执行不会增长版本，也不会重新调用
+Embedding。判定依据是内容签名（含标题、正文、类型、来源、许可、审核状态、审核人、演示标记、
+元数据与审核时间）以及索引状态（块是否存在、知识版本是否一致、`embedding_model` 与
+`embedding_dimension` 是否与当前配置一致）。嵌入模型或维度变化会触发重建，避免检索继续使用
+旧模型向量而阈值仍按新配置判断。`--expect N` 可断言本次变更条数，`--force-reindex` 用于强制重建。
+
+**导入原子性**：行变更与索引重建在同一事务内提交。任一条目失败会整体回滚并在结果中列出
+`failures`，脚本以非零退出码结束，不会留下"已审核但索引不完整"的条目。
+
+**实测结果**（真实 Embedding 与真实聊天模型）：
+
+- 三臂检索对照（32 题）：关键词 0.54 / 向量 0.62 / 混合 0.72（Recall@4）。按题面难度分层后，
+  关键词臂在改写题上为 0.0417，混合臂为 0.4167，差异才显现。
+- 生成消融（四臂）：不接检索时 23 条回答**全部没有引用**；引用校验层实测拦下模型自行产生的
+  6 条无效引用；拒答题错误回答数从 6/9 降到 1/9。
+- 浏览器端真实链路：可答问题走混合检索并挂出引用，知识库外与注入提问在本地拦截且提供方为
+  `none`（零调用）。
+

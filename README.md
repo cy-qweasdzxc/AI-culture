@@ -52,7 +52,15 @@ npx playwright install chromium
 npm run test:e2e  # 后端需先启动在8000，使用独立演示数据库
 ```
 
-本次真实结果与局限见 [测试报告](docs/test-results.md)。合成 AI 评测只验证工程机制，不是文化准确率或真实模型效果。Docker/PostgreSQL/pgvector 在本机未运行验证。
+本次真实结果与局限见 [测试报告](docs/test-results.md)。合成 AI 评测只验证工程机制，不是文化准确率或真实模型效果。
+
+2026-10-11 全栈验收（隔离项目 `aic-acceptance`，独立数据卷与端口，未触碰本机既有部署）：
+
+- **容器全栈已实测**：PostgreSQL 16.15 + pgvector 0.8.7、迁移 `0002`、Nginx 反代、健康链全部通过；容器重启后既有旅程、任务态、物品与对话日志逐项保留。
+- **真实 AI 已实测**：DeepSeek `deepseek-chat` 与通义 `text-embedding-v3`（1024 维）接入容器，11 条已审核语料发布为 11 个带向量的块；浏览器提问真实走 检索 → 引用校验 → 模型 → 界面展示，回答挂出 `reviewed_only` 范围内的引用。
+- **拒绝路径零调用**：提示词注入与知识库外提问在本地被拦截，提供方字段为 `none`，不产生付费调用。
+- **备份恢复已隔离验证**：`pg_dump` 恢复到独立库后，计数与向量维度逐项一致。
+- 部署注意：编排以明文 HTTP 暴露前端，故显式设置 `SESSION_COOKIE_SECURE=false`；**加上 TLS 终止后必须删除该行**，否则浏览器不回传 Secure Cookie，表现为登录后接口全部 401 而健康检查正常。
 
 ## 技术与文档
 

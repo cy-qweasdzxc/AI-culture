@@ -36,7 +36,24 @@ Postgres0002迁移要求CREATE EXTENSION vector权限；提供的pgvector镜像�
 
 当前Nginx配置是TLS上游后的HTTP代理配置，不含证书申请/续期。公网部署应由实际域名/证书管理环境配置，不声称已获得证书或已发布站点。OpenAPI是否开放公网、共享限流、管理员网络限制由部署者按用途配置。
 
-## 备份与恢复（容器环境待验证）
+## 备份与恢复
+
+已在隔离验收库实测（2026-10-11）：`pg_dump --clean --if-exists` 生成备份，恢复到独立库
+`restore_check` 后无 ERROR，且 `cultural_knowledge`（14）、`reviewed`（11）、`knowledge_chunks`（11）、
+`user_story_state`（22）、`user_task_state`（132）、`user_inventory`（63）、`dialogue_logs`（53）、
+pgvector 扩展与迁移版本 `0002` 与源库逐项一致；恢复库中原生向量维度同为 1024。恢复完成后立即
+删除临时库与备份文件。
+
+```bash
+# 备份（容器内执行，避免把密码写进命令行历史）
+docker compose exec -T db pg_dump -U citystory -d citystory --clean --if-exists > backup.sql
+# 恢复演练：先建独立库，确认目标无误后再导入，切勿覆盖生产库
+docker compose exec -T db psql -U citystory -d postgres -c "CREATE DATABASE restore_check;"
+docker compose exec -T db psql -U citystory -d restore_check -f /tmp/restore.sql
+docker compose exec -T db psql -U citystory -d postgres -c "DROP DATABASE restore_check;"
+```
+
+`--clean --if-exists` 使恢复可重复执行，但**恢复目标是一个空库或已确认可覆盖的库**这一前提不变。
 
 ```bash
 docker compose exec -T db pg_dump -U citystory citystory > backup.sql
@@ -55,4 +72,20 @@ docker compose exec -T db psql -U citystory citystory < backup.sql
 - HTTPS及Secure Cookie、匿名数据清除、备份恢复；
 - 真实LLM/Embedding独立配置与成本/延迟/质量记录。
 
-当前这些容器验收仍未执行；已执行的本机验收仅见测试报告。
+2026-10-11 隔离全栈验收结果（项目名 `aic-acceptance`，独立数据卷、端口 8090，新随机密钥）：
+
+| 验收项 | 结果 |
+|---|---|
+| config 语法、镜像构建、健康状态、SPA 深链 | 通过（`config --quiet` 退出 0；三容器 healthy；`/admin` 等深链返回 SPA 入口） |
+| 首次迁移、重复 seed、backend 重启后会话恢复 | 通过（迁移 `0002`；重启后既有旅程与任务态逐项保留） |
+| 迁移版本、pgvector 扩展与维度 | 通过（`alembic_version=0002`；`vector 0.8.7`；`knowledge_vectors` 11 行、维度 1024） |
+| `/admin` 未登录 401、真 Cookie 登录、源站限制 | 通过（未登录 401、错误凭据 401、恶意 Origin 403、同源 200） |
+| PostgreSQL CAS 并发与幂等回执 | 通过（8 并发同版本 → `1×200 + 7×409`；同 `request_id` 重放返回相同版本） |
+| 完整业务旅程 | 通过（5 点位依次到达，6 任务全部答对，结局 `cheng-huai`，知识分 140/140） |
+| 浏览器 E2E | 通过（对容器栈 10/10） |
+| 备份与恢复（隔离库） | 通过（逐项计数一致，恢复 ERROR 0） |
+| 真实 LLM 与 Embedding | 通过（浏览器端真实调用，回答挂出 `reviewed_only` 引用） |
+| HTTPS 与 Secure Cookie | **未执行**：明文 HTTP 下需 `SESSION_COOKIE_SECURE=false`，TLS 终止应在部署环境配置 |
+| 匿名数据清除 | 通过（`/api/journeys/reset` 与设置页清除在 E2E 中覆盖） |
+
+已知运维注意：后端容器重建会拿到新 IP，Nginx 必须用变量 + Docker 内置 DNS 解析上游，否则网关持续 502 直到前端重启（已修复并实测）。
