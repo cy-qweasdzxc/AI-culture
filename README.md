@@ -1,81 +1,73 @@
 # 城迹入戏 · City Story AI
 
-> AI 地方文化剧本游平台（Web MVP）—— 将地方文化知识、空间路线、角色叙事、任务解谜和学习评价连接起来的沉浸式文化剧本游体验。
+地方文化剧本游 Web MVP：选择角色 → 探索五个演示点位 → NPC 对话 → 六个任务 → 图鉴 → 三种规则结局 → 学习报告。保留现有 React 界面，剧情权威状态现在存放于服务端数据库。
 
-本项目为第八届全球校园人工智能算法精英大赛 · 算法主题赛（智能文化）参赛作品。
+当前交付是**可运行、可测试的工程 MVP**。14 条演示知识全部保持 pending，正式检索没有已审核资料；NPC 文化回答因此会拒答。虚构剧情线索由独立的业务规则发放，可以完成演示游玩。四类内容标签只表示分类，不代表已审核。默认 Mock，未声称真实模型或文化效果验收完成。
 
-## 用户体验闭环
+## 本地启动
 
-```
-选择主题 → 选择角色 → 进入路线 → 到达点位 → 与 AI NPC 对话
-        → 完成任务 → 解锁图鉴 → 形成结局 → 生成学习报告
-```
+需要 Node ≥22、Python ≥3.12。首次从仓库根目录复制 `.env.example` 为 `.env`，私密值不提交。
 
-- **文化知识库约束事实**：所有文化内容经人工审核后入库，AI 回答必须附证据引用，证据不足时明确拒答，不编造史实。
-- **剧情状态机控制逻辑**：服务端数据库是剧情状态唯一权威，前端与 LLM 均无权直接修改任务、道具、图鉴或结局。
-- **NPC Agent 角色化表达**：RAG 检索 + 角色卡 + 剧情上下文，生成有身份、有边界的 NPC 对话。
-- **位置触发连接虚实**：Leaflet 地图 + 浏览器定位 + 虚拟游览双模式。
-- **图鉴与报告承载学习评价**：文化条目区分史实 / 争议 / 传说 / 虚构，体验报告完全由真实旅程状态计算。
-
-## 技术栈
-
-| 层 | 技术 |
-|---|---|
-| 前端 | React + Vite + TypeScript + Tailwind CSS + Zustand |
-| 地图 | 腾讯地图 GL JS（合规底图；无密钥时自动降级为示意路线） |
-| 后端 | Python FastAPI + SQLAlchemy + Alembic |
-| 数据库 | SQLite（开发）/ PostgreSQL（部署） |
-| RAG | Chroma（开发）/ pgvector（部署） |
-| LLM | DeepSeek / 通义千问（Ollama 备用，mock 用于本地开发） |
-| 部署 | Docker + docker-compose + Nginx |
-
-## 仓库结构
-
-```
-city-story-ai/
-├── docs/            # 需求、架构、API 契约、数据库、状态机、RAG、测试、部署文档
-├── frontend/        # React 前端（页面、组件、状态、Mock）
-├── backend/         # FastAPI 后端（API、业务规则、AI 编排）
-├── data/            # 文化资料模板、演示数据、原始/处理数据、测试集
-├── deploy/          # Nginx、PostgreSQL、部署脚本
-└── .github/         # CI、Issue 与 PR 模板
-```
-
-## 快速开始
-
-前置：Node.js ≥ 22，Python ≥ 3.11，Docker（可选）。
+后端（从 backend 目录执行）：
 
 ```bash
-# 前端
-cd frontend
-npm install
-npm run dev          # http://localhost:5173
-
-# 后端（建议使用虚拟环境）
-cd backend
-pip install -e ".[dev]"
-uvicorn app.main:app --reload   # http://localhost:8000/api/docs
-
-# 全栈（生产形态）
-cp .env.example .env   # 按需修改，禁止提交真实密钥
-docker compose up --build
+python -m venv .venv
+# Windows: .venv\Scripts\Activate.ps1
+# Linux/macOS: source .venv/bin/activate
+python -m pip install -c requirements.lock -e ".[dev]"
+alembic upgrade head
+python scripts/seed.py
+uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-地图说明：前端默认使用腾讯地图 GL JS。在 [腾讯位置服务开放平台](https://lbs.qq.com) 申请免费密钥后填入 `frontend/.env` 的 `VITE_TMAP_KEY`（见 `frontend/.env.example`），并为密钥配置 Referer 白名单；未配置密钥时地图区域自动降级为可点击的示意路线，全部功能不受影响。
+前端（另一个终端，从 frontend 目录执行）：
 
-## 文档索引
+```bash
+npm ci
+npm run dev -- --host 127.0.0.1
+```
 
-- **[开发交接说明（DEVELOPMENT.md）](DEVELOPMENT.md)** —— 新成员从这里开始：环境搭建、架构红线、进度与待办、贡献指南
-- [需求规格](docs/requirements.md) · [总体架构](docs/architecture.md) · [API 契约](docs/api-contract.md)
-- [数据库设计](docs/database-schema.md) · [剧情状态机](docs/story-state-machine.md) · [RAG 与 NPC Agent](docs/rag-agent.md)
-- [测试与验收](docs/testing.md) · [部署要求](docs/deployment.md)
+访问 http://127.0.0.1:5173；API 文档 http://127.0.0.1:8000/api/docs；健康检查 /api/health 会检查已迁移数据库。重新运行 seed 不会覆写人工编辑或审核状态。前端仅缓存 API 响应，不依赖 localStorage 判定业务；清除浏览器 Cookie 会失去原匿名旅程关联。
 
-## 匿名与真实性声明
+## 管理与 AI 配置
 
-- 本仓库及全部参赛材料中**不出现学校名称、学校 LOGO 与指导教师信息**。
-- 仓库中不包含任何真实 API Key / 密钥，仅提供 `.env.example` 示例。
-- 未提供真实来源的文化数据、用户数据与测试结果统一标注为【待补充】，不以占位内容冒充真实文化资料或应用成效。
+在本地 `.env` 设置 ADMIN_PASSWORD 与私密的 ADMIN_JWT_SECRET 后可访问 /admin。管理接口使用 HttpOnly Cookie/JWT、登录限流和写操作审计；未配置密码时禁用登录。可录入/编辑资料、人工核对来源和授权、审核并发布索引、维护 NPC 与任务文案、处理纠错和查看真实数据库计数。
 
-## License
+生成模型与 Embedding 分别配置，详见 [RAG 文档](docs/rag-agent.md)。未提供真实 API 密钥，默认 Mock；缺远程聊天密钥会显式标记 Mock。未审核、被拒绝、冲突、越点位和未披露章节资料不会成为回答证据。模型建议不能发放奖励。
 
-[MIT](LICENSE)
+地图采用腾讯地图 GL JS；在 frontend/.env 中配置 VITE_TMAP_KEY 及 Referer 白名单。没有 key 时直接显示可点击 SVG 路线，不请求占位地图服务。演示坐标近似；实地模式校验距离、精度和坐标系，但浏览器位置可模拟。
+
+## 验证
+
+```bash
+# backend/
+ruff check app tests scripts
+pytest
+python scripts/evaluate_ai.py
+# frontend/
+npm run lint
+npm run test
+npm run build
+npx playwright install chromium
+npm run test:e2e  # 后端需先启动在8000，使用独立演示数据库
+```
+
+本次真实结果与局限见 [测试报告](docs/test-results.md)。合成 AI 评测只验证工程机制，不是文化准确率或真实模型效果。Docker/PostgreSQL/pgvector 在本机未运行验证。
+
+## 技术与文档
+
+React18、Vite、TypeScript、Tailwind、Zustand；FastAPI、SQLAlchemy2、Alembic；SQLite 开发；PostgreSQL + pgvector 部署配置；精确余弦/关键词混合检索；DeepSeek/Qwen/Ollama/Mock 适配。当前不依赖 Chroma。
+
+- [实施进度和基线审查](docs/implementation-progress.md) · [开发交接](DEVELOPMENT.md)
+- [需求](docs/requirements.md) · [架构](docs/architecture.md) · [API](docs/api-contract.md)
+- [数据库](docs/database-schema.md) · [状态机](docs/story-state-machine.md) · [RAG](docs/rag-agent.md)
+- [测试方法](docs/testing.md) · [部署](docs/deployment.md)
+- [技术完成度审计](docs/final-audit.md) · [文化来源候选与审核边界](docs/competition/culture-source-checklist.md)
+
+2026-10-11维护范围仅包括工程、环境与技术验证。原始技术方案和官方附件保持原样；此前AI生成的参赛草稿、PPT/PDF和审查ZIP按来源与引用核验后清理，不再作为开发入口。本轮文件快照、恢复副本、清理记录、实际测试及GitHub对比统一保存在项目外`D:/Code/AIC-maintenance/`，没有远端写入。
+
+本轮修复Unicode管理员登录与性能工具的连接失败记录，后端99项回归通过。Docker Desktop已普通用户安装，Compose配置解析通过；WSL/Engine尚不可用，实际容器与PostgreSQL验收仍待系统环境授权。前端9项单元、10项浏览器流程和生产构建通过；真实模型实验仍未执行。
+
+## 真实性与许可
+
+演示文化来源、授权和人工审核、真实模型实验、调研试点及佐证仍待提供。参赛材料禁止学校、LOGO、指导教师信息；不能以工程测试冒充文化应用成效。本次未提交、推送或发布仓库。[MIT](LICENSE) 仅适用于项目代码，不自动授予第三方文化资料权利。

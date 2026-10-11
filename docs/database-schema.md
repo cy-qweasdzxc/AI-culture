@@ -1,46 +1,58 @@
-# 数据库设计（V0.1 骨架）
+# 数据库设计与实际实现
 
-> 来源：技术方案第 10 节。
+模型以 `backend/app/models/entities.py` 为准，由 Alembic 管理。`0001` 创建 17 个规划实体及幂等回执表；`0002` 在 PostgreSQL 中启用 pgvector 与专用向量表，在 SQLite 中不增加向量表。应用启动不执行 `create_all`。
 
-## 1. 数据表一览
+## 1. 表及业务关系
 
-| 数据表 | 主要内容 |
-|---|---|
-| users | 匿名 Session、授权状态和最近活动时间 |
-| stories | 文化主题、简介、状态和版本 |
-| characters | 玩家角色与 NPC 角色卡、知识边界和提示词 |
-| cultural_locations | 点位坐标、触发半径、停留时间和路线顺序 |
-| cultural_knowledge | 文化内容、来源、授权、类型、可信等级和审核状态 |
-| knowledge_chunks | 切分文本、元数据和向量索引引用 |
-| story_nodes | 起点、点位、对话、任务、选择和结局节点 |
-| story_edges | 节点连接、选择键、转移条件和优先级 |
-| tasks | 任务类型、验证规则、奖励和知识分值 |
-| items | 线索、道具、文档及关联知识 |
-| user_story_state | 角色、模式、当前节点、章节、关键标记和状态版本 |
-| user_task_state | 任务状态、尝试次数、回答和得分 |
-| user_inventory | 获得的线索和道具 |
-| user_collections | 图鉴解锁等级、来源和时间 |
-| dialogue_logs | 输入、输出、证据、模型、提示词版本和批准动作 |
-| safety_logs | 风险类型、拦截原因、规则版本和处理结果 |
-| test_cases | RAG、角色、剧情和安全测试用例 |
-
-## 2. 关键数据原则
-
-1. 服务端数据库是剧情状态的唯一权威来源。
-2. 关键业务状态采用关系字段，扩展信息可使用 JSON。
-3. SQLite 和 PostgreSQL 均通过 SQLAlchemy 模型访问，避免业务代码依赖数据库方言。
-4. 状态更新使用事务和 `state_version` 乐观锁，避免重复奖励或并发覆盖。
-5. 文化知识只有 `review_status=reviewed` 时才允许进入生产 RAG 索引。
-
-## 3. 文化内容四级（cultural_knowledge.type）
-
-| 类型 | 定义 | 输出要求 |
+| 表 | 关键字段 | 约束与用途 |
 |---|---|---|
-| fact | 有可靠来源支持的史实 | 可陈述并展示来源 |
-| disputed | 存在多种观点 | 必须说明存在争议 |
-| legend | 地方传说或民间叙事 | 必须标注为传说 |
-| fiction | 项目为剧情创作的内容 | 必须标注为艺术化虚构 |
+| users | id、session_hash、expires_at、created_at、last_active_at、location_consent | 仅保存会话凭证的 HMAC 摘要；摘要唯一 |
+| stories | id、name、status、version、data | 主题信息存 JSON；游客仅查询 published |
+| characters | id、story_id、kind、name、data | kind 为 player/npc；初始线索及 NPC locationIds 在角色卡 data |
+| cultural_locations | id、story_id、route_order、lat、lng、trigger_radius_m、dwell_seconds、coordinates_verified、data | 同主题顺序唯一，半径为正；GCJ-02 坐标 |
+| cultural_knowledge | id、story_id、location_id、content_type、title、content、source、source_url、license、trust_level、review_status、reviewer、reviewed_at、version、is_demo、tags、metadata_json | 类型、审核状态有 CHECK；审核状态和点位有索引 |
+| knowledge_chunks | id、knowledge_id、chunk_index、content、embedding、embedding_model、embedding_dimension、knowledge_version、vector_ref、metadata_json | 同条目切片序号唯一；删除知识级联删除切片；SQLite 用 embedding JSON |
+| story_nodes | id、story_id、location_id、kind、hidden、data | 起点、点位、任务、选择、结局；演示结局文字在 data |
+| story_edges | id、story_id、from_node_id、to_node_id、choice_key、priority、conditions | 同起终点及选择唯一；前置任务、结局条件在 conditions |
+| tasks | id、story_id、location_id、node_id、type、title、knowledge_score、validation、rewards、data | 答案、必要线索和奖励在服务端；分值非负 |
+| items | id、story_id、knowledge_id、kind、name、data | clue/item/codex；图鉴关联文化知识 |
+| user_story_state | id、user_id、story_id、role_id、mode、state、current_node_id、current_location_id、chapter、state_version、state_data、ending_id、ending_snapshot、started_at、finished_at | user_id 唯一，每会话一份当前旅程；版本非负；角色、节点、结局有外键 |
+| user_task_state | journey_id + task_id、status、attempts、answer、score | 复合主键；尝试次数和分值非负 |
+| user_inventory | journey_id + item_id、source、acquired_at | 复合主键防重复线索 |
+| user_collections | journey_id + item_id、level、source、acquired_at | 复合主键防重复图鉴 |
+| dialogue_logs | id、journey_id、npc_id、user_input、response、evidence_ids、approved_actions、provider、model、prompt_version、feedback、created_at | 保存真实提供方、证据、批准动作及反馈；不记录 Key |
+| safety_logs | id、journey_id、risk_type、reason、rule_version、result、created_at | 记录审核原因，不保存精确位置 |
+| test_cases | id、category、input、expected、result、executed_at | 支持黄金测试分类及结果；文化质量仍需正式人工测试集 |
+| action_receipts | journey_id + request_id、action、payload_hash、response、created_at | 幂等；更改同 request_id 的请求内容返回冲突 |
 
-## 4. 详细字段定义
+`state_data` 保存点位状态、flags 和关键事件。任务、背包、图鉴、对话由对应关系表读取。camelCase 快照是服务端派生结果，不接受客户端直接写入。
 
-【待补充】：随 `backend/app/models/` 实现逐步补充各表 DDL 与字段说明，并以 Alembic 迁移为准。
+## 2. 事务、并发与清除
+
+每次动作验证 Session 和旅程归属，检查回执及 `state_version`，再用带版本条件的 UPDATE 抢占更新。未命中一行返回 STATE_CONFLICT。剧情状态、奖励、日志、回执一次事务提交，异常全部回滚。奖励复合主键进一步防止重复领取。
+
+相同 request_id 和原请求内容重试时返回已记录的业务结果，并重新读取最新旅程快照，避免旧请求覆盖新进度。并发创建由 user_id 唯一约束保护，返回 JOURNEY_EXISTS；重置以带版本条件的 DELETE 实现。
+
+删除 Session 会级联删除该用户的旅程、任务、背包、图鉴、对话、安全日志和回执。备份及外部日志清理需要部署者另行配置。
+
+## 3. 文化资料与初始化
+
+文化类型为 fact / disputed / legend / fiction；默认 pending，未知来源或授权为【待补充】。只有人工审核为 reviewed 的当前版本允许切片和正式 RAG。图鉴已审核内容取关联知识当前版本，避免将旧演示文本误标为已审核。
+
+`data/demo/seed.json` 从原型导出：1 主题、5 近似点位、3 玩家、3 NPC、6 任务、3 结局、7 线索/道具、14 知识。包括 fiction 在内，全部知识初始化 pending，不创建切片。精确坐标和授权未核实。剧情谜题可以闭环；AI 没有审核证据时拒答文化事实，默认明确标记 Mock。
+
+seed 只插入缺失主键，不覆盖人工审核、修改或玩家进度，可重复执行。
+
+## 4. 运行与验证
+
+在 backend 中运行：
+
+```bash
+pip install -e ".[dev]"
+alembic upgrade head
+python scripts/seed.py
+alembic check
+uvicorn app.main:app --reload
+```
+
+开发 SQLite 可独立运行。PostgreSQL、pgvector、Docker 的实际启动须有对应环境验收，不能以 SQLite 测试替代。向量模型、维度必须与索引一致，变更时重新索引；普通业务服务不依赖 PostgreSQL 方言。
