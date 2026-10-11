@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     session_secret: str = "development-session-secret-change-before-deployment"
     session_cookie: str = "citystory_session"
     session_days: int = 30
+    # 会话 Cookie 是否只在 HTTPS 上回传。真实部署应保持开启（默认按 APP_ENV 推导）。
+    # 仅当确知服务以明文 HTTP 直接对外提供时，才显式设为 false：浏览器不会在 HTTP 上
+    # 回传 Secure Cookie，那时所有需要登录的接口都会返回 401，而健康检查仍然正常，
+    # 故障表现是静默的。Compose 默认以 HTTP 暴露前端，因此本地全栈验收需要显式关闭。
+    session_cookie_secure: bool | None = None
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     admin_username: str = "admin"
     admin_password: str = ""
@@ -45,6 +50,13 @@ class Settings(BaseSettings):
             if len(self.admin_password) < 12:
                 raise ValueError("admin_password must contain at least 12 characters in production")
         return self
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Whether cookies must be marked Secure. Explicit setting wins over APP_ENV."""
+        if self.session_cookie_secure is not None:
+            return self.session_cookie_secure
+        return self.app_env == "production"
 
     @property
     def origins(self) -> list[str]:

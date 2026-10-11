@@ -48,7 +48,7 @@ def create_or_restore_session(db: Session, request: Request, response: Response)
         settings.session_cookie,
         token,
         httponly=True,
-        secure=settings.app_env == "production",
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=settings.session_days * 86400,
         path="/",

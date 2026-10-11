@@ -91,9 +91,25 @@ def source_index(research: dict) -> dict[str, dict]:
     return {entry["id"]: entry for entry in research["sources"]}
 
 
-def build(research: dict, reviewer: str) -> dict:
+def _remember_reviewed_at(previous: dict | None) -> str | None:
+    """Reuse the review timestamp already recorded in the published corpus, if there is one.
+
+    Only meaningful when every included entry shares one timestamp, which is how this script writes
+    them. A mixed set means the file was edited by hand, so fall back to "not remembered".
+    """
+    if not previous:
+        return None
+    stamps = {item.get("reviewed_at") for item in previous.get("included", [])}
+    return stamps.pop() if len(stamps) == 1 else None
+
+
+def build(research: dict, reviewer: str, *, reviewed_at: str | None = None,
+          previous: dict | None = None) -> dict:
     sources = source_index(research)
-    reviewed_at = datetime.now(UTC).isoformat()
+    # 审核时间是一次性的人工事实，不是本脚本的运行时刻。优先用显式传入值，其次沿用已发布
+    # 语料中记录的时间；否则每次复跑都会"看起来有变化"，从而无条件增长版本并重建索引
+    # （其中包含付费 Embedding 调用）。
+    recorded_at = reviewed_at or _remember_reviewed_at(previous) or datetime.now(UTC).isoformat()
     included, excluded = [], []
     for record in research["records"]:
         verdict = record.get("verification_status")
@@ -130,7 +146,7 @@ def build(research: dict, reviewer: str) -> dict:
             "license": LICENSE_NOTE,
             "review_status": "reviewed",
             "reviewer": reviewer,
-            "reviewed_at": reviewed_at,
+            "reviewed_at": recorded_at,
             "is_demo": False,
             "metadata_json": {
                 "min_chapter": 1,
@@ -150,7 +166,7 @@ def build(research: dict, reviewer: str) -> dict:
         })
     return {
         "schema_version": "culture-reviewed-corpus-v1",
-        "generated_at_utc": reviewed_at,
+        "generated_at_utc": recorded_at,
         "reviewer": reviewer,
         "research_file": "data/raw/culture-source-candidates.json",
         "research_verified_on": research.get("verified_on"),
@@ -166,41 +182,139 @@ def build(research: dict, reviewer: str) -> dict:
     }
 
 
-def apply_to_database(corpus: dict) -> dict:
-    """Write the reviewed rows and publish their index. Never runs without an explicit --apply."""
+CONTENT_FIELDS = ("location_id", "title", "content", "content_type", "source", "source_url",
+                  "license", "review_status", "reviewer", "is_demo")
+
+
+def _canonical_json(value) -> str:
+    """Canonical JSON for comparison.
+
+    The corpus file stores ``metadata_json`` as a JSON string while the ORM column reads it back as
+    a dict, so both sides must be normalised before they can be compared.
+    """
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except (ValueError, TypeError):
+            return value
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, default=str)
+
+
+def _canonical_time(value) -> str | None:
+    """Compare timestamps by instant, not by string form.
+
+    ``datetime.fromisoformat`` on an offset-aware string yields an aware datetime, but the database
+    reads it back naive, so a naive/aware mismatch would report a false difference on every run.
+    """
+    if value is None:
+        return None
+    text = str(value)
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return text
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC).isoformat()
+
+
+def content_signature(item: dict) -> tuple:
+    """Everything that, when changed, invalidates the published index for this entry."""
+    return tuple(_canonical_json(item.get(field)) if field == "metadata_json" else item.get(field)
+                 for field in CONTENT_FIELDS) + (_canonical_time(item.get("reviewed_at")),)
+
+
+def row_signature(row) -> tuple:
+    return tuple(_canonical_json(row.metadata_json) if field == "metadata_json" else getattr(row, field)
+                 for field in CONTENT_FIELDS) + (_canonical_time(row.reviewed_at),)
+
+
+def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
+    """Write the reviewed rows and publish their index. Never runs without an explicit --apply.
+
+    Three properties this function must keep:
+
+    * **Idempotent.** Re-running it with unchanged input and unchanged embedding configuration must
+      not bump ``version`` or spend an embedding call. Every bump revokes the old index and rebuilds
+      it, so an unconditional bump would keep inflating versions and paying for embeddings.
+    * **Index-consistent.** A change of embedding provider, model or dimension must rebuild the
+      index even when the text is unchanged; otherwise retrieval silently keeps vectors produced by
+      a different model and the configured similarity threshold stops meaning anything.
+    * **Atomic per entry.** The row change and the index rebuild share one transaction: a rebuild
+      failure must not leave an entry marked reviewed with a missing or partial index.
+    """
+    from sqlalchemy import select
+
     from app.ai.rag.index import rebuild_knowledge
     from app.ai.settings import AISettings
     from app.core.database import SessionLocal
-    from app.models import CulturalKnowledge
+    from app.models import CulturalKnowledge, KnowledgeChunk
 
     settings = AISettings.configured()
-    created = updated = chunks = 0
+    created = updated = skipped = chunks = 0
+    index_reasons: dict[str, int] = {}
+    failures: list[dict] = []
     with SessionLocal() as db:
         for item in corpus["included"]:
             row = db.get(CulturalKnowledge, item["id"])
+            incoming = content_signature(item)
+            reason = None
             if row is None:
-                row = CulturalKnowledge(id=item["id"], story_id="suzhou-pingjiang")
-                db.add(row)
-                created += 1
+                reason = "new_entry"
+            elif row_signature(row) != incoming:
+                reason = "content_changed"
+            elif force_reindex:
+                reason = "forced"
             else:
-                updated += 1
-            row.location_id = item["location_id"] or row.location_id
-            row.title = item["title"]
-            row.content = item["content"]
-            row.content_type = item["content_type"]
-            row.source = item["source"]
-            row.source_url = item["source_url"]
-            row.license = item["license"]
-            row.review_status = item["review_status"]
-            row.reviewer = item["reviewer"]
-            row.reviewed_at = datetime.fromisoformat(item["reviewed_at"])
-            row.is_demo = item["is_demo"]
-            row.metadata_json = item["metadata_json"]
-            row.version = (row.version or 0) + 1  # content changed -> old index must be revoked
-            db.commit()
-            chunks += rebuild_knowledge(db, row, settings)
-            db.commit()
-        return {"created": created, "updated": updated, "chunks": chunks,
+                stored = db.scalars(select(KnowledgeChunk).where(
+                    KnowledgeChunk.knowledge_id == item["id"])).all()
+                expected_model = settings.embedding_model if settings.embedding_provider != "none" else ""
+                expected_dim = settings.embedding_dimension if settings.embedding_provider != "none" else 0
+                if not stored:
+                    reason = "index_missing"
+                elif any(chunk.knowledge_version != (row.version or 0) for chunk in stored):
+                    reason = "index_stale_version"
+                elif any(chunk.embedding_model != expected_model or chunk.embedding_dimension != expected_dim
+                         for chunk in stored):
+                    reason = "embedding_config_changed"
+            if reason is None:
+                skipped += 1
+                continue
+            index_reasons[reason] = index_reasons.get(reason, 0) + 1
+            identity = (row.id, row.version) if row is not None else (item["id"], 0)
+            try:
+                if row is None:
+                    row = CulturalKnowledge(id=item["id"], story_id="suzhou-pingjiang")
+                    db.add(row)
+                    created += 1
+                else:
+                    updated += 1
+                row.location_id = item["location_id"] or row.location_id
+                row.title = item["title"]
+                row.content = item["content"]
+                row.content_type = item["content_type"]
+                row.source = item["source"]
+                row.source_url = item["source_url"]
+                row.license = item["license"]
+                row.review_status = item["review_status"]
+                row.reviewer = item["reviewer"]
+                row.reviewed_at = datetime.fromisoformat(item["reviewed_at"])
+                row.is_demo = item["is_demo"]
+                row.metadata_json = item["metadata_json"]
+                # 只有内容真的变化才提高版本；纯索引重建不影响内容版本。
+                if reason != "forced" and reason != "embedding_config_changed" and reason != "index_missing":
+                    row.version = (row.version or 0) + 1
+                elif row.version is None:
+                    row.version = 1
+                # 行变更与索引重建同一事务：失败则整体回滚，不留下"已审核但索引不完整"。
+                chunks += rebuild_knowledge(db, row, settings)
+                db.commit()
+            except Exception as error:  # noqa: BLE001 - report every failing entry, keep going
+                db.rollback()
+                failures.append({"id": identity[0], "previous_version": identity[1],
+                                 "error": f"{type(error).__name__}: {error}"})
+        return {"created": created, "updated": updated, "skipped": skipped,
+                "chunks": chunks, "failures": failures, "reindex_reasons": index_reasons,
                 "embedding_provider": settings.embedding_provider,
                 "embedding_model": settings.embedding_model,
                 "embedding_dimension": settings.embedding_dimension}
@@ -215,12 +329,25 @@ def main() -> int:
     parser.add_argument("--reviewer", default="【待确认】参赛团队指定审核人")
     parser.add_argument("--apply", action="store_true", help="write the corpus into the database and publish its index")
     parser.add_argument("--list", action="store_true", help="print the plan and exit without writing anything")
+    parser.add_argument("--expect", type=int, default=None,
+                        help="断言本次变更条数；用于证明重复导入不会再次改动（--expect 0）")
+    parser.add_argument("--reviewed-at", default=None,
+                        help="显式指定审核时间；缺省时沿用已发布语料中的记录，保证复跑幂等")
+    parser.add_argument("--force-reindex", action="store_true",
+                        help="内容未变也强制重建索引；用于嵌入模型/维度变更或修复索引")
     args = parser.parse_args()
     try:
         if args.apply or not args.list:
             if not args.reviewer.strip() or "待确认" in args.reviewer:
                 raise ValueError("REVIEWER_REQUIRED: 正式语料必须填真实审核人署名，不能使用占位符")
-        corpus = build(load_research(args.research), args.reviewer)
+        previous = None
+        if args.output.exists():
+            try:
+                previous = json.loads(args.output.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                previous = None
+        corpus = build(load_research(args.research), args.reviewer,
+                       reviewed_at=args.reviewed_at, previous=previous)
     except (ValueError, OSError, json.JSONDecodeError) as error:
         print(json.dumps({"executed": False, "reason": str(error)}, ensure_ascii=False), file=sys.stderr)
         return 2
@@ -236,8 +363,17 @@ def main() -> int:
         print(json.dumps({"applied": False,
                           "hint": "复跑时加 --apply 才会写入数据库并发布索引"}, ensure_ascii=False))
         return 0
-    result = apply_to_database(corpus)
+    result = apply_to_database(corpus, force_reindex=args.force_reindex)
     print(json.dumps({"applied": True, **result}, ensure_ascii=False))
+    # 任一条目写入或索引失败都必须让调用方看到非零退出码，避免把部分成功当成成功。
+    if result["failures"]:
+        return 1
+    if args.expect is not None and result["created"] + result["updated"] != args.expect:
+        print(json.dumps({"executed": False, "reason":
+                          f"EXPECT_MISMATCH: 期望变更 {args.expect} 条，实际 "
+                          f"{result['created'] + result['updated']} 条（跳过 {result['skipped']} 条）"},
+                         ensure_ascii=False), file=sys.stderr)
+        return 3
     return 0
 
 

@@ -87,7 +87,7 @@ def login(body: Login, request: Request, response: Response):
         raise DomainError("ADMIN_UNAUTHORIZED", "管理员账号或密码不正确。", 401)
     token = jwt.encode({"sub": body.username, "role": "admin", "iat": datetime.now(UTC),
                         "exp": datetime.now(UTC) + timedelta(hours=2)}, settings.admin_jwt_secret, algorithm="HS256")
-    response.set_cookie(COOKIE, token, httponly=True, secure=settings.app_env == "production",
+    response.set_cookie(COOKIE, token, httponly=True, secure=settings.cookie_secure,
                         samesite="strict", max_age=7200, path="/api/admin")
     return {"username": body.username, "expiresIn": 7200}
 

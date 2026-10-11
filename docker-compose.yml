@@ -30,6 +30,10 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?请配置32字符以上随机密钥}
       ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?请配置32字符以上随机密钥}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请配置12字符以上管理员密码}
+      # 本编排以明文 HTTP 暴露前端（127.0.0.1:8080），而 Secure Cookie 不会在 HTTP 上
+      # 回传，会导致登录后所有接口 401、健康检查却正常。因此这里显式关闭；一旦在前面
+      # 加了 HTTPS 终止（Nginx 证书或外部网关），必须删除本行以恢复 Secure。
+      SESSION_COOKIE_SECURE: "false"
     depends_on:
       db:
         condition: service_healthy
