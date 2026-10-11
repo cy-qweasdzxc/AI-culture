@@ -9,7 +9,9 @@ export default function SettingsPage() {
   const mode = useJourney((s) => s.mode)
   const setMode = useJourney((s) => s.setMode)
   const state = useJourney((s) => s.state)
-  const resetJourney = useJourney((s) => s.resetJourney)
+  const clearSession = useJourney((s) => s.clearSession)
+  const busy = useJourney((s) => s.busy)
+  const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
 
   const hasJourney = state !== 'CREATED'
@@ -21,24 +23,31 @@ export default function SettingsPage() {
       <section className="card mt-6 p-6">
         <h2 className="font-serif text-lg font-bold text-inkgreen">体验模式</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          当前模式：<strong>{mode === 'virtual' ? '虚拟游览' : '实地探索'}</strong>。两种模式剧情内容一致，可随时切换。
+          当前模式：<strong>{mode === 'virtual' ? '虚拟游览' : '实地探索'}</strong>
+          。两种模式剧情内容一致，可随时切换。
         </p>
         <div className="mt-3 flex gap-2" role="group" aria-label="切换体验模式">
           <button
             type="button"
-            onClick={() => setMode('virtual')}
-            disabled={!hasJourney}
+            onClick={() => void setMode('virtual').catch((err: Error) => setError(err.message))}
+            disabled={!hasJourney || busy}
             aria-pressed={mode === 'virtual'}
-            className={cn('chip min-h-9 px-4', mode === 'virtual' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft')}
+            className={cn(
+              'chip min-h-9 px-4',
+              mode === 'virtual' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft',
+            )}
           >
             虚拟游览
           </button>
           <button
             type="button"
-            onClick={() => setMode('onsite')}
-            disabled={!hasJourney}
+            onClick={() => void setMode('onsite').catch((err: Error) => setError(err.message))}
+            disabled={!hasJourney || busy}
             aria-pressed={mode === 'onsite'}
-            className={cn('chip min-h-9 px-4', mode === 'onsite' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft')}
+            className={cn(
+              'chip min-h-9 px-4',
+              mode === 'onsite' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft',
+            )}
           >
             实地探索
           </button>
@@ -48,11 +57,21 @@ export default function SettingsPage() {
       <section className="card mt-5 p-6">
         <h2 className="font-serif text-lg font-bold text-inkgreen">定位与隐私</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink-soft">
-          <li>定位仅用于实地模式的点位触发校验（约 120-150 米半径），在浏览器本地完成，不长期保存原始坐标。</li>
-          <li>平台不需要注册：旅程数据保存在你自己的浏览器中（localStorage），清除后不可恢复。</li>
+          <li>
+            仅在授权后读取浏览器坐标，提交服务端计算距离和定位精度，不保存原始坐标。浏览器位置可被模拟，此校验不构成可信位置证明。
+          </li>
+          <li>
+            平台不需要注册：HttpOnly Cookie
+            关联匿名会话，旅程进度保存在服务端，刷新后可恢复。清除操作删除当前会话及其旅程记录。
+          </li>
           <li>若拒绝定位授权，可随时切换为虚拟游览模式，不影响任何剧情内容。</li>
         </ul>
-        <button type="button" className="btn-secondary mt-4" disabled={!hasJourney} onClick={() => setConfirming(true)}>
+        <button
+          type="button"
+          className="btn-secondary mt-4"
+          disabled={!hasJourney || busy}
+          onClick={() => setConfirming(true)}
+        >
           清除全部旅程数据
         </button>
       </section>
@@ -60,14 +79,21 @@ export default function SettingsPage() {
       <section className="card mt-5 p-6">
         <h2 className="font-serif text-lg font-bold text-inkgreen">AI 说明</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          NPC 对话采用检索增强生成（RAG）：先检索人工审核过的文化资料，再生成角色化回答，回答附证据编号；
-          证据不足或超出知识边界时，NPC 使用固定话术拒答。正式版本中，任务、道具、图鉴与结局的任何变化都必须经服务端状态机校验，AI
+          NPC
+          对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。文化资料未经人工审核时，不用于正式文化回答。
+          证据不足或超出知识边界时，NPC
+          使用固定话术拒答。任务、道具、图鉴与结局的任何变化都必须经服务端状态机校验，AI
           无权直接修改。
         </p>
         <div className="mt-4">
           <DemoDataNotice />
         </div>
       </section>
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
 
       {confirming ? (
         <div
@@ -81,7 +107,7 @@ export default function SettingsPage() {
               确认清除全部数据？
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              将删除本浏览器中的旅程进度、线索、图鉴解锁与对话记录，且不可恢复。
+              将删除当前匿名会话及其服务端旅程进度、线索、图鉴解锁与对话记录，且不可恢复。
             </p>
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" className="btn-ghost" onClick={() => setConfirming(false)}>
@@ -90,10 +116,15 @@ export default function SettingsPage() {
               <button
                 type="button"
                 className="btn bg-danger text-white hover:opacity-90"
-                onClick={() => {
-                  resetJourney()
-                  setConfirming(false)
-                  navigate('/')
+                disabled={busy}
+                onClick={async () => {
+                  try {
+                    await clearSession()
+                    setConfirming(false)
+                    navigate('/')
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : '清除失败。')
+                  }
                 }}
               >
                 确认清除

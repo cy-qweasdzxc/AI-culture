@@ -2,11 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MapView from '@/components/MapView'
 import SchematicMap from '@/components/SchematicMap'
-import { spotById, spots } from '@/data/theme'
 import { useJourney } from '@/engine/journeyStore'
 import type { SpotStatus } from '@/types'
 import { cn } from '@/utils/cn'
-import { distanceM, wgs84ToGcj02 } from '@/utils/coordTransform'
 
 const statusMeta: Record<SpotStatus, { icon: string; label: string; cls: string }> = {
   undiscovered: { icon: '？', label: '未发现', cls: 'border-line bg-paper-deep text-bluegray' },
@@ -21,19 +19,26 @@ export default function MapPage() {
   const mode = useJourney((s) => s.mode)
   const setMode = useJourney((s) => s.setMode)
   const arriveSpot = useJourney((s) => s.arriveSpot)
+  const spots = useJourney((s) => s.spots)
+  const busy = useJourney((s) => s.busy)
+  const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
 
-  const selected = selectedId ? spotById.get(selectedId) : undefined
+  const selected = spots.find((spot) => spot.id === selectedId)
   const selectedStatus = selectedId ? (spotStatus[selectedId] ?? 'undiscovered') : undefined
 
-  const doArriveVirtual = (spotId: string) => {
-    const ok = arriveSpot(spotId)
-    setFeedback(ok ? null : '这个点位尚未解锁，先完成前一个点位的任务。')
-    if (ok) navigate(`/spot/${spotId}`)
+  const doArriveVirtual = async (spotId: string) => {
+    try {
+      await arriveSpot(spotId)
+      setFeedback(null)
+      navigate(`/spot/${spotId}`)
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : '点位触发失败。')
+    }
   }
 
   const doLocate = () => {
@@ -45,15 +50,19 @@ export default function MapPage() {
     setLocating(true)
     setFeedback(null)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false)
-        const gcj = wgs84ToGcj02(pos.coords.latitude, pos.coords.longitude)
-        const d = distanceM(gcj.lat, gcj.lng, selected.lat, selected.lng)
-        if (d <= selected.triggerRadiusM) {
-          arriveSpot(selectedId)
+      async (pos) => {
+        try {
+          await arriveSpot(selectedId, {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy_m: pos.coords.accuracy,
+            coordinate_system: 'wgs84',
+          })
           navigate(`/spot/${selectedId}`)
-        } else {
-          setFeedback(`你距离「${selected.name}」约 ${Math.round(d)} 米，超出 ${selected.triggerRadiusM} 米触发范围，再走近一些。`)
+        } catch (error) {
+          setFeedback(error instanceof Error ? error.message : '定位触发失败。')
+        } finally {
+          setLocating(false)
         }
       },
       () => {
@@ -71,16 +80,24 @@ export default function MapPage() {
         <div className="flex items-center gap-2 text-sm" role="group" aria-label="体验模式切换">
           <button
             type="button"
-            onClick={() => setMode('virtual')}
-            className={cn('chip min-h-8 px-3', mode === 'virtual' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft')}
+            disabled={busy}
+            onClick={() => void setMode('virtual').catch(() => undefined)}
+            className={cn(
+              'chip min-h-8 px-3',
+              mode === 'virtual' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft',
+            )}
             aria-pressed={mode === 'virtual'}
           >
             虚拟游览
           </button>
           <button
             type="button"
-            onClick={() => setMode('onsite')}
-            className={cn('chip min-h-8 px-3', mode === 'onsite' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft')}
+            disabled={busy}
+            onClick={() => void setMode('onsite').catch(() => undefined)}
+            className={cn(
+              'chip min-h-8 px-3',
+              mode === 'onsite' ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft',
+            )}
             aria-pressed={mode === 'onsite'}
           >
             实地探索
@@ -111,13 +128,21 @@ export default function MapPage() {
                   aria-label={`${s.name}，${meta.label}`}
                 >
                   <span
-                    className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold', meta.cls)}
+                    className={cn(
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold',
+                      meta.cls,
+                    )}
                     aria-hidden
                   >
                     {meta.icon}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={cn('block truncate text-sm font-medium', locked ? 'text-bluegray' : 'text-ink')}>
+                    <span
+                      className={cn(
+                        'block truncate text-sm font-medium',
+                        locked ? 'text-bluegray' : 'text-ink',
+                      )}
+                    >
                       {locked ? '？？？' : s.name}
                     </span>
                     <span className="block text-xs text-bluegray">{meta.label}</span>
@@ -127,14 +152,32 @@ export default function MapPage() {
               </li>
             )
           })}
+          {Array.from({ length: Math.max(0, totalSpots - spots.length) }, (_, i) => (
+            <li
+              key={`locked-${i}`}
+              className="rounded-lg border border-dashed border-line p-3 text-sm text-bluegray"
+            >
+              ？ 未发现 · 完成前一站后解锁
+            </li>
+          ))}
         </ol>
 
         {/* 中：地图（在线或示意降级） */}
         <div className="card order-1 h-[420px] overflow-hidden lg:order-2 lg:h-[560px]">
           {mapError ? (
-            <SchematicMap spotStatus={spotStatus} reason={mapError} onSpotClick={(id) => setSelectedId(id)} />
+            <SchematicMap
+              spots={spots}
+              spotStatus={spotStatus}
+              reason={mapError}
+              onSpotClick={(id) => setSelectedId(id)}
+            />
           ) : (
-            <MapView spotStatus={spotStatus} onSpotClick={(id) => setSelectedId(id)} onUnavailable={(r) => setMapError(r)} />
+            <MapView
+              spots={spots}
+              spotStatus={spotStatus}
+              onSpotClick={(id) => setSelectedId(id)}
+              onUnavailable={(r) => setMapError(r)}
+            />
           )}
         </div>
 
@@ -144,28 +187,51 @@ export default function MapPage() {
             <div className="card anim-fade-rise p-5" key={selected.id}>
               <div className="flex items-center justify-between">
                 <h2 className="font-serif text-lg font-bold text-ink">{selected.name}</h2>
-                <span className={cn('chip border', statusMeta[selectedStatus].cls)}>{statusMeta[selectedStatus].label}</span>
+                <span className={cn('chip border', statusMeta[selectedStatus].cls)}>
+                  {statusMeta[selectedStatus].label}
+                </span>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">{selected.intro}</p>
+              <p className="mt-2 text-xs text-bluegray">
+                演示路线 · 点位坐标为近似值，精确位置【待核实】。
+              </p>
 
               <div className="mt-4 space-y-2">
                 {selectedStatus === 'discovered' && mode === 'virtual' ? (
-                  <button type="button" className="btn-primary w-full" onClick={() => doArriveVirtual(selected.id)}>
+                  <button
+                    type="button"
+                    className="btn-primary w-full"
+                    disabled={busy}
+                    onClick={() => doArriveVirtual(selected.id)}
+                  >
                     到达此点（虚拟游览）
                   </button>
                 ) : null}
                 {selectedStatus === 'discovered' && mode === 'onsite' ? (
-                  <button type="button" className="btn-primary w-full" disabled={locating} onClick={doLocate}>
+                  <button
+                    type="button"
+                    className="btn-primary w-full"
+                    disabled={locating || busy}
+                    onClick={doLocate}
+                  >
                     {locating ? '正在定位…' : '使用我的位置到达'}
                   </button>
                 ) : null}
                 {selectedStatus === 'current' || selectedStatus === 'completed' ? (
                   <>
-                    <button type="button" className="btn-primary w-full" onClick={() => navigate(`/spot/${selected.id}`)}>
+                    <button
+                      type="button"
+                      className="btn-primary w-full"
+                      onClick={() => navigate(`/spot/${selected.id}`)}
+                    >
                       进入点位剧情
                     </button>
                     {selected.npcId ? (
-                      <button type="button" className="btn-secondary w-full" onClick={() => navigate(`/chat/${selected.npcId}`)}>
+                      <button
+                        type="button"
+                        className="btn-secondary w-full"
+                        onClick={() => navigate(`/chat/${selected.npcId}`)}
+                      >
                         与 NPC 对话
                       </button>
                     ) : null}
@@ -175,13 +241,18 @@ export default function MapPage() {
               </div>
 
               {feedback ? (
-                <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-xs leading-relaxed text-ink-soft" role="status">
+                <p
+                  className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-xs leading-relaxed text-ink-soft"
+                  role="status"
+                >
                   {feedback}
                 </p>
               ) : null}
               {selectedStatus === 'discovered' ? (
                 <p className="mt-3 text-xs text-bluegray">
-                  {mode === 'virtual' ? '虚拟模式：点击上方按钮即可到达。' : `实地模式：进入 ${selected.triggerRadiusM} 米范围后触发。`}
+                  {mode === 'virtual'
+                    ? '虚拟模式：点击上方按钮即可到达。'
+                    : `实地模式：进入 ${selected.triggerRadiusM} 米范围后触发。`}
                 </p>
               ) : null}
             </div>

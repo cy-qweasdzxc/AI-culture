@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { roles } from '@/data/roles'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -9,12 +8,20 @@ export default function DemoPage() {
   const navigate = useNavigate()
   const startJourney = useJourney((s) => s.startJourney)
   const resetJourney = useJourney((s) => s.resetJourney)
-  const [roleId, setRoleId] = useState(roles[0].id)
+  const roles = useJourney((s) => s.roles)
+  const busy = useJourney((s) => s.busy)
+  const [error, setError] = useState<string | null>(null)
+  const [roleId, setRoleId] = useState(roles[0]?.id ?? 'scholar')
 
-  const start = () => {
-    resetJourney()
-    startJourney(roleId, 'virtual')
-    navigate('/map')
+  const start = async () => {
+    try {
+      setError(null)
+      if (useJourney.getState().journeyId) await resetJourney()
+      await startJourney(roleId, 'virtual')
+      navigate('/map')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '创建演示旅程失败。')
+    }
   }
 
   return (
@@ -22,8 +29,8 @@ export default function DemoPage() {
       <p className="text-sm font-medium text-bronze">比赛演示 · 无需定位</p>
       <h1 className="mt-2 font-serif text-3xl font-bold text-ink">三分钟走完这条路线</h1>
       <p className="mt-4 max-w-prose text-sm leading-relaxed text-ink-soft">
-        演示模式固定为虚拟游览：点击地图即可到达点位，与 NPC 对话收集证据，解开六道谜题，在尾声做出选择并生成报告。
-        以下为演示准备的快捷路径：
+        演示模式固定为虚拟游览：点击地图即可到达点位，与 NPC
+        对话收集证据，解开六道谜题，在尾声做出选择并生成报告。 以下为演示准备的快捷路径：
       </p>
 
       <ol className="mt-6 space-y-2 text-sm text-ink-soft">
@@ -56,7 +63,13 @@ export default function DemoPage() {
                 roleId === r.id ? 'border-cinnabar ring-2 ring-cinnabar/25' : 'hover:border-bronze',
               )}
             >
-              <input type="radio" name="demo-role" className="sr-only" checked={roleId === r.id} onChange={() => setRoleId(r.id)} />
+              <input
+                type="radio"
+                name="demo-role"
+                className="sr-only"
+                checked={roleId === r.id}
+                onChange={() => setRoleId(r.id)}
+              />
               <span className="block font-medium text-ink">{r.name}</span>
               <span className="mt-1 block text-xs text-bluegray">{r.tagline}</span>
             </label>
@@ -64,10 +77,17 @@ export default function DemoPage() {
         </div>
       </fieldset>
 
-      <button type="button" className="btn-primary mt-8" onClick={start}>
-        进入演示
+      <button type="button" className="btn-primary mt-8" disabled={busy} onClick={start}>
+        {busy ? '正在创建…' : '进入演示'}
       </button>
-      <p className="mt-3 text-xs text-bluegray">进入演示会覆盖当前浏览器中已有的旅程进度。</p>
+      {error ? (
+        <p role="alert" className="mt-3 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
+      <p className="mt-3 text-xs text-bluegray">
+        进入演示会重置当前匿名会话的服务端旅程。模型与资料模式将在对话中标明。
+      </p>
     </div>
   )
 }

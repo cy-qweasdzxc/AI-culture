@@ -1,4 +1,4 @@
-import { knowledgeTypeLabel } from '@/data/codex'
+import { knowledgeTypeLabel } from '@/data/knowledgeLabels'
 import type { KnowledgeType } from '@/types'
 import { cn } from '@/utils/cn'
 
@@ -17,7 +17,11 @@ export default function TypeTag({ type, className }: { type: KnowledgeType; clas
   const c = config[type]
   return (
     <span
-      className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium', c.className, className)}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
+        c.className,
+        className,
+      )}
     >
       <span aria-hidden>{c.icon}</span>
       {knowledgeTypeLabel[type]}

@@ -1,7 +1,4 @@
 import { useState } from 'react'
-import { clueById } from '@/data/clues'
-import { npcs } from '@/data/npcs'
-import { spotById } from '@/data/theme'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -22,9 +19,12 @@ function relationLevel(messageCount: number): { label: string; cls: string } {
 export default function CluesPage() {
   const inventory = useJourney((s) => s.inventory)
   const messages = useJourney((s) => s.messages)
+  const clues = useJourney((s) => s.clues)
+  const npcs = useJourney((s) => s.npcs)
+  const spots = useJourney((s) => s.spots)
   const [tab, setTab] = useState<Tab>('clue')
 
-  const items = inventory.map((id) => clueById.get(id)).filter(Boolean)
+  const items = clues.filter((item) => inventory.includes(item.id))
   const filtered = items.filter((c) => (tab === 'relation' ? false : c!.kind === tab))
 
   return (
@@ -42,7 +42,9 @@ export default function CluesPage() {
             onClick={() => setTab(t.key)}
             className={cn(
               'min-h-11 border-b-2 px-4 text-sm transition-colors',
-              tab === t.key ? 'border-cinnabar font-medium text-cinnabar' : 'border-transparent text-ink-soft hover:text-ink',
+              tab === t.key
+                ? 'border-cinnabar font-medium text-cinnabar'
+                : 'border-transparent text-ink-soft hover:text-ink',
             )}
           >
             {t.label}
@@ -54,7 +56,9 @@ export default function CluesPage() {
         filtered.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-sm text-bluegray">
-              {tab === 'clue' ? '还没有线索。去和 NPC 聊聊，或完成任务。' : '还没有道具。角色初始道具和任务奖励会出现在这里。'}
+              {tab === 'clue'
+                ? '还没有线索。去和 NPC 聊聊，或完成任务。'
+                : '还没有道具。角色初始道具和任务奖励会出现在这里。'}
             </p>
           </div>
         ) : (
@@ -66,7 +70,11 @@ export default function CluesPage() {
                   <span className="chip text-bluegray">{c!.kind === 'clue' ? '线索' : '道具'}</span>
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{c!.description}</p>
-                {c!.fromSpotId ? <p className="mt-2 text-xs text-bluegray">来自：{spotById.get(c!.fromSpotId)?.name}</p> : null}
+                {c!.fromSpotId ? (
+                  <p className="mt-2 text-xs text-bluegray">
+                    来自：{spots.find((spot) => spot.id === c!.fromSpotId)?.name ?? '旅程点位'}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>

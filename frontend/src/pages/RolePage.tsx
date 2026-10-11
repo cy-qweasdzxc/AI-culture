@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { roles } from '@/data/roles'
 import { useJourney } from '@/engine/journeyStore'
 import type { JourneyMode } from '@/types'
 import { cn } from '@/utils/cn'
@@ -10,6 +9,9 @@ export default function RolePage() {
   const state = useJourney((s) => s.state)
   const startJourney = useJourney((s) => s.startJourney)
   const resetJourney = useJourney((s) => s.resetJourney)
+  const roles = useJourney((s) => s.roles)
+  const busy = useJourney((s) => s.busy)
+  const [error, setError] = useState<string | null>(null)
 
   const [roleId, setRoleId] = useState<string | null>(null)
   const [mode, setMode] = useState<JourneyMode>('virtual')
@@ -17,11 +19,16 @@ export default function RolePage() {
 
   const hasJourney = state !== 'CREATED'
 
-  const doStart = () => {
+  const doStart = async () => {
     if (!roleId) return
-    if (hasJourney) resetJourney()
-    startJourney(roleId, mode)
-    navigate('/map')
+    try {
+      setError(null)
+      if (hasJourney) await resetJourney()
+      await startJourney(roleId, mode)
+      navigate('/map')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '创建旅程失败。')
+    }
   }
 
   const onStartClick = () => {
@@ -34,8 +41,8 @@ export default function RolePage() {
     <div className="mx-auto max-w-6xl px-4 py-12">
       <h1 className="font-serif text-3xl font-bold text-ink">选择你的身份</h1>
       <p className="mt-3 max-w-prose text-sm leading-relaxed text-ink-soft">
-        角色不只是头像：它决定 NPC 怎么称呼你、你带着什么线索上路、能听到哪些对话，甚至影响结局的措辞。
-        三位角色均为虚构身份。
+        角色不只是头像：它决定 NPC
+        怎么称呼你、你带着什么线索上路、能听到哪些对话，甚至影响结局的措辞。 三位角色均为虚构身份。
       </p>
 
       <div className="mt-8 grid gap-5 md:grid-cols-3" role="radiogroup" aria-label="玩家角色">
@@ -84,7 +91,9 @@ export default function RolePage() {
           <label
             className={cn(
               'card flex cursor-pointer gap-3 p-5',
-              mode === 'virtual' ? 'border-cinnabar ring-2 ring-cinnabar/25' : 'hover:border-bronze',
+              mode === 'virtual'
+                ? 'border-cinnabar ring-2 ring-cinnabar/25'
+                : 'hover:border-bronze',
             )}
           >
             <input
@@ -125,11 +134,22 @@ export default function RolePage() {
       </fieldset>
 
       <div className="mt-10 flex items-center gap-4">
-        <button type="button" className="btn-primary" disabled={!roleId} onClick={onStartClick}>
-          创建旅程，开始体验
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={!roleId || busy}
+          onClick={onStartClick}
+        >
+          {busy ? '正在创建旅程…' : '创建旅程，开始体验'}
         </button>
         {!roleId ? <span className="text-sm text-bluegray">先选择一位角色</span> : null}
       </div>
+
+      {error ? (
+        <p className="mt-4 text-sm text-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       {/* 覆盖确认 */}
       {confirming ? (
@@ -143,12 +163,14 @@ export default function RolePage() {
             <h2 id="restart-title" className="font-serif text-lg font-bold text-ink">
               已有进行中的旅程
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">重新开始会清空当前旅程的进度、线索与图鉴解锁记录。</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              重新开始会清空当前旅程的进度、线索与图鉴解锁记录。
+            </p>
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" className="btn-ghost" onClick={() => setConfirming(false)}>
                 继续原旅程
               </button>
-              <button type="button" className="btn-primary" onClick={doStart}>
+              <button type="button" className="btn-primary" disabled={busy} onClick={doStart}>
                 清空并重新开始
               </button>
             </div>

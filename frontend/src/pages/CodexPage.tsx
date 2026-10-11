@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import Drawer from '@/components/Drawer'
 import TypeTag from '@/components/TypeTag'
-import { codexEntries, knowledgeTypeLabel } from '@/data/codex'
-import { spotById } from '@/data/theme'
+import DemoDataNotice from '@/components/DemoDataNotice'
+import { knowledgeTypeLabel } from '@/data/knowledgeLabels'
 import { useJourney } from '@/engine/journeyStore'
 import type { KnowledgeType } from '@/types'
 import { cn } from '@/utils/cn'
@@ -18,24 +18,30 @@ const typeFilters: { key: KnowledgeType | 'all'; label: string }[] = [
 export default function CodexPage() {
   const unlockedCodex = useJourney((s) => s.unlockedCodex)
   const state = useJourney((s) => s.state)
+  const codexEntries = useJourney((s) => s.codexEntries)
+  const total = useJourney((s) => s.codexTotal)
+  const spots = useJourney((s) => s.spots)
 
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<KnowledgeType | 'all'>('all')
   const [detailId, setDetailId] = useState<string | null>(null)
 
   const unlocked = codexEntries.filter((e) => unlockedCodex.includes(e.id))
-  const locked = codexEntries.filter((e) => !unlockedCodex.includes(e.id))
+  const lockedCount = Math.max(0, total - unlocked.length)
 
   const visibleUnlocked = useMemo(() => {
     const q = query.trim()
     return unlocked.filter((e) => {
       if (typeFilter !== 'all' && e.type !== typeFilter) return false
-      if (q && !e.title.includes(q) && !e.summary.includes(q) && !e.content.includes(q)) return false
+      if (q && !e.title.includes(q) && !e.summary.includes(q) && !e.content.includes(q))
+        return false
       return true
     })
   }, [unlocked, query, typeFilter])
 
-  const detail = detailId ? codexEntries.find((e) => e.id === detailId && unlockedCodex.includes(e.id)) : undefined
+  const detail = detailId
+    ? codexEntries.find((e) => e.id === detailId && unlockedCodex.includes(e.id))
+    : undefined
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -43,7 +49,7 @@ export default function CodexPage() {
         <div>
           <h1 className="font-serif text-2xl font-bold text-ink">文化图鉴</h1>
           <p className="mt-2 text-sm text-bluegray">
-            已解锁 {unlocked.length} / {codexEntries.length} 条。每条都标注可信等级与来源；未解锁条目只显示轮廓。
+            已解锁 {unlocked.length} / {total} 条。每条都标注可信等级与来源；未解锁条目只显示轮廓。
           </p>
         </div>
         <div className="w-full sm:w-64">
@@ -67,13 +73,21 @@ export default function CodexPage() {
             type="button"
             onClick={() => setTypeFilter(f.key)}
             aria-pressed={typeFilter === f.key}
-            className={cn('chip min-h-8 px-3', typeFilter === f.key ? 'border-cinnabar bg-cinnabar text-white' : 'text-ink-soft hover:text-ink')}
+            className={cn(
+              'chip min-h-8 px-3',
+              typeFilter === f.key
+                ? 'border-cinnabar bg-cinnabar text-white'
+                : 'text-ink-soft hover:text-ink',
+            )}
           >
             {f.label}
           </button>
         ))}
       </div>
 
+      <div className="mt-4">
+        <DemoDataNotice />
+      </div>
       {state === 'CREATED' ? (
         <div className="mt-10 rounded-md border border-dashed border-line p-10 text-center text-sm text-bluegray">
           还没有开始旅程。开始体验后，解锁的文化条目会出现在这里。
@@ -82,7 +96,9 @@ export default function CodexPage() {
         <>
           {visibleUnlocked.length === 0 ? (
             <p className="mt-10 text-center text-sm text-bluegray">
-              {unlocked.length === 0 ? '还没有解锁任何条目，去完成任务或与 NPC 交谈吧。' : '没有匹配的条目，换个关键词或筛选试试。'}
+              {unlocked.length === 0
+                ? '还没有解锁任何条目，去完成任务或与 NPC 交谈吧。'
+                : '没有匹配的条目，换个关键词或筛选试试。'}
             </p>
           ) : (
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -98,25 +114,31 @@ export default function CodexPage() {
                       <TypeTag type={e.type} />
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-ink-soft">{e.summary}</p>
-                    <p className="mt-3 text-xs text-bluegray">{spotById.get(e.spotId)?.name}</p>
+                    <p className="mt-3 text-xs text-bluegray">
+                      {spots.find((spot) => spot.id === e.spotId)?.name}
+                    </p>
                   </button>
                 </li>
               ))}
             </ul>
           )}
 
-          {locked.length > 0 ? (
+          {lockedCount > 0 ? (
             <section className="mt-10">
-              <h2 className="text-sm font-medium text-bluegray">未解锁（{locked.length}）</h2>
+              <h2 className="text-sm font-medium text-bluegray">未解锁（{lockedCount}）</h2>
               <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {locked.map((e) => (
-                  <li key={e.id} className="rounded-lg border border-dashed border-line bg-paper-deep/40 p-5" aria-label={`未解锁条目，位于${spotById.get(e.spotId)?.name}`}>
+                {Array.from({ length: lockedCount }, (_, i) => (
+                  <li
+                    key={i}
+                    className="rounded-lg border border-dashed border-line bg-paper-deep/40 p-5"
+                    aria-label="未解锁文化条目"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-serif text-base font-bold text-bluegray">？？？</span>
                       <span className="chip text-bluegray">未解锁</span>
                     </div>
                     <p className="mt-2 text-xs text-bluegray">
-                      前往「{spotById.get(e.spotId)?.name}」，完成任务或与 NPC 交谈后解锁
+                      继续探索路线，完成任务或与 NPC 交谈后解锁
                     </p>
                   </li>
                 ))}
@@ -141,9 +163,13 @@ export default function CodexPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h3 className="text-xs font-medium text-ink">来源</h3>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{detail.source}</p>
+              <p className="mt-2 text-xs text-bluegray">
+                {detail.isDemo ? '演示资料 · ' : ''}审核状态：{detail.reviewStatus ?? '待补充'}
+              </p>
             </div>
             <p className="text-xs text-bluegray">
-              所属点位：{spotById.get(detail.spotId)?.name} · 可信等级：{knowledgeTypeLabel[detail.type]}
+              所属点位：{spots.find((spot) => spot.id === detail.spotId)?.name} · 可信等级：
+              {knowledgeTypeLabel[detail.type]}
             </p>
           </div>
         ) : null}

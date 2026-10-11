@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { spots } from '@/data/theme'
-import type { SpotStatus } from '@/types'
+import type { Spot, SpotStatus } from '@/types'
 
 /**
  * 腾讯地图 GL JS 封装（合规底图）。
  * 密钥策略（不内置任何真实密钥）：
  *  - 配置了 VITE_TMAP_KEY：使用用户自行申请的密钥加载（生产部署路径）；
- *  - 未配置：使用 WorkBuddy 代理模式，__WB_HTTP_PORT__ / __WB_TMAP_SECRET__
- *    为运行时占位符，由 WorkBuddy 预览环境自动替换。
+ *  - 未配置：直接降级为示意路线，不访问无密钥代理。
  * 加载失败时通过 onUnavailable 回调让上层降级为示意图。
  */
 
@@ -19,7 +17,10 @@ interface TMapLatLng {
 interface TMapNS {
   Map: new (el: HTMLElement, opts: Record<string, unknown>) => TMapMap
   LatLng: new (lat: number, lng: number) => TMapLatLng
-  MultiMarker: new (opts: Record<string, unknown>) => { setGeometries(g: unknown[]): void; on(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void }
+  MultiMarker: new (opts: Record<string, unknown>) => {
+    setGeometries(g: unknown[]): void
+    on(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void
+  }
   MultiPolyline: new (opts: Record<string, unknown>) => object
   MarkerStyle: new (opts: Record<string, unknown>) => object
   PolylineStyle: new (opts: Record<string, unknown>) => object
@@ -60,9 +61,8 @@ function loadTMap(): Promise<void> {
   loaderPromise = new Promise((resolve, reject) => {
     const key = import.meta.env.VITE_TMAP_KEY as string | undefined
     if (!key) {
-      window._TMapSecurityConfig = {
-        serviceHost: 'http://127.0.0.1:__WB_HTTP_PORT__/_TMapService/_wbt/__WB_TMAP_SECRET__',
-      }
+      reject(new Error('未配置地图密钥'))
+      return
     }
     const script = document.createElement('script')
     script.src = key
@@ -76,12 +76,13 @@ function loadTMap(): Promise<void> {
 }
 
 interface MapViewProps {
+  spots: Spot[]
   spotStatus: Record<string, SpotStatus>
   onSpotClick?: (spotId: string) => void
   onUnavailable: (reason: string) => void
 }
 
-export default function MapView({ spotStatus, onSpotClick, onUnavailable }: MapViewProps) {
+export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<TMapMap | null>(null)
   const markersRef = useRef<{ setGeometries(g: unknown[]): void } | null>(null)
@@ -102,7 +103,12 @@ export default function MapView({ spotStatus, onSpotClick, onUnavailable }: MapV
         new TMap.MultiPolyline({
           map,
           styles: {
-            route: new TMap.PolylineStyle({ color: '#A6352B', width: 3, borderWidth: 1, borderColor: '#ffffff' }),
+            route: new TMap.PolylineStyle({
+              color: '#A6352B',
+              width: 3,
+              borderWidth: 1,
+              borderColor: '#ffffff',
+            }),
           },
           geometries: [
             {
@@ -143,7 +149,7 @@ export default function MapView({ spotStatus, onSpotClick, onUnavailable }: MapV
       mapRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [spots.map((spot) => spot.id).join(',')])
 
   // 点位状态变化 → 更新标记样式
   useEffect(() => {
@@ -157,7 +163,7 @@ export default function MapView({ spotStatus, onSpotClick, onUnavailable }: MapV
         properties: { title: s.name },
       })),
     )
-  }, [spotStatus, ready])
+  }, [spotStatus, spots, ready])
 
   return <div ref={containerRef} className="h-full w-full" aria-label="文化路线地图" />
 }

@@ -1,5 +1,4 @@
-import { spots } from '@/data/theme'
-import type { SpotStatus } from '@/types'
+import type { Spot, SpotStatus } from '@/types'
 import { cn } from '@/utils/cn'
 
 /**
@@ -15,21 +14,50 @@ const NODE_POS = [
   { x: 430, y: 60 },
 ]
 
-const statusStyle: Record<SpotStatus, { ring: string; fill: string; text: string; label: string }> = {
-  undiscovered: { ring: 'stroke-[#8b8b8b]', fill: 'fill-[#e5e2da]', text: 'fill-[#6b6b6b]', label: '未发现' },
-  discovered: { ring: 'stroke-bronze', fill: 'fill-surface', text: 'fill-bronze', label: '已发现' },
-  current: { ring: 'stroke-cinnabar', fill: 'fill-cinnabar', text: 'fill-white', label: '当前点位' },
-  completed: { ring: 'stroke-inkgreen', fill: 'fill-inkgreen', text: 'fill-white', label: '已完成' },
-}
+const statusStyle: Record<SpotStatus, { ring: string; fill: string; text: string; label: string }> =
+  {
+    undiscovered: {
+      ring: 'stroke-[#8b8b8b]',
+      fill: 'fill-[#e5e2da]',
+      text: 'fill-[#6b6b6b]',
+      label: '未发现',
+    },
+    discovered: {
+      ring: 'stroke-bronze',
+      fill: 'fill-surface',
+      text: 'fill-bronze',
+      label: '已发现',
+    },
+    current: {
+      ring: 'stroke-cinnabar',
+      fill: 'fill-cinnabar',
+      text: 'fill-white',
+      label: '当前点位',
+    },
+    completed: {
+      ring: 'stroke-inkgreen',
+      fill: 'fill-inkgreen',
+      text: 'fill-white',
+      label: '已完成',
+    },
+  }
 
 interface SchematicMapProps {
+  spots: Spot[]
   spotStatus: Record<string, SpotStatus>
   reason?: string
   onSpotClick?: (spotId: string) => void
 }
 
-export default function SchematicMap({ spotStatus, reason, onSpotClick }: SchematicMapProps) {
-  const path = NODE_POS.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+export default function SchematicMap({
+  spots,
+  spotStatus,
+  reason,
+  onSpotClick,
+}: SchematicMapProps) {
+  const path = NODE_POS.slice(0, spots.length)
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    .join(' ')
   return (
     <div className="flex h-full flex-col">
       {reason ? (
@@ -56,7 +84,16 @@ export default function SchematicMap({ spotStatus, reason, onSpotClick }: Schema
           strokeLinecap="round"
         />
         {/* 路线 */}
-        <path d={path} fill="none" stroke="var(--cinnabar)" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" className="route-line-draw" style={{ strokeDashoffset: 0 }} />
+        <path
+          d={path}
+          fill="none"
+          stroke="var(--cinnabar)"
+          strokeWidth="2.5"
+          strokeDasharray="6 8"
+          strokeLinecap="round"
+          className="route-line-draw"
+          style={{ strokeDashoffset: 0 }}
+        />
         {spots.map((s, i) => {
           const st = spotStatus[s.id] ?? 'undiscovered'
           const c = statusStyle[st]
@@ -69,6 +106,13 @@ export default function SchematicMap({ spotStatus, reason, onSpotClick }: Schema
               onClick={() => clickable && onSpotClick?.(s.id)}
               className={cn(clickable && 'cursor-pointer')}
               role={clickable ? 'button' : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onKeyDown={(event) => {
+                if (clickable && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault()
+                  onSpotClick?.(s.id)
+                }
+              }}
               aria-label={`${s.name}：${c.label}`}
             >
               <circle r="20" className={cn(c.fill, c.ring)} strokeWidth="2.5" />

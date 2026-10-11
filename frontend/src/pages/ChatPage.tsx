@@ -2,17 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
 import TypeTag from '@/components/TypeTag'
-import { suggestedChoices } from '@/data/chatScripts'
-import { knowledgeById } from '@/data/knowledge'
-import { npcById } from '@/data/npcs'
-import { spotById } from '@/data/theme'
-import { taskById } from '@/data/tasks'
+import { suggestedChoices } from '@/data/chatChoices'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
 export default function ChatPage() {
   const { npcId } = useParams<{ npcId: string }>()
-  const npc = npcId ? npcById.get(npcId) : undefined
+  const npcs = useJourney((s) => s.npcs)
+  const spots = useJourney((s) => s.spots)
+  const tasks = useJourney((s) => s.tasks)
+  const busy = useJourney((s) => s.busy)
+  const npc = npcs.find((item) => item.id === npcId)
 
   const messages = useJourney((s) => (npcId ? (s.messages[npcId] ?? []) : []))
   const sendChat = useJourney((s) => s.sendChat)
@@ -28,18 +28,21 @@ export default function ChatPage() {
   const [contextOpen, setContextOpen] = useState(false)
   const [reportingId, setReportingId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const timerRef = useRef<number | undefined>(undefined)
 
-  const spot = npc ? spotById.get(npc.spotId) : undefined
-  const evidence = evidenceId ? knowledgeById.get(evidenceId) : undefined
+  const currentSpotId = useJourney((s) => s.currentSpotId)
+  const spot =
+    spots.find((item) => item.id === currentSpotId && item.npcId === npcId) ??
+    spots.find((item) => item.id === npc?.spotId)
+  const evidence = messages
+    .flatMap((message) => message.evidence ?? [])
+    .find((item) => item.id === evidenceId)
   const choices = npc ? suggestedChoices(npc.id, (id) => inventory.includes(id)) : []
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages.length, thinking])
-
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
 
   if (!npc) {
     return (
@@ -52,19 +55,22 @@ export default function ChatPage() {
     )
   }
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || thinking) return
-    setInput('')
     setThinking(true)
-    // 模拟"正在检索文化资料"的检索时延；正式版为真实 RAG 调用
-    timerRef.current = window.setTimeout(() => {
-      sendChat(npc.id, trimmed)
+    setError(null)
+    try {
+      await sendChat(npc.id, trimmed)
+      setInput('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '对话请求失败，请重试。')
+    } finally {
       setThinking(false)
-    }, 700)
+    }
   }
 
-  const spotTasks = spot?.taskIds.map((id) => taskById.get(id)).filter(Boolean) ?? []
+  const spotTasks = tasks.filter((task) => task.spotId === spot?.id)
 
   const profilePanel = (
     <div className="space-y-4">
@@ -100,7 +106,10 @@ export default function ChatPage() {
       {spot ? (
         <div>
           <h3 className="text-xs font-medium text-ink">当前位置</h3>
-          <Link to={`/spot/${spot.id}`} className="mt-1 block text-sm text-cinnabar underline underline-offset-4">
+          <Link
+            to={`/spot/${spot.id}`}
+            className="mt-1 block text-sm text-cinnabar underline underline-offset-4"
+          >
             {spot.name}（{spotStatus[spot.id] === 'completed' ? '已完成' : '进行中'}）
           </Link>
         </div>
@@ -111,9 +120,17 @@ export default function ChatPage() {
           {spotTasks.map((t) =>
             t ? (
               <li key={t.id}>
-                <Link to={`/task/${t.id}`} className="flex items-center justify-between rounded border border-line px-2.5 py-1.5 text-sm hover:border-bronze">
+                <Link
+                  to={`/task/${t.id}`}
+                  className="flex items-center justify-between rounded border border-line px-2.5 py-1.5 text-sm hover:border-bronze"
+                >
                   <span className="text-ink">{t.title}</span>
-                  <span className={cn('text-xs', taskStates[t.id]?.status === 'completed' ? 'text-inkgreen' : 'text-bluegray')}>
+                  <span
+                    className={cn(
+                      'text-xs',
+                      taskStates[t.id]?.status === 'completed' ? 'text-inkgreen' : 'text-bluegray',
+                    )}
+                  >
                     {taskStates[t.id]?.status === 'completed' ? '✓' : '未完成'}
                   </span>
                 </Link>
@@ -124,7 +141,12 @@ export default function ChatPage() {
       </div>
       <div>
         <h3 className="text-xs font-medium text-ink">背包里的线索</h3>
-        <p className="mt-1.5 text-sm text-bluegray">{inventory.length} 件 · <Link to="/clues" className="text-cinnabar underline underline-offset-4">查看背包</Link></p>
+        <p className="mt-1.5 text-sm text-bluegray">
+          {inventory.length} 件 ·{' '}
+          <Link to="/clues" className="text-cinnabar underline underline-offset-4">
+            查看背包
+          </Link>
+        </p>
       </div>
     </div>
   )
@@ -140,20 +162,35 @@ export default function ChatPage() {
           <header className="flex items-center justify-between border-b border-line px-4 py-3">
             <div>
               <h1 className="font-serif text-base font-bold text-ink">
-                与{npc.name}对话{spot ? <span className="ml-2 text-xs font-normal text-bluegray">{spot.name}</span> : null}
+                与{npc.name}对话
+                {spot ? (
+                  <span className="ml-2 text-xs font-normal text-bluegray">{spot.name}</span>
+                ) : null}
               </h1>
             </div>
             <div className="flex gap-2 lg:hidden">
-              <button type="button" className="btn-ghost min-h-9 px-2 py-1 text-xs" onClick={() => setProfileOpen(true)}>
+              <button
+                type="button"
+                className="btn-ghost min-h-9 px-2 py-1 text-xs"
+                onClick={() => setProfileOpen(true)}
+              >
                 档案
               </button>
-              <button type="button" className="btn-ghost min-h-9 px-2 py-1 text-xs" onClick={() => setContextOpen(true)}>
+              <button
+                type="button"
+                className="btn-ghost min-h-9 px-2 py-1 text-xs"
+                onClick={() => setContextOpen(true)}
+              >
                 任务
               </button>
             </div>
           </header>
 
-          <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
+          <div
+            ref={listRef}
+            className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
+            aria-live="polite"
+          >
             <div className="anim-fade-rise flex justify-start">
               <div className="max-w-[85%] rounded-lg rounded-tl-none bg-paper-deep px-3.5 py-2.5 text-sm leading-relaxed text-ink">
                 {npc.greeting}
@@ -170,18 +207,35 @@ export default function ChatPage() {
               }
               const isUser = m.from === 'user'
               return (
-                <div key={m.id} className={cn('anim-fade-rise flex', isUser ? 'justify-end' : 'justify-start')}>
+                <div
+                  key={m.id}
+                  className={cn('anim-fade-rise flex', isUser ? 'justify-end' : 'justify-start')}
+                >
                   <div
                     className={cn(
                       'max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed',
-                      isUser ? 'rounded-tr-none bg-cinnabar text-white' : 'rounded-tl-none bg-paper-deep text-ink',
+                      isUser
+                        ? 'rounded-tr-none bg-cinnabar text-white'
+                        : 'rounded-tl-none bg-paper-deep text-ink',
                     )}
                   >
                     <p className="whitespace-pre-wrap">{m.text}</p>
+                    {!isUser ? (
+                      <p className="mt-2 text-xs text-bluegray">
+                        {m.provider === 'none'
+                          ? '规则拒答 · 未调用模型'
+                          : m.mock || m.provider === 'mock'
+                            ? 'Mock 模型 · 开发演示'
+                            : m.provider
+                              ? `模型提供方：${m.provider}`
+                              : '服务端回答'}
+                        {m.dataScope ? ` · 资料范围：${m.dataScope}` : ''}
+                      </p>
+                    ) : null}
                     {!isUser && m.evidenceIds && m.evidenceIds.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1.5 border-t border-line/60 pt-2">
                         {m.evidenceIds.map((eid) => {
-                          const ev = knowledgeById.get(eid)
+                          const ev = m.evidence?.find((item) => item.id === eid)
                           if (!ev) return null
                           return (
                             <button
@@ -215,7 +269,10 @@ export default function ChatPage() {
 
             {thinking ? (
               <div className="anim-fade-rise flex justify-start">
-                <div className="rounded-lg rounded-tl-none bg-paper-deep px-3.5 py-2.5 text-sm text-bluegray" role="status">
+                <div
+                  className="rounded-lg rounded-tl-none bg-paper-deep px-3.5 py-2.5 text-sm text-bluegray"
+                  role="status"
+                >
                   正在检索文化资料<span className="animate-pulse">…</span>
                 </div>
               </div>
@@ -229,7 +286,7 @@ export default function ChatPage() {
                 <button
                   key={c}
                   type="button"
-                  disabled={thinking}
+                  disabled={thinking || busy}
                   onClick={() => send(c)}
                   className="chip shrink-0 border-bronze/40 bg-surface px-3 py-1.5 text-ink-soft hover:border-bronze hover:text-ink"
                 >
@@ -257,12 +314,21 @@ export default function ChatPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder={`问${npc.name}一个与「${npc.knowledgeScope.slice(0, 12)}…」相关的问题`}
               maxLength={200}
-              disabled={thinking}
+              disabled={thinking || busy}
             />
-            <button type="submit" className="btn-primary shrink-0" disabled={thinking || !input.trim()}>
+            <button
+              type="submit"
+              className="btn-primary shrink-0"
+              disabled={thinking || busy || !input.trim()}
+            >
               发送
             </button>
           </form>
+          {error ? (
+            <p className="border-t border-line px-4 py-2 text-sm text-danger" role="alert">
+              {error}
+            </p>
+          ) : null}
         </section>
 
         {/* 右：上下文（桌面端） */}
@@ -278,7 +344,11 @@ export default function ChatPage() {
       </Drawer>
 
       {/* 证据详情抽屉 */}
-      <Drawer open={!!evidence} onClose={() => setEvidenceId(null)} title={evidence ? '证据来源' : ''}>
+      <Drawer
+        open={!!evidence}
+        onClose={() => setEvidenceId(null)}
+        title={evidence ? '证据来源' : ''}
+      >
         {evidence ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
@@ -289,6 +359,19 @@ export default function ChatPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
+              {evidence.source_url || evidence.sourceUrl ? (
+                <a
+                  className="mt-2 block text-xs text-cinnabar underline"
+                  href={evidence.source_url ?? evidence.sourceUrl ?? undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  查看来源页面
+                </a>
+              ) : null}
+              <p className="mt-2 text-xs text-bluegray">
+                审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
+              </p>
             </div>
           </div>
         ) : null}
@@ -297,7 +380,8 @@ export default function ChatPage() {
       {/* 纠错反馈 */}
       <Drawer open={!!reportingId} onClose={() => setReportingId(null)} title="纠错反馈">
         <p className="text-sm leading-relaxed text-ink-soft">
-          指出 AI 回答中可能不准确的地方，会写入对话审核队列，由内容审核人员核对。这正是在帮助系统变得更可靠。
+          指出 AI
+          回答中可能不准确的地方，会写入对话审核队列，由内容审核人员核对。这正是在帮助系统变得更可靠。
         </p>
         <label htmlFor="report-reason" className="mt-4 block text-sm font-medium text-ink">
           问题描述
@@ -314,9 +398,13 @@ export default function ChatPage() {
           type="button"
           className="btn-primary mt-4"
           disabled={reportReason.trim().length < 4}
-          onClick={() => {
-            if (reportingId) reportIssue(npc.id, reportingId, reportReason.trim())
-            setReportingId(null)
+          onClick={async () => {
+            try {
+              if (reportingId) await reportIssue(npc.id, reportingId, reportReason.trim())
+              setReportingId(null)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : '纠错提交失败。')
+            }
           }}
         >
           提交纠错

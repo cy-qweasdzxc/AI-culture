@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import ProgressBar from '@/components/ProgressBar'
-import { roleById } from '@/data/roles'
 import { selectCompletedTaskCount, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -17,7 +16,9 @@ export default function JourneyLayout() {
   const roleId = useJourney((s) => s.roleId)
   const mode = useJourney((s) => s.mode)
   const done = useJourney(selectCompletedTaskCount)
-  const role = roleId ? roleById.get(roleId) : undefined
+  const roles = useJourney((s) => s.roles)
+  const totalTasks = useJourney((s) => s.report?.totalTaskCount ?? 6)
+  const role = roles.find((item) => item.id === roleId)
 
   return (
     <div className="flex min-h-screen flex-col pb-16 md:pb-0">
@@ -50,7 +51,7 @@ export default function JourneyLayout() {
               {mode === 'virtual' ? '虚拟游览' : '实地探索'}
             </span>
             <div className="w-28 sm:w-40">
-              <ProgressBar value={done} max={6} label="任务" />
+              <ProgressBar value={done} max={totalTasks} label="任务" />
             </div>
             <span className="shrink-0 text-sm text-ink-soft">{role ? `${role.name}` : ''}</span>
           </div>
@@ -62,7 +63,10 @@ export default function JourneyLayout() {
       </main>
 
       {/* 移动端底部五项导航 */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface md:hidden" aria-label="旅程导航">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface md:hidden"
+        aria-label="旅程导航"
+      >
         <div className="grid grid-cols-5">
           {tabs.map((t) => (
             <NavLink

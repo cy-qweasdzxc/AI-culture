@@ -1,7 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
 import SealMark from '@/components/SealMark'
-import { endingById } from '@/data/endings'
-import { roleById } from '@/data/roles'
 import { selectKnowledgeScore, selectMaxScore, useJourney } from '@/engine/journeyStore'
 
 export default function EndingPage() {
@@ -11,16 +9,25 @@ export default function EndingPage() {
   const flags = useJourney((s) => s.flags)
   const events = useJourney((s) => s.events)
   const score = useJourney(selectKnowledgeScore)
+  const savedEnding = useJourney((s) => s.ending)
+  const roles = useJourney((s) => s.roles)
 
-  const ending = endingId ? endingById.get(endingId) : undefined
-  const role = roleId ? roleById.get(roleId) : undefined
+  const ending = savedEnding?.id === endingId ? savedEnding : undefined
+  const role = roles.find((item) => item.id === roleId)
 
   if (!ending || !completed) {
     return <Navigate to="/map" replace />
   }
 
-  const choiceText = flags.finalChoice === 'hang' ? '把灯挂上长廊' : flags.finalChoice === 'keep' ? '把灯收进行囊' : '（未选择）'
-  const keyEvents = events.filter((e) => e.kind === 'task' || e.kind === 'choice' || e.kind === 'ending').slice(-8)
+  const choiceText =
+    flags.finalChoice === 'hang'
+      ? '把灯挂上长廊'
+      : flags.finalChoice === 'keep'
+        ? '把灯收进行囊'
+        : '（未选择）'
+  const keyEvents = events
+    .filter((e) => e.kind === 'task' || e.kind === 'choice' || e.kind === 'ending')
+    .slice(-8)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">

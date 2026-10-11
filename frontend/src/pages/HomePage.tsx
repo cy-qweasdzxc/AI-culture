@@ -1,15 +1,40 @@
 import { Link } from 'react-router-dom'
 import SealMark from '@/components/SealMark'
-import { demoTheme, spots } from '@/data/theme'
+import { publicRouteStops } from '@/data/publicRoute'
 import { useJourney } from '@/engine/journeyStore'
 
 /** 路线卷轴：首页首屏的主视觉（写意的平江路线） */
 function RouteScroll() {
   return (
-    <svg viewBox="0 0 420 520" className="h-auto w-full max-w-md" role="img" aria-label="平江寻梦路线卷轴">
+    <svg
+      viewBox="0 0 420 520"
+      className="h-auto w-full max-w-md"
+      role="img"
+      aria-label="平江寻梦路线卷轴"
+    >
       {/* 卷轴边框 */}
-      <rect x="8" y="8" width="404" height="504" rx="10" fill="none" stroke="var(--bronze)" strokeWidth="1.5" opacity="0.5" />
-      <rect x="18" y="18" width="384" height="484" rx="6" fill="none" stroke="var(--bronze)" strokeWidth="0.75" opacity="0.35" />
+      <rect
+        x="8"
+        y="8"
+        width="404"
+        height="504"
+        rx="10"
+        fill="none"
+        stroke="var(--bronze)"
+        strokeWidth="1.5"
+        opacity="0.5"
+      />
+      <rect
+        x="18"
+        y="18"
+        width="384"
+        height="484"
+        rx="6"
+        fill="none"
+        stroke="var(--bronze)"
+        strokeWidth="0.75"
+        opacity="0.35"
+      />
       {/* 水巷 */}
       <path
         d="M 110 480 C 170 400, 120 330, 190 260 S 230 140, 210 50"
@@ -28,7 +53,7 @@ function RouteScroll() {
         strokeDasharray="5 8"
         strokeLinecap="round"
       />
-      {spots.map((s, i) => {
+      {publicRouteStops.map((name, i) => {
         const pos = [
           { x: 120, y: 452 },
           { x: 262, y: 360 },
@@ -37,13 +62,20 @@ function RouteScroll() {
           { x: 310, y: 60 },
         ][i]
         return (
-          <g key={s.id} transform={`translate(${pos.x}, ${pos.y})`}>
+          <g key={name} transform={`translate(${pos.x}, ${pos.y})`}>
             <circle r="15" fill="var(--surface)" stroke="var(--cinnabar)" strokeWidth="2" />
-            <text textAnchor="middle" dy="4.5" fontSize="12" fill="var(--cinnabar)" fontWeight="700" fontFamily="serif">
+            <text
+              textAnchor="middle"
+              dy="4.5"
+              fontSize="12"
+              fill="var(--cinnabar)"
+              fontWeight="700"
+              fontFamily="serif"
+            >
               {i + 1}
             </text>
             <text x="24" dy="4" fontSize="14" fill="var(--ink)" fontWeight="600">
-              {s.shortName}
+              {name}
             </text>
           </g>
         )
@@ -51,10 +83,26 @@ function RouteScroll() {
       {/* 印章 */}
       <g transform="translate(60, 46)">
         <rect width="44" height="44" rx="4" fill="var(--cinnabar)" />
-        <text x="22" y="20" textAnchor="middle" fontSize="15" fill="#fff" fontFamily="serif" fontWeight="700">
+        <text
+          x="22"
+          y="20"
+          textAnchor="middle"
+          fontSize="15"
+          fill="#fff"
+          fontFamily="serif"
+          fontWeight="700"
+        >
           平江
         </text>
-        <text x="22" y="37" textAnchor="middle" fontSize="15" fill="#fff" fontFamily="serif" fontWeight="700">
+        <text
+          x="22"
+          y="37"
+          textAnchor="middle"
+          fontSize="15"
+          fill="#fff"
+          fontFamily="serif"
+          fontWeight="700"
+        >
           寻梦
         </text>
       </g>
@@ -94,22 +142,32 @@ const steps = [
 
 export default function HomePage() {
   const state = useJourney((s) => s.state)
+  const demoTheme = useJourney((s) => s.themes[0])
   const inJourney = state !== 'CREATED'
+  if (!demoTheme) return <p className="px-4 py-16 text-center text-bluegray">暂无已发布主题。</p>
 
   return (
     <div>
       {/* 首屏 */}
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-20">
         <div>
-          <p className="text-sm font-medium tracking-wide text-bronze">{demoTheme.subtitle} · 演示原型</p>
-          <h1 className="mt-3 font-serif text-4xl font-bold leading-tight text-ink md:text-5xl" style={{ textWrap: 'balance' }}>
+          <p className="text-sm font-medium tracking-wide text-bronze">
+            {demoTheme.subtitle} · 演示原型
+          </p>
+          <h1
+            className="mt-3 font-serif text-4xl font-bold leading-tight text-ink md:text-5xl"
+            style={{ textWrap: 'balance' }}
+          >
             把一座城，
             <br />
             走成一出戏。
           </h1>
-          <p className="mt-5 max-w-prose text-base leading-relaxed text-ink-soft" style={{ textWrap: 'pretty' }}>
-            《城迹入戏》是 AI
-            地方文化剧本游平台：你选一位角色走进真实的文化路线，与有知识边界的 NPC 交谈，靠证据解开谜题，在图鉴里留下可信的文化笔记，最终抵达属于你的结局。
+          <p
+            className="mt-5 max-w-prose text-base leading-relaxed text-ink-soft"
+            style={{ textWrap: 'pretty' }}
+          >
+            《城迹入戏》是 AI 地方文化剧本游平台：你选一位角色走进真实的文化路线，与有知识边界的 NPC
+            交谈，靠证据解开谜题，在图鉴里留下可信的文化笔记，最终抵达属于你的结局。
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {inJourney ? (
@@ -128,15 +186,21 @@ export default function HomePage() {
           <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-line pt-6 text-sm">
             <div>
               <dt className="text-bluegray">路线点位</dt>
-              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">{spots.length} 个</dd>
+              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">
+                {publicRouteStops.length} 个
+              </dd>
             </div>
             <div>
               <dt className="text-bluegray">预计时长</dt>
-              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">{demoTheme.durationMinutes} 分钟</dd>
+              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">
+                {demoTheme.durationMinutes} 分钟
+              </dd>
             </div>
             <div>
               <dt className="text-bluegray">步行距离</dt>
-              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">约 {demoTheme.distanceKm} 公里</dd>
+              <dd className="mt-1 font-serif text-xl font-bold text-inkgreen">
+                约 {demoTheme.distanceKm} 公里
+              </dd>
             </div>
           </dl>
         </div>
@@ -193,7 +257,10 @@ export default function HomePage() {
             平台内的文化内容分四级标注：可靠史实、争议观点、民间传说、艺术化虚构。NPC
             只讲述审核过的内容，回答附证据来源；超出其知识边界或证据不足时，会明确告诉你"现有资料无法确认"。当前为演示数据，正式版本所有内容须经人工审核后入库。
           </p>
-          <Link to="/intro" className="mt-4 inline-block text-sm font-medium text-cinnabar underline underline-offset-4">
+          <Link
+            to="/intro"
+            className="mt-4 inline-block text-sm font-medium text-cinnabar underline underline-offset-4"
+          >
             阅读完整的玩法与隐私说明
           </Link>
         </div>

@@ -84,6 +84,10 @@ export interface KnowledgeEvidence {
   title: string
   content: string
   source: string
+  source_url?: string | null
+  sourceUrl?: string | null
+  review_status?: string
+  reviewStatus?: string
 }
 
 export interface CodexEntry {
@@ -94,6 +98,9 @@ export interface CodexEntry {
   summary: string
   content: string
   source: string
+  reviewStatus?: string
+  isDemo?: boolean
+  sourceUrl?: string | null
 }
 
 export interface QuizOption {
@@ -152,7 +159,75 @@ export interface ChatMessage {
   from: 'user' | 'npc' | 'system'
   text: string
   evidenceIds?: string[]
+  evidence?: KnowledgeEvidence[]
+  provider?: string
+  dataScope?: string
+  safetyFlag?: string
+  mock?: boolean
   at: number
+}
+
+/** 服务端公开任务，答案不会发送到浏览器；解释在完成后返回。 */
+export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' | 'explanation'> & {
+  explanation?: string
+}
+
+export interface JourneySnapshot {
+  sessionId: string
+  journeyId: string
+  stateVersion: number
+  roleId: string | null
+  mode: JourneyMode
+  state: JourneyState
+  currentSpotId: string | null
+  spotStatus: Record<string, SpotStatus>
+  taskStates: Record<string, TaskState>
+  inventory: string[]
+  unlockedCodex: string[]
+  flags: Record<string, string>
+  events: JourneyEvent[]
+  messages: Record<string, ChatMessage[]>
+  auditLog: { at: number; npcId: string; messageId: string; reason: string }[]
+  endingId: string | null
+  startedAt: number | null
+  finishedAt: number | null
+}
+
+export interface JourneyReport {
+  completedTaskCount: number
+  totalTaskCount: number
+  completedSpotCount: number
+  totalSpotCount: number
+  knowledgeScore: number
+  maxScore: number
+  unlockedCodexCount: number
+  totalCodexCount: number
+  durationMinutes: number
+  events: JourneyEvent[]
+  weakPoints: { taskId: string; title: string; attempts: number }[]
+  bySpot: { spotId: string; completed: number; total: number; score: number }[]
+}
+
+export interface ChatReply {
+  snapshot: JourneySnapshot
+  dialogue: string
+  intent: string
+  evidence_ids: string[]
+  evidence: KnowledgeEvidence[]
+  approved_actions: unknown[]
+  provider: string
+  mode?: string
+  data_scope?: string
+  mock?: boolean
+  reason?: string
+  message_id?: string
+}
+
+export interface LocationReading {
+  lat: number
+  lng: number
+  accuracy_m: number
+  coordinate_system: 'wgs84'
 }
 
 export interface TaskState {
