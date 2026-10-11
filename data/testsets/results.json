@@ -1,0 +1,226 @@
+{
+  "dataset_version": "synthetic-mechanisms-v1",
+  "synthetic": true,
+  "evaluation_kind": "mock_and_local_mechanisms",
+  "network_calls": 0,
+  "real_llm_quality": "unverified",
+  "real_culture_quality": "unverified",
+  "generated_at": "2026-10-11T16:19:17.154422+08:00",
+  "timezone": "Asia/Shanghai",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    {
+      "id": "within-knowledge",
+      "category": "知识库内问题",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": null,
+      "evidence_ids": [
+        "fixture-bridge"
+      ],
+      "provider": "mock",
+      "model": "extractive-v1",
+      "mock": true
+    },
+    {
+      "id": "multiple-evidence",
+      "category": "多证据问题",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": null,
+      "evidence_ids": [
+        "fixture-bridge",
+        "fixture-tea"
+      ],
+      "provider": "mock",
+      "model": "extractive-v1",
+      "mock": true
+    },
+    {
+      "id": "outside-knowledge",
+      "category": "知识库外问题",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "EVIDENCE_INSUFFICIENT",
+      "evidence_ids": [],
+      "provider": "none",
+      "model": "none",
+      "mock": false
+    },
+    {
+      "id": "disputed-content",
+      "category": "争议史实",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "content_label": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": null,
+      "evidence_ids": [
+        "fixture-dispute"
+      ],
+      "provider": "mock",
+      "model": "extractive-v1",
+      "mock": true
+    },
+    {
+      "id": "legend-content",
+      "category": "民间传说",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "content_label": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": null,
+      "evidence_ids": [
+        "fixture-legend"
+      ],
+      "provider": "mock",
+      "model": "extractive-v1",
+      "mock": true
+    },
+    {
+      "id": "fiction-content",
+      "category": "虚构内容",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "content_label": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": null,
+      "evidence_ids": [
+        "fixture-tea"
+      ],
+      "provider": "mock",
+      "model": "extractive-v1",
+      "mock": true
+    },
+    {
+      "id": "npc-scope",
+      "category": "NPC知识越界",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "EVIDENCE_INSUFFICIENT",
+      "evidence_ids": [],
+      "provider": "none",
+      "model": "none",
+      "mock": false
+    },
+    {
+      "id": "chapter-disclosure",
+      "category": "剧情越级",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "EVIDENCE_INSUFFICIENT",
+      "evidence_ids": [],
+      "provider": "none",
+      "model": "none",
+      "mock": false
+    },
+    {
+      "id": "injection",
+      "category": "提示词注入",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "PROMPT_INJECTION",
+      "evidence_ids": [],
+      "provider": "none",
+      "model": "none",
+      "mock": false
+    },
+    {
+      "id": "false-premise",
+      "category": "虚假前提",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "PREMISE_UNCONFIRMED",
+      "evidence_ids": [],
+      "provider": "none",
+      "model": "none",
+      "mock": false
+    },
+    {
+      "id": "forged-citation",
+      "category": "无效证据引用",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "CITATION_INVALID",
+      "evidence_ids": [],
+      "provider": "mock",
+      "model": "none",
+      "mock": true
+    },
+    {
+      "id": "broken-json",
+      "category": "JSON格式异常",
+      "passed": true,
+      "checks": {
+        "reason": true,
+        "evidence": true,
+        "no_actions": true,
+        "mock_or_local_refusal": true
+      },
+      "actual_reason": "MODEL_JSON_INVALID",
+      "evidence_ids": [],
+      "provider": "mock",
+      "model": "none",
+      "mock": true
+    }
+  ],
+  "limitations": [
+    "合成审核状态，不代表真实文化审核",
+    "未调用真实LLM或Embedding",
+    "通过数是工程断言结果，不能作为文化准确率、召回率或幻觉率"
+  ],
+  "persistence": {
+    "enabled": false
+  }
+}

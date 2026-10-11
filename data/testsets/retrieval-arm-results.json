@@ -1,0 +1,2302 @@
+{
+  "schema_version": "retrieval-arm-comparison-v1",
+  "executed_at_utc": "2026-10-11T07:58:19.863714+00:00",
+  "experiment_kind": "retrieval_only_real_embedding",
+  "python_version": "3.12.5",
+  "dataset_version": "golden-suzhou-pingjiang-v2",
+  "dataset_status": "reviewed",
+  "dataset_reviewer": "Penknife",
+  "dataset_reviewed_at": "2026-10-11T15:30:00+08:00",
+  "question_count": 32,
+  "arms": [
+    "keyword",
+    "vector",
+    "hybrid"
+  ],
+  "limit": 4,
+  "embedding_provider": "qwen",
+  "embedding_model": "text-embedding-v3",
+  "embedding_dimension": 1024,
+  "embedding_calls": 1,
+  "embedded_text_count": 29,
+  "embedding_elapsed_ms": 1733.437,
+  "vector_distance": "cosine",
+  "index": "exact",
+  "retrieval_config": {
+    "lexical_min_score": 0.12,
+    "vector_min_score": 0.65,
+    "hybrid_lexical_weight": 0.65,
+    "hybrid_vector_weight": 0.35,
+    "default_limit": 4,
+    "distance": "cosine",
+    "index": "exact"
+  },
+  "ranking_unit": "distinct_knowledge_id",
+  "metric_definitions": {
+    "recall_at_k": "relevant distinct knowledge IDs among top K / expected IDs",
+    "precision_at_k": "relevant distinct knowledge IDs among top K / configured K; empty answer retrieval scores zero",
+    "precision_of_returned": "relevant returned distinct knowledge IDs / actually returned IDs",
+    "unlabeled_or_refusal_cases": "excluded from means unless independently annotated with relevant evidence"
+  },
+  "authorization": "explicit_allow_paid_calls",
+  "usage": {
+    "responses": 3,
+    "responses_with_usage": 3,
+    "provider_reported_token_totals": {
+      "prompt_tokens": 402,
+      "total_tokens": 402
+    },
+    "token_accounting_complete": true,
+    "estimated_cost": null,
+    "pricing_verified": false
+  },
+  "corpus_count": 11,
+  "corpus_manifest": [
+    {
+      "id": "kn-ouyuan-jiaou",
+      "title": "\"耦\"通\"偶\"",
+      "location_id": "ouyuan",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "256c742a4578001d356372a921a226c898bc40319cf5db96472bc68586e913c4",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-ouyuan-water",
+      "title": "三面临水的耦园",
+      "location_id": "ouyuan",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "8621628092ec9a0b7bb521bb341343fd86b1096c0eb3403b137b285e77037427",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-pianshi",
+      "title": "片石假山",
+      "location_id": "subo",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "2a591bff1abe320ed741f75922c94e537fdd58405a1fe96bf9effa6c94fea435",
+      "source": "苏州博物馆",
+      "source_url": "https://dx.szmuseum.com/views/NewsDetails.aspx?guid=349a54de-f3f5-41bc-b86d-7c3488d3c0d6",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-pingjiangtu",
+      "title": "《平江图》碑",
+      "location_id": "pingjiang",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "b0231f97fabe4385c74cd10f0787827972ef1c0c8d934244bbbbcfaca97451c3",
+      "source": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+      "source_url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-shijieyichan",
+      "title": "列入《世界遗产名录》",
+      "location_id": "zhuozhengyuan",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "e7f07d5d2815081030d36de8b5d12b9a77e0dfa1b277dad3b70d1068b12a7e3a",
+      "source": "UNESCO World Heritage Centre",
+      "source_url": "https://whc.unesco.org/en/list/813/",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-shizi-origin",
+      "title": "元代始建的狮子林",
+      "location_id": "shizilin",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "3dca098b6827bd336affa5d05f7e34d0bbb4f875e5a5b4a5bdf6375715c5bda1",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-shuangqipan",
+      "title": "水陆并行、河街相邻",
+      "location_id": "pingjiang",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "eff97cc3fd1fa6a4c54ec971db2f61359d29f8face7df9957bfa63282118cb81",
+      "source": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+      "source_url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-subo-bei",
+      "title": "贝聿铭与苏博新馆",
+      "location_id": "subo",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "13a99f706f169b411bc3c5abd98f5252a23d5a5a702706dfb42912708ab71055",
+      "source": "苏州博物馆",
+      "source_url": "https://dx.szmuseum.com/views/NewsDetails.aspx?guid=349a54de-f3f5-41bc-b86d-7c3488d3c0d6",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-wenzhengming",
+      "title": "文徵明与拙政园",
+      "location_id": "zhuozhengyuan",
+      "content_type": "disputed",
+      "version": 5,
+      "content_sha256": "d4fff8b2be4197ef787724a47e017b47a4d5e85b76f2c5394575b334ae6d01e5",
+      "source": "苏州市园林和绿化管理局（刊载明代文徵明文本）",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/ylwh/201911/b852c23fcc704e738e1f59f22ac3ce06.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-zhongwangfu",
+      "title": "忠王府旧址",
+      "location_id": "subo",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "576a7455a35cfefcecd0d73dc24103af4849b181a493f479c3667145e1e84e6b",
+      "source": "苏州博物馆",
+      "source_url": "https://dx.szmuseum.com/views/NewsDetails.aspx?guid=349a54de-f3f5-41bc-b86d-7c3488d3c0d6",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    },
+    {
+      "id": "kn-zhuozheng-origin",
+      "title": "拙政园园名由来",
+      "location_id": "zhuozhengyuan",
+      "content_type": "fact",
+      "version": 5,
+      "content_sha256": "d09f897da70325ee0902e2a56d85b46efd5d4b51a9aa153c10a36a0436106d7b",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/c1df393edc8745abb20e8a9bd5525782.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:36:30.427600"
+    }
+  ],
+  "results": {
+    "keyword": [
+      {
+        "id": "gold-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shuangqipan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-water",
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-water:0",
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-zhuozheng-origin",
+          "kn-shijieyichan",
+          "kn-wenzhengming"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-zhuozheng-origin:0",
+          "kn-shijieyichan:0",
+          "kn-wenzhengming:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-wenzhengming-001",
+        "category": "disputed",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-wenzhengming"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-wenzhengming",
+          "kn-shijieyichan",
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-wenzhengming:0",
+          "kn-shijieyichan:0",
+          "kn-zhuozheng-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pianshi",
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pianshi:0",
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-zhongwangfu",
+          "kn-subo-bei"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-zhongwangfu:0",
+          "kn-subo-bei:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-multi-001",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi",
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 0.5,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-multi-002",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan",
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-outside-001",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-001",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-002",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-outside-002",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-001",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-002",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-003",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-premise-001",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-premise-002",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      }
+    ],
+    "vector": [
+      {
+        "id": "gold-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shuangqipan",
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shuangqipan:0",
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-jiaou",
+          "kn-ouyuan-water"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-jiaou:0",
+          "kn-ouyuan-water:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-water",
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-water:0",
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-zhuozheng-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-wenzhengming-001",
+        "category": "disputed",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-wenzhengming"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-wenzhengming"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-wenzhengming:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0"
+        ],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pianshi:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-multi-001",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi",
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-multi-002",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan",
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 0.5,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-outside-001",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-001",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-002",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-outside-002",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-001",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-002",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-003",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-premise-001",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-premise-002",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      }
+    ],
+    "hybrid": [
+      {
+        "id": "gold-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shuangqipan",
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shuangqipan:0",
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-jiaou",
+          "kn-ouyuan-water"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-jiaou:0",
+          "kn-ouyuan-water:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-water",
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-water:0",
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-zhuozheng-origin",
+          "kn-shijieyichan",
+          "kn-wenzhengming"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-zhuozheng-origin:0",
+          "kn-shijieyichan:0",
+          "kn-wenzhengming:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-wenzhengming-001",
+        "category": "disputed",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-wenzhengming"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-wenzhengming",
+          "kn-zhuozheng-origin",
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-wenzhengming:0",
+          "kn-zhuozheng-origin:0",
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pianshi",
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pianshi:0",
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.3333,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-zhongwangfu",
+          "kn-subo-bei"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-zhongwangfu:0",
+          "kn-subo-bei:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-pingjiangtu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shuangqipan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shuangqipan"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-ouyuan-jiaou-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-ouyuan-jiaou"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-ouyuan-jiaou:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-ouyuan-water-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-ouyuan-water"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shizilin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-zhuozheng-origin-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-shijieyichan-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-pianshi-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pianshi"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pianshi:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-subo-bei-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-zhongwangfu-001",
+        "category": "direct_knowledge",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-zhongwangfu"
+        ],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.0,
+        "precision_at_k": 0.0,
+        "precision_of_returned": 0.0,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-sem-multi-001",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-pianshi",
+          "kn-subo-bei"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-subo-bei",
+          "kn-zhongwangfu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-subo-bei:0",
+          "kn-zhongwangfu:0"
+        ],
+        "recall_at_k": 0.5,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 0.5,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-sem-multi-002",
+        "category": "multi_evidence",
+        "difficulty": "semantic",
+        "location_id": "zhuozhengyuan",
+        "chapter": 4,
+        "expected_behavior": "answer",
+        "expected_evidence_ids": [
+          "kn-shijieyichan",
+          "kn-zhuozheng-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shijieyichan"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shijieyichan:0"
+        ],
+        "recall_at_k": 0.5,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-outside-001",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-001",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-scope-002",
+        "category": "npc_scope",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-outside-002",
+        "category": "out_of_knowledge",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-001",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-002",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "ouyuan",
+        "chapter": 2,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-injection-003",
+        "category": "prompt_injection",
+        "difficulty": "lexical",
+        "location_id": "subo",
+        "chapter": 5,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [],
+        "retrieved_evidence_ids": [],
+        "retrieved_chunk_ids": [],
+        "recall_at_k": null,
+        "reciprocal_rank": null,
+        "precision_at_k": null,
+        "precision_of_returned": null,
+        "no_evidence_returned": true
+      },
+      {
+        "id": "gold-premise-001",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "pingjiang",
+        "chapter": 1,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-pingjiangtu"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-pingjiangtu:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      },
+      {
+        "id": "gold-premise-002",
+        "category": "false_premise",
+        "difficulty": "lexical",
+        "location_id": "shizilin",
+        "chapter": 3,
+        "expected_behavior": "refuse",
+        "expected_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_evidence_ids": [
+          "kn-shizi-origin"
+        ],
+        "retrieved_chunk_ids": [
+          "kn-shizi-origin:0"
+        ],
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0,
+        "precision_at_k": 0.25,
+        "precision_of_returned": 1.0,
+        "no_evidence_returned": false
+      }
+    ]
+  },
+  "summaries": {
+    "keyword": {
+      "cases": 32,
+      "scored_cases": 25,
+      "cases_with_no_evidence": 18,
+      "mean_recall_at_k": 0.54,
+      "full_recall_cases": 13,
+      "mean_reciprocal_rank": 0.56,
+      "mean_precision_at_k": 0.14,
+      "mean_elapsed_ms": 0.493,
+      "p95_elapsed_ms": 0.714,
+      "max_elapsed_ms": 1.289
+    },
+    "vector": {
+      "cases": 32,
+      "scored_cases": 25,
+      "cases_with_no_evidence": 15,
+      "mean_recall_at_k": 0.62,
+      "full_recall_cases": 15,
+      "mean_reciprocal_rank": 0.64,
+      "mean_precision_at_k": 0.16,
+      "mean_elapsed_ms": 0.465,
+      "p95_elapsed_ms": 0.66,
+      "max_elapsed_ms": 0.662
+    },
+    "hybrid": {
+      "cases": 32,
+      "scored_cases": 25,
+      "cases_with_no_evidence": 13,
+      "mean_recall_at_k": 0.72,
+      "full_recall_cases": 17,
+      "mean_reciprocal_rank": 0.76,
+      "mean_precision_at_k": 0.19,
+      "mean_elapsed_ms": 0.476,
+      "p95_elapsed_ms": 0.681,
+      "max_elapsed_ms": 0.706
+    }
+  },
+  "by_category": {
+    "keyword": {
+      "direct_knowledge": {
+        "cases": 20,
+        "mean_recall_at_k": 0.5,
+        "full_recall_cases": 10
+      },
+      "disputed": {
+        "cases": 1,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 1
+      },
+      "false_premise": {
+        "cases": 2,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 2
+      },
+      "multi_evidence": {
+        "cases": 2,
+        "mean_recall_at_k": 0.25,
+        "full_recall_cases": 0
+      }
+    },
+    "vector": {
+      "direct_knowledge": {
+        "cases": 20,
+        "mean_recall_at_k": 0.6,
+        "full_recall_cases": 12
+      },
+      "disputed": {
+        "cases": 1,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 1
+      },
+      "false_premise": {
+        "cases": 2,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 2
+      },
+      "multi_evidence": {
+        "cases": 2,
+        "mean_recall_at_k": 0.25,
+        "full_recall_cases": 0
+      }
+    },
+    "hybrid": {
+      "direct_knowledge": {
+        "cases": 20,
+        "mean_recall_at_k": 0.7,
+        "full_recall_cases": 14
+      },
+      "disputed": {
+        "cases": 1,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 1
+      },
+      "false_premise": {
+        "cases": 2,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 2
+      },
+      "multi_evidence": {
+        "cases": 2,
+        "mean_recall_at_k": 0.5,
+        "full_recall_cases": 0
+      }
+    }
+  },
+  "by_difficulty": {
+    "keyword": {
+      "lexical": {
+        "cases": 13,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 13
+      },
+      "semantic": {
+        "cases": 12,
+        "mean_recall_at_k": 0.0417,
+        "full_recall_cases": 0
+      }
+    },
+    "vector": {
+      "lexical": {
+        "cases": 13,
+        "mean_recall_at_k": 0.8462,
+        "full_recall_cases": 11
+      },
+      "semantic": {
+        "cases": 12,
+        "mean_recall_at_k": 0.375,
+        "full_recall_cases": 4
+      }
+    },
+    "hybrid": {
+      "lexical": {
+        "cases": 13,
+        "mean_recall_at_k": 1.0,
+        "full_recall_cases": 13
+      },
+      "semantic": {
+        "cases": 12,
+        "mean_recall_at_k": 0.4167,
+        "full_recall_cases": 4
+      }
+    }
+  },
+  "summaries_are_retrieval_only": true,
+  "limitations": [
+    "只测检索，不含生成；不衡量文化事实准确性、幻觉率或表达质量。",
+    "Recall@K 标准来自标记已人审的数据集，但本工具不能代替审核者核实标注内容。",
+    "样本由人工数据集决定，不能把单次结果推广为总体召回率。",
+    "本轮未做人工事实性评分；需要人工评分时必须另附评分标准与记录。",
+    "阈值为工程初始参数，不是调优结果；不得据此宣称检索质量达到某一档位。"
+  ],
+  "dataset_sha256": "a4bf9c0f2eff031fdcfbdd73650c01ea727c1f367668391cef53c867384498f6"
+}

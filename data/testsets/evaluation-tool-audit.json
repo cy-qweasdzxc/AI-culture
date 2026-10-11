@@ -1,0 +1,21 @@
+{
+  "audit_date": "2026-10-10",
+  "kind": "independent_local_engineering_audit",
+  "paid_provider_calls_executed": false,
+  "real_llm_quality_evaluation_executed": false,
+  "real_embedding_retrieval_experiment_executed": false,
+  "evaluation_regressions_before_fix": {"passed": 8, "failed": 6},
+  "evaluation_regressions_after_fix": {"passed": 17, "failed": 0, "elapsed_seconds": 5.26},
+  "input_guard_regressions_before_fix": {"passed": 7, "failed": 4},
+  "final_backend_pytest": {"passed": 92, "failed": 0, "warnings": 1, "elapsed_seconds": 34.61, "command": ".venv/Scripts/python.exe -m pytest -q --basetemp=.pytest-tmp-final-backend-c1", "warning": "Starlette TestClient httpx deprecation"},
+  "ruff": {"command": ".venv/Scripts/python.exe -m ruff check app tests scripts", "passed": true},
+  "default_retrieval_script": {"executed": false, "reason": "EMBEDDING_REQUIRED", "script_exit_code": 2},
+  "default_live_script": {"executed": false, "reason": "LIVE_LLM_REQUIRED", "script_exit_code": 2},
+  "statuses": {"evaluation_tools": "IMPLEMENTED", "local_regressions": "DONE", "real_cultural_model_experiments": "BLOCKED"},
+  "measurement_unit": "distinct_knowledge_id",
+  "precision_at_k_denominator": "configured_k",
+  "token_estimates_without_tokenizer": null,
+  "unverified_currency_cost": null,
+  "human_fact_accuracy": null,
+  "human_hallucination_rate": null
+}

@@ -1,0 +1,230 @@
+{
+  "generated_at": "2026-10-10T04:29:42.214191+00:00",
+  "base_url": "http://127.0.0.1:8001",
+  "environment": {
+    "os": "Windows",
+    "python": "3.12.5",
+    "database": "SQLite demo",
+    "server": "single uvicorn process"
+  },
+  "limitations": [
+    "本机回环请求，不能外推生产吞吐或公网延迟",
+    "未调用真实LLM/Embedding",
+    "聊天使用无审核资料的本地拒答；不是生成或检索性能",
+    "临时匿名旅程，结束后删除"
+  ],
+  "groups": {
+    "health_serial": {
+      "requests": 50,
+      "succeeded": 50,
+      "status_counts": {
+        "200": 50
+      },
+      "mean_ms": 11.44,
+      "p50_ms": 13.13,
+      "p95_ms": 25.31,
+      "max_ms": 27.34,
+      "workers": 1,
+      "elapsed_seconds": 2.147
+    },
+    "health_concurrent": {
+      "requests": 200,
+      "succeeded": 200,
+      "status_counts": {
+        "200": 200
+      },
+      "mean_ms": 268.25,
+      "p50_ms": 243.1,
+      "p95_ms": 471.45,
+      "max_ms": 835.79,
+      "workers": 10,
+      "elapsed_seconds": 9.506
+    },
+    "journey_serial": {
+      "requests": 35,
+      "succeeded": 35,
+      "status_counts": {
+        "200": 35
+      },
+      "mean_ms": 32.56,
+      "p50_ms": 33.92,
+      "p95_ms": 51.36,
+      "max_ms": 51.48,
+      "flows": 5,
+      "workers": 1,
+      "elapsed_seconds": 1.414,
+      "by_operation": {
+        "session": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 22.84,
+          "p50_ms": 21.29,
+          "p95_ms": 38.25,
+          "max_ms": 38.25
+        },
+        "start": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 37.38,
+          "p50_ms": 39.45,
+          "p95_ms": 45.51,
+          "max_ms": 45.51
+        },
+        "arrive": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 36.24,
+          "p50_ms": 37.15,
+          "p95_ms": 51.48,
+          "max_ms": 51.48
+        },
+        "chat_local_refusal": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 43.47,
+          "p50_ms": 41.41,
+          "p95_ms": 51.36,
+          "max_ms": 51.36
+        },
+        "verify": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 45.48,
+          "p50_ms": 46.21,
+          "p95_ms": 50.48,
+          "max_ms": 50.48
+        },
+        "report": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 16.91,
+          "p50_ms": 10.19,
+          "p95_ms": 30.65,
+          "max_ms": 30.65
+        },
+        "delete_session": {
+          "requests": 5,
+          "succeeded": 5,
+          "status_counts": {
+            "200": 5
+          },
+          "mean_ms": 25.63,
+          "p50_ms": 20.6,
+          "p95_ms": 36.43,
+          "max_ms": 36.43
+        }
+      }
+    },
+    "journey_concurrent": {
+      "requests": 70,
+      "succeeded": 70,
+      "status_counts": {
+        "200": 70
+      },
+      "mean_ms": 101.34,
+      "p50_ms": 84.34,
+      "p95_ms": 218.41,
+      "max_ms": 373.33,
+      "flows": 10,
+      "workers": 5,
+      "elapsed_seconds": 1.886,
+      "by_operation": {
+        "session": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 83.66,
+          "p50_ms": 83.66,
+          "p95_ms": 166.37,
+          "max_ms": 166.37
+        },
+        "start": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 156.06,
+          "p50_ms": 132.62,
+          "p95_ms": 373.33,
+          "max_ms": 373.33
+        },
+        "arrive": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 110.28,
+          "p50_ms": 79.0,
+          "p95_ms": 229.31,
+          "max_ms": 229.31
+        },
+        "chat_local_refusal": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 96.34,
+          "p50_ms": 67.48,
+          "p95_ms": 214.32,
+          "max_ms": 214.32
+        },
+        "verify": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 87.67,
+          "p50_ms": 58.55,
+          "p95_ms": 166.26,
+          "max_ms": 166.26
+        },
+        "report": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 59.52,
+          "p50_ms": 34.66,
+          "p95_ms": 160.07,
+          "max_ms": 160.07
+        },
+        "delete_session": {
+          "requests": 10,
+          "succeeded": 10,
+          "status_counts": {
+            "200": 10
+          },
+          "mean_ms": 115.87,
+          "p50_ms": 116.9,
+          "p95_ms": 218.41,
+          "max_ms": 218.41
+        }
+      }
+    }
+  }
+}
