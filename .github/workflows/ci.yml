@@ -22,6 +22,38 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -c backend/requirements.lock -e "./backend[dev]"
+        working-directory: .
+      - name: Migrate and start isolated E2E API
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///../.cache/ci-e2e.db
+          ADMIN_PASSWORD: ci-only-admin-fixture-password
+          ADMIN_JWT_SECRET: ci-only-fixture-signing-key-at-least-32-characters
+        run: |
+          alembic upgrade head
+          python scripts/seed.py
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 > ../.cache/ci-e2e-api.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/api/health; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8000/api/health
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+        env:
+          E2E_ADMIN_PASSWORD: ci-only-admin-fixture-password
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-failure
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+            .cache/ci-e2e-api.log
 
   backend:
     runs-on: ubuntu-latest
@@ -32,7 +64,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-      - run: pip install -e ".[dev]"
-      - run: ruff check app
+          python-version: "3.12"
+      - run: pip install -c requirements.lock -e ".[dev]"
+      - run: ruff check app tests scripts
       - run: pytest
+      - run: python scripts/evaluate_ai.py --output ../data/testsets/results.json

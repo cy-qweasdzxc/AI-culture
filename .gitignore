@@ -18,18 +18,36 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+.pytest-tmp*/
 .ruff_cache/
 *.egg-info/
 build/
 
 # ===== 数据库与向量索引 =====
 *.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 *.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
 data/processed/chroma/
 *.parquet
 
 # ===== 日志与系统 =====
 *.log
+.cache/
+tmp/
+*.tsbuildinfo
+backend/data/
+/.chart-data-*/
+/AI-culture_GPT审查包_*.zip
+/AIC-city-story-source.zip
+/AIC-city-story-full.zip
+/docs/competition/artifacts/AI-culture_GPT审查包_*.zip
+/docs/competition/artifacts/*-源码包.zip
 .DS_Store
 Thumbs.db
 

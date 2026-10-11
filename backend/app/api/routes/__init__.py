@@ -1,0 +1,1 @@
+"""Public and protected routes."""

@@ -1,0 +1,690 @@
+{
+  "seedVersion": "frontend-demo-v1",
+  "isDemo": true,
+  "reviewStatus": "pending",
+  "theme": {
+    "id": "suzhou-pingjiang",
+    "name": "平江寻梦",
+    "subtitle": "苏州古城文化路线",
+    "city": "苏州",
+    "district": "姑苏区 · 平江历史街区",
+    "description": "从平江路的水巷石桥出发，一路走进耦园、狮子林、拙政园，最后抵达苏州博物馆。一条街巷、三座园林、一座新馆，串起苏州八百年的城市记忆。",
+    "durationMinutes": 120,
+    "distanceKm": 2.5
+  },
+  "spots": [
+    {
+      "id": "pingjiang",
+      "order": 1,
+      "name": "平江路",
+      "shortName": "平江路",
+      "lat": 31.3169,
+      "lng": 120.6343,
+      "triggerRadiusM": 150,
+      "intro": "水陆并行、河街相邻，苏州古城双棋盘格局的活标本。",
+      "story": "南宋绍定二年，一方《平江图》碑刻下了这座城的街巷水巷。八百年后，平江路依然河街并行，桥影相衔。茶馆的周伯在这里坐了一辈子，巷子里的事，他比碑刻记得还细。",
+      "npcId": "zhou-bo",
+      "taskIds": [
+        "task-shuangqipan",
+        "task-pingjiangtu"
+      ],
+      "codexIds": [
+        "codex-shuangqipan",
+        "codex-pingjiangtu",
+        "codex-yuxiang"
+      ]
+    },
+    {
+      "id": "ouyuan",
+      "order": 2,
+      "name": "耦园",
+      "shortName": "耦园",
+      "lat": 31.3199,
+      "lng": 120.6416,
+      "triggerRadiusM": 120,
+      "intro": "\"耦\"通\"偶\"，一座藏着偕隐之约的水边园子。",
+      "story": "清末，沈秉成携夫人严永华在此隐居，把园子改名\"耦园\"。三面临水的小园不事张扬，却把\"佳偶\"二字藏进了名字里。",
+      "npcId": "a-heng",
+      "taskIds": [
+        "task-jiaou"
+      ],
+      "codexIds": [
+        "codex-ouyuan-jiaou",
+        "codex-ouyuan-water"
+      ]
+    },
+    {
+      "id": "shizilin",
+      "order": 3,
+      "name": "狮子林",
+      "shortName": "狮子林",
+      "lat": 31.3231,
+      "lng": 120.6324,
+      "triggerRadiusM": 120,
+      "intro": "元代的假山王国，石峰如狮，曲径如谜。",
+      "story": "至正二年，弟子们为天如禅师建起这座园子。满园的湖石假山盘旋起伏，相传连乾隆皇帝都在里面转得兴致盎然，题下\"真趣\"二字。",
+      "npcId": "a-heng",
+      "taskIds": [
+        "task-shizi-dynasty"
+      ],
+      "codexIds": [
+        "codex-shizi-origin",
+        "codex-zhenqu"
+      ]
+    },
+    {
+      "id": "zhuozhengyuan",
+      "order": 4,
+      "name": "拙政园",
+      "shortName": "拙政园",
+      "lat": 31.3254,
+      "lng": 120.6307,
+      "triggerRadiusM": 150,
+      "intro": "\"拙者之为政\"，明代文人园林的集大成者。",
+      "story": "明正德年间，御史王献臣辞官归乡，以潘岳《闲居赋》中一句\"拙者之为政\"为园命名。数百年间园分园合，1997年，它作为苏州古典园林的代表列入《世界遗产名录》。",
+      "npcId": "a-heng",
+      "taskIds": [
+        "task-zhuozheng-timeline"
+      ],
+      "codexIds": [
+        "codex-zhuozheng-origin",
+        "codex-wenzhengming",
+        "codex-shijieyichan"
+      ]
+    },
+    {
+      "id": "subo",
+      "order": 5,
+      "name": "苏州博物馆",
+      "shortName": "苏博",
+      "lat": 31.3244,
+      "lng": 120.6294,
+      "triggerRadiusM": 150,
+      "intro": "贝聿铭以壁为纸、以石为绘，为古城写下新的一页。",
+      "story": "2006年，贝聿铭设计的苏博新馆在忠王府旁落成。灰白几何的屋顶接住了古城的天际线，一庭片石假山，把山水收进了一面白墙。青年馆员小沈在这里等你，她手里有一盏\"守园灯\"。",
+      "npcId": "xiao-shen",
+      "taskIds": [
+        "task-pianshi"
+      ],
+      "codexIds": [
+        "codex-subo-bei",
+        "codex-pianshi",
+        "codex-zhongwangfu",
+        "codex-shouyuandeng"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "scholar",
+      "name": "沈观澜",
+      "identity": "寻访学者（虚构身份）",
+      "tagline": "带着半页残碑拓片来的考据人",
+      "description": "你研究城市史多年，此行是为核对一段关于《平江图》的记载。NPC 会称你\"先生\"，对话中更容易引出文献与年代线索。",
+      "perk": "初始持有线索「平江图残页」：可提前查看《平江图》相关证据。",
+      "storyEffect": "NPC 以\"先生\"相称；涉及碑刻、世遗的对话会给出更具体的出处。",
+      "startClueId": "clue-tuopian",
+      "isFictional": true
+    },
+    {
+      "id": "wanderer",
+      "name": "阿蘅姐的故交",
+      "identity": "风雅闲客（虚构身份）",
+      "tagline": "为一口茶、一窗景而来的慢游者",
+      "description": "你不赶时间，只想把这条水巷走慢一些。NPC 会把你当作老熟人，对话中更容易听到掌故与传说。",
+      "perk": "初始持有道具「茶馆旧票」：周伯会对你多说一段巷子里的旧事。",
+      "storyEffect": "NPC 以\"你\"亲切相称；传说类内容更容易触发，传说会明确标注。",
+      "startClueId": "clue-tea-ticket",
+      "isFictional": true
+    },
+    {
+      "id": "apprentice",
+      "name": "小满",
+      "identity": "见习园主（虚构身份）",
+      "tagline": "揣着一把铜钥匙的造园学徒",
+      "description": "你拜在一位老园艺人门下学手艺，师父让你把这条路线上的园子挨个看明白。NPC 会考你，也会教你。",
+      "perk": "初始持有道具「铜钥匙」：可提前开启一个点位任务的提示。",
+      "storyEffect": "NPC 以\"小满\"相称；造园工艺类对话会多出追问选项。",
+      "startClueId": "clue-tong-key",
+      "isFictional": true
+    }
+  ],
+  "npcs": [
+    {
+      "id": "zhou-bo",
+      "name": "周伯",
+      "title": "平江路老茶客",
+      "spotId": "pingjiang",
+      "personality": [
+        "健谈",
+        "念旧",
+        "爱考人"
+      ],
+      "greeting": "来，坐。看你面生，是头一回来平江路吧？我在这河沿上喝了六十年茶，这条巷子的事，你问什么我都能说道说道。",
+      "knowledgeScope": "平江路街巷格局、市井掌故、《平江图》碑、巷弄传说",
+      "isFictional": true
+    },
+    {
+      "id": "a-heng",
+      "name": "阿蘅",
+      "title": "园艺人",
+      "spotId": "ouyuan",
+      "personality": [
+        "细致",
+        "话少",
+        "手艺人的较真"
+      ],
+      "greeting": "园子里讲究\"虽由人作，宛自天开\"。我跟着师父在这些园子里修山理水十几年，你要问造园的事，我尽力答；别的事，我不敢乱讲。",
+      "knowledgeScope": "耦园、狮子林、拙政园的造园工艺、假山布局、园史沿革",
+      "isFictional": true
+    },
+    {
+      "id": "xiao-shen",
+      "name": "小沈",
+      "title": "苏州博物馆青年馆员",
+      "spotId": "subo",
+      "personality": [
+        "严谨",
+        "温和",
+        "引经据典"
+      ],
+      "greeting": "欢迎来到苏博。我负责观众教育，馆里的建筑和藏品都可以问我。有争议的说法我会说明有争议，不确定的我会直接告诉你不确定。",
+      "knowledgeScope": "苏博新馆建筑、贝聿铭设计、忠王府旧址、世界遗产相关记录",
+      "isFictional": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-shuangqipan",
+      "spotId": "pingjiang",
+      "type": "quiz",
+      "title": "双棋盘之谜",
+      "briefing": "站在平江路口，左手是河，右手是街。周伯考你：苏州古城延续至今、在平江路保存最完整的城市格局是哪一种？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "前朝后市，中轴对称"
+        },
+        {
+          "key": "B",
+          "text": "水陆并行，河街相邻"
+        },
+        {
+          "key": "C",
+          "text": "里坊封闭，宵禁夜行"
+        },
+        {
+          "key": "D",
+          "text": "依山傍水，自由散落"
+        }
+      ],
+      "answerKey": "B",
+      "rewardCodexIds": [
+        "codex-shuangqipan"
+      ],
+      "explanation": "平江路延续了\"水陆并行、河街相邻\"的双棋盘格局，这在《平江图》碑上已有清晰描绘。"
+    },
+    {
+      "id": "task-pingjiangtu",
+      "spotId": "pingjiang",
+      "type": "password",
+      "title": "碑上的年份",
+      "briefing": "周伯说：\"《平江图》碑的年纪，就是解开下一段路的钥匙。绍定二年是公元哪一年？答对了，后面的路就好走了。\"（提示：向周伯打听《平江图》，或翻看你的线索背包）",
+      "knowledgeScore": 20,
+      "password": "1229",
+      "passwordHint": "四位数字，公元纪年",
+      "requiredClues": [
+        "clue-shaoding"
+      ],
+      "rewardCodexIds": [
+        "codex-pingjiangtu"
+      ],
+      "explanation": "《平江图》碑刻于南宋绍定二年，即公元 1229 年，现存苏州碑刻博物馆。"
+    },
+    {
+      "id": "task-jiaou",
+      "spotId": "ouyuan",
+      "type": "quiz",
+      "title": "耦园之\"耦\"",
+      "briefing": "园子原名涉园，沈秉成夫妇偕隐于此，改名\"耦园\"。这个\"耦\"字，藏的是什么心意？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "耦耕并作的田园之趣"
+        },
+        {
+          "key": "B",
+          "text": "\"耦\"通\"偶\"，佳偶天成"
+        },
+        {
+          "key": "C",
+          "text": "园中多种莲藕"
+        },
+        {
+          "key": "D",
+          "text": "东西两园偶然相连"
+        }
+      ],
+      "answerKey": "B",
+      "rewardClueId": "clue-ou-zi",
+      "rewardCodexIds": [
+        "codex-ouyuan-jiaou",
+        "codex-ouyuan-water"
+      ],
+      "explanation": "\"耦\"通\"偶\"，取佳偶之意，纪念沈秉成与严永华夫妇的偕隐生活。"
+    },
+    {
+      "id": "task-shizi-dynasty",
+      "spotId": "shizilin",
+      "type": "quiz",
+      "title": "假山王国的朝代",
+      "briefing": "狮子林以湖石假山闻名，素有\"假山王国\"之称。阿蘅问你：这座园子始建于哪个朝代？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "北宋"
+        },
+        {
+          "key": "B",
+          "text": "元代"
+        },
+        {
+          "key": "C",
+          "text": "明代"
+        },
+        {
+          "key": "D",
+          "text": "清代"
+        }
+      ],
+      "answerKey": "B",
+      "rewardCodexIds": [
+        "codex-shizi-origin",
+        "codex-zhenqu"
+      ],
+      "explanation": "狮子林始建于元代至正二年（1342年），由天如禅师弟子为其师所建。"
+    },
+    {
+      "id": "task-zhuozheng-timeline",
+      "spotId": "zhuozhengyuan",
+      "type": "sorting",
+      "title": "五百年园史排序",
+      "briefing": "拙政园五百年间几经分合。把下面四件事按时间先后排好，阿蘅才信你是真看懂了这座园子。",
+      "knowledgeScore": 30,
+      "sortingItems": [
+        "明正德年间，王献臣建园，借\"拙者之为政\"命名",
+        "文徵明为园作图咏，诗文画作传世",
+        "太平天国时期，园子归入忠王府范围",
+        "作为苏州古典园林代表列入《世界遗产名录》"
+      ],
+      "sortingAnswer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "rewardClueId": "clue-pianshi",
+      "rewardCodexIds": [
+        "codex-zhuozheng-origin",
+        "codex-wenzhengming",
+        "codex-shijieyichan"
+      ],
+      "explanation": "建园于明正德，文徵明图咏在明中后期，太平天国在清末，列入世界遗产是 1997 年。"
+    },
+    {
+      "id": "task-pianshi",
+      "spotId": "subo",
+      "type": "combine",
+      "title": "以壁为纸，以石为绘",
+      "briefing": "苏博主庭园那面白墙前的片石假山，贝聿铭先生题了八个字：\"以壁为纸\"的下联是什么？把你背包里相关的两条线索组合起来。（需要「一片湖石」和「白壁照片」）",
+      "knowledgeScore": 30,
+      "options": [
+        {
+          "key": "A",
+          "text": "以石为绘"
+        },
+        {
+          "key": "B",
+          "text": "以山为屏"
+        },
+        {
+          "key": "C",
+          "text": "以水为镜"
+        },
+        {
+          "key": "D",
+          "text": "以竹为骨"
+        }
+      ],
+      "answerKey": "A",
+      "requiredClues": [
+        "clue-pianshi",
+        "clue-baibi"
+      ],
+      "rewardCodexIds": [
+        "codex-subo-bei",
+        "codex-pianshi",
+        "codex-zhongwangfu"
+      ],
+      "explanation": "\"以壁为纸，以石为绘\"，贝聿铭借米芾山水画意，在白墙前叠石成山。"
+    }
+  ],
+  "clues": [
+    {
+      "id": "clue-tuopian",
+      "name": "平江图残页",
+      "kind": "clue",
+      "description": "半页碑刻拓片的影印件，边角写着\"绍定二年\"四个字。学者沈观澜的随身之物。",
+      "fromSpotId": "pingjiang"
+    },
+    {
+      "id": "clue-tea-ticket",
+      "name": "茶馆旧票",
+      "kind": "item",
+      "description": "一张泛黄的茶馆旧票，票根印着\"临河雅座\"。周伯认得它。",
+      "fromSpotId": "pingjiang"
+    },
+    {
+      "id": "clue-tong-key",
+      "name": "铜钥匙",
+      "kind": "item",
+      "description": "一把磨得发亮的铜钥匙，师父说\"园子的门好开，看园子的眼难开\"。"
+    },
+    {
+      "id": "clue-shaoding",
+      "name": "纪年卡「绍定二年」",
+      "kind": "clue",
+      "description": "周伯写给你的小卡：南宋绍定二年，即公元 1229 年，《平江图》碑刻成。",
+      "fromSpotId": "pingjiang"
+    },
+    {
+      "id": "clue-ou-zi",
+      "name": "「耦」字笺",
+      "kind": "clue",
+      "description": "阿蘅递来的一张字笺：耦，通\"偶\"。园子改名那年，主人夫妇正当年。",
+      "fromSpotId": "ouyuan"
+    },
+    {
+      "id": "clue-pianshi",
+      "name": "一片湖石",
+      "kind": "item",
+      "description": "阿蘅送你的一小片湖石：好假山不是堆出来的，是\"叠\"出来的。到了苏博，你会想起它。",
+      "fromSpotId": "zhuozhengyuan"
+    },
+    {
+      "id": "clue-baibi",
+      "name": "白壁照片",
+      "kind": "clue",
+      "description": "小沈给你看的一张照片：苏博主庭园的白墙，\"以壁为纸\"的下半句，要你自己对上。",
+      "fromSpotId": "subo"
+    }
+  ],
+  "codex": [
+    {
+      "id": "codex-shuangqipan",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "双棋盘格局",
+      "summary": "水陆并行、河街相邻的古城肌理",
+      "content": "苏州古城自宋代以来保持\"水陆并行、河街相邻\"的双棋盘格局：河道与街道两两相伴，人家临水而居，后门是河埠，前门是街巷。平江路历史街区是这一格局保存较为完整的区域之一。",
+      "source": "苏州市地方志与公开文旅资料（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-pingjiangtu",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "《平江图》碑",
+      "summary": "南宋绍定二年的城市地图",
+      "content": "《平江图》碑刻于南宋绍定二年（公元1229年），高逾两米，详尽描绘平江府城（今苏州）的城墙、街巷、河道与官署，是现存较早的大型城市石刻地图之一，现存于苏州碑刻博物馆。",
+      "source": "苏州碑刻博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-yuxiang",
+      "spotId": "pingjiang",
+      "type": "disputed",
+      "title": "《雨巷》与丁香巷",
+      "summary": "戴望舒的雨巷是不是这条巷子",
+      "content": "平江路一带有条丁香巷，因戴望舒《雨巷》中\"丁香一样的姑娘\"而常被游人寻访。但《雨巷》是否真写于此，历来众说纷纭、并无定论。此条目存在争议，宜作文学趣谈看待。",
+      "source": "现代文学研究公开讨论（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-ouyuan-jiaou",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "耦园佳偶",
+      "summary": "\"耦\"通\"偶\"的偕隐之约",
+      "content": "耦园原名涉园，清末沈秉成购得后扩建，与夫人严永华偕隐于此，取\"耦\"与\"偶\"相通之意，寓意佳偶天成。园中的东花园、西花园分列中厅两侧，暗合成双之趣。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-ouyuan-water",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "三面临水的耦园",
+      "summary": "可以乘船抵达的园子",
+      "content": "耦园宅园相依，园外三面临河，从前访客可沿水巷乘船直抵园门。在苏州诸园中，这样\"枕水而居\"的格局颇为少见。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-shizi-origin",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "假山王国",
+      "summary": "元代至正二年的禅意园林",
+      "content": "狮子林始建于元代至正二年（1342年），由天如禅师的弟子们为其师修建。园内湖石假山群峰回路转、洞壑盘旋，游人入其中如入迷阵，素有\"假山王国\"之称。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-zhenqu",
+      "spotId": "shizilin",
+      "type": "legend",
+      "title": "\"真趣\"轶闻",
+      "summary": "相传乾隆帝的题字",
+      "content": "相传清乾隆帝游历狮子林，在假山间穿行半日方出，兴之所至题下\"真趣\"二字。此类帝王轶闻多见于后世记载与民间讲述，本图鉴按传说标注，作为掌故欣赏为宜。",
+      "source": "民间传说与地方掌故（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-zhuozheng-origin",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园园名由来",
+      "summary": "\"拙者之为政\"的自谦",
+      "content": "拙政园始建于明正德年间（16世纪初），御史王献臣辞官归乡后所建。园名借西晋潘岳《闲居赋》\"拙者之为政\"一句，自谦拙于从政、退而理园。全园以水为中心，是明代文人园林的代表。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-wenzhengming",
+      "spotId": "zhuozhengyuan",
+      "type": "disputed",
+      "title": "文徵明与拙政园",
+      "summary": "图咏传世，参与程度存争议",
+      "content": "文徵明与王献臣交好，曾屡游拙政园并作图咏、诗文传世，是研究该园早期面貌的重要资料。至于文徵明是否直接参与造园设计、参与到何种程度，史料记载不一，学界说法并存。",
+      "source": "园林史研究公开讨论（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-shijieyichan",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "列入《世界遗产名录》",
+      "summary": "1997年，苏州古典园林",
+      "content": "1997年，以拙政园、留园、网师园、环秀山庄为代表的苏州古典园林被联合国教科文组织列入《世界遗产名录》；2000年，沧浪亭、狮子林、耦园等作为扩展项目列入。",
+      "source": "联合国教科文组织世界遗产名录（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-subo-bei",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "贝聿铭与苏博新馆",
+      "summary": "2006年，为古城写新的一页",
+      "content": "苏州博物馆新馆由建筑师贝聿铭设计，2006年10月建成开放。建筑以灰白为主调，几何形坡顶呼应苏州传统民居的轮廓，让新建筑谦逊地嵌入古城肌理。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-pianshi",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "片石假山",
+      "summary": "以壁为纸，以石为绘",
+      "content": "苏博新馆主庭园中，贝聿铭以白墙为纸、片石为绘，将石头切片叠置，借米芾山水画意，在一面素墙前营造出层峦叠嶂的山水意境，是传统造园语言的一次现代转译。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-zhongwangfu",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "忠王府旧址",
+      "summary": "苏博馆址的太平天国遗存",
+      "content": "苏州博物馆馆址包含太平天国忠王府旧址，是国内保存较完整的太平天国时期王府建筑之一，与新馆建筑相邻，新旧并置。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "codex-shouyuandeng",
+      "spotId": "subo",
+      "type": "fiction",
+      "title": "守园灯",
+      "summary": "本平台剧情创作的一盏灯",
+      "content": "\"守园灯\"是《城迹入戏》为本条路线创作的剧情意象：传说每座园林都有一盏守园灯，点亮它的人，会把这一路听到、看到的故事继续讲下去。本条目为艺术化虚构。",
+      "source": "城迹入戏剧情创作（艺术化虚构）"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "kn-shuangqipan",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "水陆并行、河街相邻",
+      "content": "平江路历史街区延续了苏州古城\"水陆并行、河街相邻\"的双棋盘格局，是古城内保存较为完整的历史街区之一。",
+      "source": "苏州市地方志与公开文旅资料（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-pingjiangtu",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "《平江图》碑",
+      "content": "《平江图》碑刻于南宋绍定二年（公元1229年），描绘了当时平江府城的街巷与河道布局，现存于苏州碑刻博物馆。",
+      "source": "苏州碑刻博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-yuxiang",
+      "spotId": "pingjiang",
+      "type": "disputed",
+      "title": "《雨巷》与丁香巷",
+      "content": "戴望舒《雨巷》的原型是否为苏州丁香巷，历来有多种说法，并无定论。此说多为后人附会，宜作文学趣谈看待。",
+      "source": "现代文学研究公开讨论（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-ouyuan-jiaou",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "\"耦\"通\"偶\"",
+      "content": "耦园原名涉园，清末沈秉成购得后扩建，与夫人严永华偕隐于此，取\"耦\"与\"偶\"相通之意，寓意佳偶天成。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-ouyuan-water",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "三面临水的耦园",
+      "content": "耦园宅园相依，东花园与西花园分列中厅两侧，园外三面临河，可从水巷乘船而至，是苏州园林中颇特别的一处。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-shizi-origin",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "元代始建的狮子林",
+      "content": "狮子林始建于元代至正二年（1342年），由天如禅师的弟子们为其师修建。园内湖石假山群峰回路转，素有\"假山王国\"之称。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-zhenqu",
+      "spotId": "shizilin",
+      "type": "legend",
+      "title": "\"真趣\"轶闻",
+      "content": "相传清乾隆帝游历狮子林，兴之所至题下\"真趣\"二字。此类帝王轶闻多见于后世记载与民间讲述，作为传说欣赏为宜。",
+      "source": "民间传说与地方掌故（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-zhuozheng-origin",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园园名由来",
+      "content": "拙政园始建于明正德年间（16世纪初），御史王献臣辞官归乡后所建。园名借西晋潘岳《闲居赋》中\"拙者之为政\"一句，自谦\"拙于从政\"。",
+      "source": "苏州园林公开史料（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-wenzhengming",
+      "spotId": "zhuozhengyuan",
+      "type": "disputed",
+      "title": "文徵明与拙政园",
+      "content": "文徵明与王献臣交好，为拙政园作图咏多幅并传世。至于他是否直接参与造园设计、参与到何种程度，史料记载不一，学界说法并存。",
+      "source": "园林史研究公开讨论（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-shijieyichan",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "列入《世界遗产名录》",
+      "content": "1997年，以拙政园、留园、网师园、环秀山庄为代表的苏州古典园林被联合国教科文组织列入《世界遗产名录》。",
+      "source": "联合国教科文组织世界遗产名录（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-subo-bei",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "贝聿铭与苏博新馆",
+      "content": "苏州博物馆新馆由建筑师贝聿铭设计，于2006年10月建成开放。建筑以灰白为主调，几何坡顶呼应苏州传统民居的天际线。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-pianshi",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "片石假山",
+      "content": "苏博新馆主庭园中，贝聿铭以白墙为纸、片石为绘，叠石成山，借米芾山水画意，在一面素墙前营造出层峦叠嶂的山水意境。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-zhongwangfu",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "忠王府旧址",
+      "content": "苏州博物馆馆址包含太平天国忠王府旧址，是国内保存较完整的太平天国时期王府建筑之一。",
+      "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-shouyuandeng",
+      "spotId": "subo",
+      "type": "fiction",
+      "title": "守园灯（剧情创作）",
+      "content": "\"守园灯\"为本平台剧情创作：传说每座园林都有一盏守园灯，点亮它的人，会把这一路的故事继续讲下去。",
+      "source": "城迹入戏剧情创作（艺术化虚构）"
+    }
+  ],
+  "endings": [
+    {
+      "id": "cheng-huai",
+      "name": "澄怀观道",
+      "category": "完整探索型",
+      "narrative": "你把守园灯挂上了长廊。灯亮起来的那一刻，平江路的橹声、耦园的水影、狮子林的石峰、拙政园的荷风，都一一亮了起来。小沈说，每一位点亮守园灯的人，都会成为这条路的讲述者。你走完了全部五个点位，解开了六道谜题，这条八百年的水巷，从此有了一位新的守灯人。",
+      "conditionText": "完成全部 6 个任务，并在尾声选择「把灯挂上长廊」"
+    },
+    {
+      "id": "qu-jing",
+      "name": "曲径归舟",
+      "category": "分支选择型",
+      "narrative": "你把守园灯轻轻收进行囊。有些故事不必急着讲给别人，先在心底养一养。你循着来路走回平江路，夜色里的河面映着灯影，像一页没写完的《平江图》。你解开了全部六道谜题，这条路已经属于你了——下一次带谁来，讲哪一段，都由你定。",
+      "conditionText": "完成全部 6 个任务，并在尾声选择「把灯收进行囊」"
+    },
+    {
+      "id": "wei-jin",
+      "name": "未尽之约",
+      "category": "未尽探索型",
+      "narrative": "你提前走到了尾声。守园灯还挂在长廊尽头，等你把它点亮。小沈把灯替你留着：\"这条路不急，回去把没走完的点位走完，没解开的谜解开，灯一直在这里。\"水巷深处，还有几扇门你没有推开。",
+      "conditionText": "未完成全部任务便进入尾声"
+    }
+  ]
+}
