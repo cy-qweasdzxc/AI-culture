@@ -4,7 +4,7 @@
 
 管理端新增资料默认 pending。清洗采用 Unicode NFKC、空白归一化和 SHA256 正文去重；切分450字符，重叠60字符，记录标题、点位、内容类型、来源/URL/授权、标签、最早章节、审核人、版本和指纹。
 
-人工审核必须确认来源 URL 与授权，不能接受“待补充/不明/未授权”等说明。reviewed 且非演示资料才可 publish。编辑和审核变更递增内容版本、撤销旧 chunks；检索连接资料表检查最新审核版本，防止旧向量继续生效。种子保持14条pending、0条正式检索证据；工程师没有代替审核人通过这些资料。
+人工审核必须确认来源 URL 与授权，不能接受“待补充/不明/未授权”等说明。reviewed 且非演示资料才可 publish。编辑和审核变更递增内容版本、撤销旧 chunks；检索连接资料表检查最新审核版本，防止旧向量继续生效。种子默认 24 条 pending、0 条正式检索证据；导入已核对语料后 22 条 reviewed、2 条排除。
 
 SQLite 使用 KnowledgeChunk JSON 向量；PostgreSQL 0002启用 pgvector 并建立 knowledge_vectors 原生向量表。维度、模型名称随每块记录，数据库检查 vector_dims。当前应用做精确余弦排序，无 HNSW、Chroma 或性能索引主张。
 
@@ -58,7 +58,7 @@ DeepSeek/Qwen使用 /chat/completions + response_format=json_object；Ollama用 
 | Embedding 提供方 / 模型 / 维度 | 通义 `text-embedding-v3` / **1024** |
 | 聊天提供方 / 模型 | DeepSeek `deepseek-chat` |
 | 提示词版本 | `npc-evidence-v2`（v1 未声明枚举取值，真实模型返回 `emotion="平静"` 被 schema 拒绝） |
-| 已审核语料 | 11 条（另有 3 条 pending 未入库） |
+| 已审核语料 | 22 条（验收当日为 11 条，其后扩充；另有 2 条 pending 未入库） |
 | 索引 | 11 个块，全部带 1024 维向量；pgvector 原生表 11 行且 `vector_dims=1024` |
 
 **导入幂等性**：`build_reviewed_corpus.py --apply` 重复执行不会增长版本，也不会重新调用
@@ -78,4 +78,3 @@ Embedding。判定依据是内容签名（含标题、正文、类型、来源�
   6 条无效引用；拒答题错误回答数从 6/9 降到 1/9。
 - 浏览器端真实链路：可答问题走混合检索并挂出引用，知识库外与注入提问在本地拦截且提供方为
   `none`（零调用）。
-

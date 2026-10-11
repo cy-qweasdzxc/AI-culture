@@ -2,7 +2,7 @@
   "schema_version": 1,
   "verified_on": "2026-10-10",
   "verification_kind": "public_primary_source_web_check",
-  "scope": "data/demo/seed.json knowledge 14项及对应codex/task的表述风险",
+  "scope": "data/demo/seed.json knowledge 24项及对应codex/task的表述风险",
   "automatic_publish": false,
   "database_modified": false,
   "license_status": "unconfirmed_for_project",
@@ -15,10 +15,11 @@
     "未抓取整页正文或图片入库，未复制《雨巷》诗歌全文。",
     "不将公开访问、Public Domain图像标识或特定UNESCO简介许可扩大成整站内容/本项目全部材料的授权。",
     "两项disputed未获得双方研究资料；对已读可靠来源与未找到的证据分别标记。",
-    "原seed/codex/task仍保留原文，建议尚未应用，14条仍pending且is_demo=true。"
+    "原seed/codex/task仍保留原文，建议尚未应用。2026-10-11 增补 10 条新记录并改写 1 条判定，用于扩充 RAG 语料与图鉴；正式人工逐页复核仍待完成。"
   ],
   "summary": {
-    "knowledge_count": 14,
+    "knowledge_count": 24,
+    "appended_2026_10_11": 10,
     "original_category_counts": {
       "fact": 10,
       "disputed": 2,
@@ -490,7 +491,7 @@
       "source_ids": [
         "dingxiang-2024"
       ],
-      "verification_status": "not_supported_as_written",
+      "verification_status": "partially_supported_needs_wording",
       "evidence_summary": "市方志机构明确否定诗写苏州丁香巷；现有正文“历来多种说法、并无定论、多为附会”缺少双方研究证据。",
       "supported_claims": [
         "丁香巷引发《雨巷》文学联想",
@@ -581,6 +582,37 @@
       "original_content": "相传清乾隆帝游历狮子林，兴之所至题下\"真趣\"二字。此类帝王轶闻多见于后世记载与民间讲述，作为传说欣赏为宜。",
       "original_source_placeholder": "民间传说与地方掌故（演示数据，待正式审核）",
       "related_codex_id": "codex-zhenqu"
+    },
+    {
+      "knowledge_id": "kn-zhenqu-bian",
+      "source_ids": [
+        "shizilin-2022"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "苏州市园林和绿化管理局狮林园史介绍记载乾隆1765年题“真趣”匾，后设真趣亭。",
+      "supported_claims": [
+        "乾隆1765年游狮子林题“真趣”匾",
+        "园内真趣亭与御笔匾额"
+      ],
+      "unsupported_or_unverified_claims": [
+        "乾隆穿行假山半日方出的具体过程"
+      ],
+      "proposed_content": "狮子林的“真趣”匾额为清乾隆帝于1765年游园时所题，园内后设真趣亭。",
+      "fact_legend_fiction_boundary": "仅收录题匾史实；迷路轶闻无来源，不并入本条。",
+      "human_followup": "人工核原匾、御制诗与园志。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "狮子林“真趣”匾",
+      "original_type": "fact",
+      "original_content": "狮子林“真趣”匾额为清乾隆帝于1765年游园时题写，园内后设真趣亭。",
+      "original_source_placeholder": "苏州市园林和绿化管理局狮林园史介绍",
+      "related_codex_id": null
     },
     {
       "knowledge_id": "kn-pianshi",
@@ -811,6 +843,285 @@
       "original_content": "拙政园始建于明正德年间（16世纪初），御史王献臣辞官归乡后所建。园名借西晋潘岳《闲居赋》中\"拙者之为政\"一句，自谦\"拙于从政\"。",
       "original_source_placeholder": "苏州园林公开史料（演示数据，待正式审核）",
       "related_codex_id": "codex-zhuozheng-origin"
+    },
+    {
+      "knowledge_id": "kn-shizilin-jiashan",
+      "spot_id": "shizilin",
+      "source_ids": [
+        "shizilin-2022"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "苏州市园林和绿化管理局狮林园史介绍：国内现存最大的古代假山群，太湖石堆叠，假山分三层、9条山路、21个洞口。",
+      "supported_claims": [
+        "拥有国内现存最大的古代假山群",
+        "太湖石堆叠，被誉为假山王国",
+        "假山分上中下三层，9条山路、21个洞口"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "狮子林拥有国内现存最大的古代假山群，以太湖石堆叠，被誉为“假山王国”。假山分上、中、下三层，共有9条山路、21个洞口，洞壑盘旋曲折。",
+      "fact_legend_fiction_boundary": "仅采用园方对假山规模的记载，不加入后世演绎。",
+      "human_followup": "人工复核园方现行数据是否更新。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "狮子林假山",
+      "original_type": "fact",
+      "original_content": "狮子林拥有国内现存最大的古代假山群，以太湖石堆叠，被誉为“假山王国”。假山分上、中、下三层，共有9条山路、21个洞口，洞壑盘旋曲折。",
+      "original_source_placeholder": "苏州市园林和绿化管理局狮林园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-shizilin-bei",
+      "spot_id": "shizilin",
+      "source_ids": [
+        "shizilin-2022"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "狮林园史介绍：1917年贝润生购得狮子林，斥资八十万银元、历时近七年整修；1954年对公众开放。",
+      "supported_claims": [
+        "1917年贝润生购得狮子林",
+        "斥资八十万银元、历时近七年整修",
+        "贝润生为贝聿铭叔祖父",
+        "1954年对公众开放"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "1917年，上海颜料巨商贝润生（建筑师贝聿铭的叔祖父）购得狮子林，斥资八十万银元、历时近七年整修，新增部分景点并沿用“狮子林”旧名。1954年，狮子林对公众开放。",
+      "fact_legend_fiction_boundary": "贝氏购园与开放年份为园方记载，不作评价性叙述。",
+      "human_followup": "人工核贝氏购园金额与开放年份的现行口径。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "贝润生与狮子林",
+      "original_type": "fact",
+      "original_content": "1917年，上海颜料巨商贝润生（建筑师贝聿铭的叔祖父）购得狮子林，斥资八十万银元、历时近七年整修，新增部分景点并沿用“狮子林”旧名。1954年，狮子林对公众开放。",
+      "original_source_placeholder": "苏州市园林和绿化管理局狮林园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-zhuozheng-siming",
+      "spot_id": "zhuozhengyuan",
+      "source_ids": [
+        "zhuozheng-2020"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "拙政园园史介绍：中国四大名园之一且历史最悠久；1961年列为首批全国重点文物保护单位；1997年列入世界遗产。",
+      "supported_claims": [
+        "中国四大名园之一且历史最悠久",
+        "1961年列为首批全国重点文物保护单位",
+        "1997年列入世界文化遗产"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "拙政园是中国四大名园（拙政园、留园、颐和园、承德避暑山庄）之一，也是其中历史最悠久者。1961年，拙政园被国务院列为首批全国重点文物保护单位；1997年列入《世界遗产名录》。",
+      "fact_legend_fiction_boundary": "仅采用园方与国务院公布口径。",
+      "human_followup": "人工复核文保单位批次表述。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "拙政园的历史地位",
+      "original_type": "fact",
+      "original_content": "拙政园是中国四大名园（拙政园、留园、颐和园、承德避暑山庄）之一，也是其中历史最悠久者。1961年，拙政园被国务院列为首批全国重点文物保护单位；1997年列入《世界遗产名录》。",
+      "original_source_placeholder": "苏州市园林和绿化管理局拙政园园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-zhuozheng-layout",
+      "spot_id": "zhuozhengyuan",
+      "source_ids": [
+        "zhuozheng-2020"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "拙政园园史介绍：占地约78亩，全园分东、中、西三部分，中部池水面积约占三分之一。",
+      "supported_claims": [
+        "占地约78亩（约52000平方米）",
+        "全园分东、中、西三部分",
+        "中部池水面积约占三分之一，为主要精华"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "拙政园占地约78亩，全园分东、中、西三部分。中部是全园精华，池水面积约占三分之一，以水为主、池广树茂；主要景点有远香堂、香洲、荷风四面亭、见山楼、小飞虹等。",
+      "fact_legend_fiction_boundary": "仅采用园方公布的面积与分区数据。",
+      "human_followup": "人工复核面积数据。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "拙政园的布局",
+      "original_type": "fact",
+      "original_content": "拙政园占地约78亩，全园分东、中、西三部分。中部是全园精华，池水面积约占三分之一，以水为主、池广树茂；主要景点有远香堂、香洲、荷风四面亭、见山楼、小飞虹等。",
+      "original_source_placeholder": "苏州市园林和绿化管理局拙政园园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-ouyuan-jiashan",
+      "spot_id": "ouyuan",
+      "source_ids": [
+        "ouyuan-2025"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "耦园园史介绍：住宅居中、东西花园对偶；东花园黄石假山，西花园织帘老屋前湖石假山，象征阴阳相携。",
+      "supported_claims": [
+        "住宅居中、东西花园对偶格局",
+        "东花园黄石假山，雄浑峭拔",
+        "西花园织帘老屋前湖石假山，尽显阴柔"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "耦园采用“住宅居中、东西花园”的对偶格局，形成东园—中宅—西园的布局。东花园以黄石假山居中，雄浑峭拔；西花园在织帘老屋前堆叠湖石假山，尽显阴柔，象征阴阳相携。",
+      "fact_legend_fiction_boundary": "阴阳象征取自园方介绍，作为造园语汇说明，不作超自然叙述。",
+      "human_followup": "人工复核假山石种与命名。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "耦园的假山与对偶格局",
+      "original_type": "fact",
+      "original_content": "耦园采用“住宅居中、东西花园”的对偶格局，形成东园—中宅—西园的布局。东花园以黄石假山居中，雄浑峭拔；西花园在织帘老屋前堆叠湖石假山，尽显阴柔，象征阴阳相携。",
+      "original_source_placeholder": "苏州市园林和绿化管理局耦园园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-ouyuan-zoumalou",
+      "spot_id": "ouyuan",
+      "source_ids": [
+        "ouyuan-2025"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "耦园园史介绍：园北枕河楼房以楼上走廊与过道串联东、中、西三部分，俗称走马楼。",
+      "supported_claims": [
+        "园北枕河楼房",
+        "楼上走廊与过道串联东、中、西三部分",
+        "东达双照楼、西至藏书楼，俗称走马楼"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "耦园园北为枕河楼房，以楼上走廊和过道将东、中、西三部分连成一体，东达东花园双照楼，西至西花园藏书楼，俗称“走马楼”。",
+      "fact_legend_fiction_boundary": "仅采用园方建筑描述。",
+      "human_followup": "人工复核走马楼现状与命名。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "耦园走马楼",
+      "original_type": "fact",
+      "original_content": "耦园园北为枕河楼房，以楼上走廊和过道将东、中、西三部分连成一体，东达东花园双照楼，西至西花园藏书楼，俗称“走马楼”。",
+      "original_source_placeholder": "苏州市园林和绿化管理局耦园园史介绍",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-dingxiang-ming",
+      "spot_id": "pingjiang",
+      "source_ids": [
+        "pingjiang-2021"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "苏州市文广旅局平江古巷专题：丁香巷西起平江路、东至仓街，因巷内多棵丁香树得名。",
+      "supported_claims": [
+        "丁香巷西起平江路、东至仓街",
+        "因巷内有多棵丁香树而得名"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "丁香巷西起平江路、东至仓街，因巷内有多棵丁香树而得名。",
+      "fact_legend_fiction_boundary": "与《雨巷》文学联想分列，不把得名说成诗歌原型。",
+      "human_followup": "人工核巷名沿革与植栽现状。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "丁香巷的得名",
+      "original_type": "fact",
+      "original_content": "丁香巷西起平江路、东至仓街，因巷内有多棵丁香树而得名。",
+      "original_source_placeholder": "苏州市文化广电和旅游局平江古巷专题",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-pingjiang-xiang",
+      "spot_id": "pingjiang",
+      "source_ids": [
+        "pingjiang-2021"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "苏州市文广旅局平江古巷专题：苏州现存最典型、最完整的古城历史文化保护区，有二十余条街巷、十三座古桥。",
+      "supported_claims": [
+        "苏州现存最典型、最完整的古城历史文化保护区",
+        "街区内有二十余条纵横街巷、十三座古桥",
+        "散布众多古宅、古井、古树、古牌坊"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "平江古巷是苏州现存最典型、最完整的古城历史文化保护区，堪称苏州古城的缩影。街区有二十余条纵横街巷和十三座古桥，并散布着众多古宅、古井、古树与古牌坊。",
+      "fact_legend_fiction_boundary": "采用官方专题的概括性描述，不含文学化形容。",
+      "human_followup": "人工复核街巷与古桥数量口径。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "平江古巷",
+      "original_type": "fact",
+      "original_content": "平江古巷是苏州现存最典型、最完整的古城历史文化保护区，堪称苏州古城的缩影。街区有二十余条纵横街巷和十三座古桥，并散布着众多古宅、古井、古树与古牌坊。",
+      "original_source_placeholder": "苏州市文化广电和旅游局平江古巷专题",
+      "related_codex_id": null
+    },
+    {
+      "knowledge_id": "kn-subo-chuangyi",
+      "spot_id": "subo",
+      "source_ids": [
+        "subo-garden-2025"
+      ],
+      "verification_status": "supported_public_evidence_only",
+      "evidence_summary": "苏州园林局苏州博物馆花园条目：创意山水园由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林组成；片石假山以壁为纸、以石为画。",
+      "supported_claims": [
+        "新馆花园名创意山水园",
+        "由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林组成",
+        "片石假山以壁为纸、以石为画，与拙政园景致笔断意连"
+      ],
+      "unsupported_or_unverified_claims": [],
+      "proposed_content": "苏州博物馆新馆花园又名创意山水园，由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林等组成。片石假山以壁为纸、以石为画，呈现清晰的轮廓与剪影效果，与一旁拙政园的景致笔断意连。",
+      "fact_legend_fiction_boundary": "仅采用官方条目对园景构成的描述。",
+      "human_followup": "人工复核园景元素清单。",
+      "proposed_content_applied": false,
+      "review_status": "pending",
+      "is_demo": true,
+      "license": null,
+      "license_status": "unconfirmed_for_project",
+      "human_review_status": "pending",
+      "reviewer": null,
+      "reviewed_at": null,
+      "original_title": "苏博创意山水园",
+      "original_type": "fact",
+      "original_content": "苏州博物馆新馆花园又名创意山水园，由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林等组成。片石假山以壁为纸、以石为画，呈现清晰的轮廓与剪影效果，与一旁拙政园的景致笔断意连。",
+      "original_source_placeholder": "苏州市园林和绿化管理局苏州博物馆花园条目",
+      "related_codex_id": null
     }
   ],
   "source_snapshot": {

@@ -4,7 +4,7 @@
 
 2026-10-11在 Windows、Python3.12.5、Node24.15 上验证 SQLite 迁移/幂等种子、FastAPI、Vite、桌面和375px浏览器流程，并实测后端进程重启后的任务、奖励及完整状态恢复。
 
-本轮已按普通用户模式安装 Docker Desktop 4.94.0，安装包通过官方 SHA256 和有效数字签名校验；实际 Docker CLI 29.8.2、Compose 5.5.1。使用工程外私有测试配置及仅替换 backend env_file 的 overlay，`docker compose config --quiet` 实际通过，未创建或覆盖工程内 `.env`。WSL尚未安装，Engine不可用；系统功能启用和重启须按用户授权边界另行确认，因此镜像构建、PostgreSQL/pgvector/Nginx容器和容器恢复仍未验收。完整执行记录在工程外 `D:/Code/AIC-maintenance/test-summary.md`。
+本轮已按普通用户模式安装 Docker Desktop 4.94.0，安装包通过官方 SHA256 和有效数字签名校验；实际 Docker CLI 29.8.2、Compose 5.5.1。使用工程外私有测试配置及仅替换 backend env_file 的 overlay，`docker compose config --quiet` 实际通过，未创建或覆盖工程内 `.env`。其后在 WSL2 后端完成了隔离全栈验收（见下文“2026-10-11 隔离全栈验收结果”）：镜像构建、PostgreSQL/pgvector、Nginx、容器重启持久化与备份恢复均已实测；仅生产 HTTPS/TLS 终止形态与多实例共享限流仍未执行。完整执行记录在工程外 `D:/Code/AIC-maintenance/test-summary.md`。
 
 ## 本地
 

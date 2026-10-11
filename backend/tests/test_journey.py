@@ -62,7 +62,7 @@ def test_migrations_and_idempotent_seed(db, database):
     assert len(tables) == 19  # 17 planned entities, action receipts and Alembic revision.
     seed_database(db)
     seed_database(db)
-    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 14
+    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
     assert not db.scalar(select(func.count()).select_from(CulturalKnowledge).where(CulturalKnowledge.review_status != "pending"))
     assert not db.scalar(select(func.count()).select_from(KnowledgeChunk))
     assert db.scalar(select(func.count()).select_from(StoryEdge)) > 20
@@ -261,6 +261,8 @@ def test_complete_route_and_persistent_endings(client, started, choice, expected
     assert report["knowledgeScore"] == report["maxScore"] == 140
     assert report["completedTaskCount"] == 6
     assert report["completedSpotCount"] == 5
+    # Every codex entry must be reachable: task rewards plus the ending grant cover them all.
+    assert report["unlockedCodexCount"] == report["totalCodexCount"] == 24
     assert report["metricSource"] == "persisted_journey"
     blocked = client.post("/api/journeys/mode", json=action(final, mode="onsite"))
     assert blocked.json()["error"]["code"] == "JOURNEY_COMPLETED"

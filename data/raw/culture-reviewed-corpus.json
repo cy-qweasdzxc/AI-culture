@@ -19,8 +19,8 @@
     "license_note": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。"
   },
   "summary": {
-    "included": 11,
-    "excluded": 3
+    "included": 22,
+    "excluded": 2
   },
   "included": [
     {
@@ -225,6 +225,44 @@
       }
     },
     {
+      "id": "kn-yuxiang",
+      "location_id": "pingjiang",
+      "title": "《雨巷》与丁香巷",
+      "content": "苏州丁香巷的名字和风貌容易让人联想到戴望舒《雨巷》。苏州市方志馆的公开介绍明确指出，该诗并非写苏州丁香巷；这里的联系宜理解为后来的文学联想。",
+      "content_type": "disputed",
+      "source": "苏州市地方志编纂委员会办公室（市方志馆）",
+      "source_url": "https://dfzb.suzhou.gov.cn/dfzb/szdq/202408/01e5951b93bf4027b3c915d998e59bdb.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "partially_supported_needs_wording",
+        "content_origin": "research_proposed_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "dingxiang-2024",
+            "institution": "苏州市地方志编纂委员会办公室（市方志馆）",
+            "url": "https://dfzb.suzhou.gov.cn/dfzb/szdq/202408/01e5951b93bf4027b3c915d998e59bdb.shtml",
+            "published_on": "2024-08-06",
+            "accessed_on": "2026-10-10",
+            "locator": "《雨巷》介绍后紧接的辨析段",
+            "supports": "诗歌意象引发丁香巷文学联想；该机构明确否定《雨巷》写苏州丁香巷。",
+            "limitations": "没有提供创作地点的原始手稿或学术双方争议；不引用页面整段诗歌。"
+          }
+        ],
+        "research_limitations": [
+          "有可靠学术来源支持苏州丁香巷为原型",
+          "史实处于势均力敌、无定论的学术争议状态",
+          "多为后人附会这一历史评价"
+        ],
+        "human_followup": "若要声称原型争议，须获取支持该说法及反对该说法的原始研究；未找到支持方，不补造第二来源。"
+      }
+    },
+    {
       "id": "kn-shizi-origin",
       "location_id": "shizilin",
       "title": "元代始建的狮子林",
@@ -256,6 +294,42 @@
         ],
         "research_limitations": [],
         "human_followup": "人工校核原始园史与转述许可；主管机构网页其他段落有字误，不整页盲目入库。"
+      }
+    },
+    {
+      "id": "kn-zhenqu-bian",
+      "location_id": "shizilin",
+      "title": "狮子林“真趣”匾",
+      "content": "狮子林“真趣”匾额为清乾隆帝于1765年游园时题写，园内后设真趣亭。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "shizilin-2022",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+            "published_on": "2022-10-27",
+            "accessed_on": "2026-10-10",
+            "locator": "始建段、主要特点第1和第3项",
+            "supports": "1342年弟子为天如禅师建禅林；湖石假山；乾隆1765年题真趣匾，后设真趣亭。",
+            "limitations": "正文存在其他叙述/字词瑕疵，不扩写未核定细节；未证实“迷路半日”或即兴题字过程。"
+          }
+        ],
+        "research_limitations": [
+          "乾隆穿行假山半日方出的具体过程"
+        ],
+        "human_followup": "人工核原匾、御制诗与园志。"
       }
     },
     {
@@ -578,14 +652,315 @@
         ],
         "human_followup": "人工核古籍整理本与官场经历；原文辞官建议修为退居。"
       }
+    },
+    {
+      "id": "kn-shizilin-jiashan",
+      "location_id": "shizilin",
+      "title": "狮子林假山",
+      "content": "狮子林拥有国内现存最大的古代假山群，以太湖石堆叠，被誉为“假山王国”。假山分上、中、下三层，共有9条山路、21个洞口，洞壑盘旋曲折。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "shizilin-2022",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+            "published_on": "2022-10-27",
+            "accessed_on": "2026-10-10",
+            "locator": "始建段、主要特点第1和第3项",
+            "supports": "1342年弟子为天如禅师建禅林；湖石假山；乾隆1765年题真趣匾，后设真趣亭。",
+            "limitations": "正文存在其他叙述/字词瑕疵，不扩写未核定细节；未证实“迷路半日”或即兴题字过程。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核园方现行数据是否更新。"
+      }
+    },
+    {
+      "id": "kn-shizilin-bei",
+      "location_id": "shizilin",
+      "title": "贝润生与狮子林",
+      "content": "1917年，上海颜料巨商贝润生（建筑师贝聿铭的叔祖父）购得狮子林，斥资八十万银元、历时近七年整修，新增部分景点并沿用“狮子林”旧名。1954年，狮子林对公众开放。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "shizilin-2022",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/767dcf47765b40549969f1a6989c689c.shtml",
+            "published_on": "2022-10-27",
+            "accessed_on": "2026-10-10",
+            "locator": "始建段、主要特点第1和第3项",
+            "supports": "1342年弟子为天如禅师建禅林；湖石假山；乾隆1765年题真趣匾，后设真趣亭。",
+            "limitations": "正文存在其他叙述/字词瑕疵，不扩写未核定细节；未证实“迷路半日”或即兴题字过程。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工核贝氏购园金额与开放年份的现行口径。"
+      }
+    },
+    {
+      "id": "kn-zhuozheng-siming",
+      "location_id": "zhuozhengyuan",
+      "title": "拙政园的历史地位",
+      "content": "拙政园是中国四大名园（拙政园、留园、颐和园、承德避暑山庄）之一，也是其中历史最悠久者。1961年，拙政园被国务院列为首批全国重点文物保护单位；1997年列入《世界遗产名录》。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/c1df393edc8745abb20e8a9bd5525782.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "zhuozheng-2020",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/c1df393edc8745abb20e8a9bd5525782.shtml",
+            "published_on": "2020-03-16",
+            "accessed_on": "2026-10-10",
+            "locator": "建园历史段",
+            "supports": "1509年王献臣退居后拓建；园名取潘岳赋句；文徵明设计蓝图一说明确冠以据传。",
+            "limitations": "不能将据传升级为史实；页面未提出已证实的两派学术争论。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核文保单位批次表述。"
+      }
+    },
+    {
+      "id": "kn-zhuozheng-layout",
+      "location_id": "zhuozhengyuan",
+      "title": "拙政园的布局",
+      "content": "拙政园占地约78亩，全园分东、中、西三部分。中部是全园精华，池水面积约占三分之一，以水为主、池广树茂；主要景点有远香堂、香洲、荷风四面亭、见山楼、小飞虹等。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/c1df393edc8745abb20e8a9bd5525782.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "zhuozheng-2020",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/201905/c1df393edc8745abb20e8a9bd5525782.shtml",
+            "published_on": "2020-03-16",
+            "accessed_on": "2026-10-10",
+            "locator": "建园历史段",
+            "supports": "1509年王献臣退居后拓建；园名取潘岳赋句；文徵明设计蓝图一说明确冠以据传。",
+            "limitations": "不能将据传升级为史实；页面未提出已证实的两派学术争论。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核面积数据。"
+      }
+    },
+    {
+      "id": "kn-ouyuan-jiashan",
+      "location_id": "ouyuan",
+      "title": "耦园的假山与对偶格局",
+      "content": "耦园采用“住宅居中、东西花园”的对偶格局，形成东园—中宅—西园的布局。东花园以黄石假山居中，雄浑峭拔；西花园在织帘老屋前堆叠湖石假山，尽显阴柔，象征阴阳相携。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "ouyuan-2025",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+            "published_on": "2025-09-15",
+            "accessed_on": "2026-10-10",
+            "locator": "正文第2、3段",
+            "supports": "沈秉成1874年购涉园旧址扩建；园名夫妻佳偶含义；东园—中宅—西园布局。",
+            "limitations": "未直接表述“耦通偶”；不提供当前游船服务。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核假山石种与命名。"
+      }
+    },
+    {
+      "id": "kn-ouyuan-zoumalou",
+      "location_id": "ouyuan",
+      "title": "耦园走马楼",
+      "content": "耦园园北为枕河楼房，以楼上走廊和过道将东、中、西三部分连成一体，东达东花园双照楼，西至西花园藏书楼，俗称“走马楼”。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "ouyuan-2025",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/202509/b6e90b58ee1947fe9282ad5d7ecdae08.shtml",
+            "published_on": "2025-09-15",
+            "accessed_on": "2026-10-10",
+            "locator": "正文第2、3段",
+            "supports": "沈秉成1874年购涉园旧址扩建；园名夫妻佳偶含义；东园—中宅—西园布局。",
+            "limitations": "未直接表述“耦通偶”；不提供当前游船服务。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核走马楼现状与命名。"
+      }
+    },
+    {
+      "id": "kn-dingxiang-ming",
+      "location_id": "pingjiang",
+      "title": "丁香巷的得名",
+      "content": "丁香巷西起平江路、东至仓街，因巷内有多棵丁香树而得名。",
+      "content_type": "fact",
+      "source": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+      "source_url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "pingjiang-2021",
+            "institution": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+            "url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+            "published_on": "2021-10-29",
+            "accessed_on": "2026-10-10",
+            "locator": "正文首段",
+            "supports": "《平江图》刻于1229年；平江古巷保存历史风貌，古城水陆并行、河街相邻。",
+            "limitations": "未单独说明碑刻现藏地；该页“最早”不扩写为本项目新结论。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工核巷名沿革与植栽现状。"
+      }
+    },
+    {
+      "id": "kn-pingjiang-xiang",
+      "location_id": "pingjiang",
+      "title": "平江古巷",
+      "content": "平江古巷是苏州现存最典型、最完整的古城历史文化保护区，堪称苏州古城的缩影。街区有二十余条纵横街巷和十三座古桥，并散布着众多古宅、古井、古树与古牌坊。",
+      "content_type": "fact",
+      "source": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+      "source_url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "pingjiang-2021",
+            "institution": "苏州市文化广电和旅游局（苏州市政府运河十景专题）",
+            "url": "https://www.suzhou.gov.cn/szwgjyhsj/yhsjjbgk/202110/59af752df49b4b9d8ad3efe119e9b713.shtml",
+            "published_on": "2021-10-29",
+            "accessed_on": "2026-10-10",
+            "locator": "正文首段",
+            "supports": "《平江图》刻于1229年；平江古巷保存历史风貌，古城水陆并行、河街相邻。",
+            "limitations": "未单独说明碑刻现藏地；该页“最早”不扩写为本项目新结论。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核街巷与古桥数量口径。"
+      }
+    },
+    {
+      "id": "kn-subo-chuangyi",
+      "location_id": "subo",
+      "title": "苏博创意山水园",
+      "content": "苏州博物馆新馆花园又名创意山水园，由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林等组成。片石假山以壁为纸、以石为画，呈现清晰的轮廓与剪影效果，与一旁拙政园的景致笔断意连。",
+      "content_type": "fact",
+      "source": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/ylml/201912/991bce137015448c8d680a3d1c70ab95.shtml",
+      "license": "来源为公开政府与文博机构网页；经参赛团队确认用于本项目非商业赛事演示，未取得书面转载许可，不复制原始页面图像，仅引述事实并标注出处。",
+      "review_status": "reviewed",
+      "reviewer": "Penknife",
+      "reviewed_at": "2026-10-11T07:46:10.212648+00:00",
+      "is_demo": false,
+      "metadata_json": {
+        "min_chapter": 1,
+        "verification_status": "supported_public_evidence_only",
+        "content_origin": "original_content",
+        "review_note": "审核依据上一轮来源核对结论（data/raw/culture-source-candidates.json），未由审核人逐页独立复核；正式提交前需人工确认。",
+        "cited_sources": [
+          {
+            "id": "subo-garden-2025",
+            "institution": "苏州市园林和绿化管理局",
+            "url": "https://ylj.suzhou.gov.cn/szsylj/ylml/201912/991bce137015448c8d680a3d1c70ab95.shtml",
+            "published_on": "2025-10-21",
+            "accessed_on": "2026-10-10",
+            "locator": "正文两段",
+            "supports": "2006年10月6日正式开放；主庭院片石假山与白墙形成绘画般的景观。",
+            "limitations": "页面表述为“以石为画”，不能据此断言任一措辞是题字原件。"
+          }
+        ],
+        "research_limitations": [],
+        "human_followup": "人工复核园景元素清单。"
+      }
     }
   ],
   "excluded": [
-    {
-      "knowledge_id": "kn-yuxiang",
-      "verification_status": "not_supported_as_written",
-      "reason": "公开来源不支持现有表述，需要人工改写后才能审核"
-    },
     {
       "knowledge_id": "kn-zhenqu",
       "verification_status": "mixed_fact_and_unverified_legend",

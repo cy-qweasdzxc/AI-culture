@@ -238,7 +238,10 @@
         "clue-shaoding"
       ],
       "rewardCodexIds": [
-        "codex-pingjiangtu"
+        "codex-pingjiangtu",
+        "codex-yuxiang",
+        "codex-dingxiang-ming",
+        "codex-pingjiang-xiang"
       ],
       "explanation": "《平江图》碑刻于南宋绍定二年，即公元 1229 年，现存苏州碑刻博物馆。"
     },
@@ -271,7 +274,9 @@
       "rewardClueId": "clue-ou-zi",
       "rewardCodexIds": [
         "codex-ouyuan-jiaou",
-        "codex-ouyuan-water"
+        "codex-ouyuan-water",
+        "codex-ouyuan-jiashan",
+        "codex-ouyuan-zoumalou"
       ],
       "explanation": "\"耦\"通\"偶\"，取佳偶之意，纪念沈秉成与严永华夫妇的偕隐生活。"
     },
@@ -303,7 +308,10 @@
       "answerKey": "B",
       "rewardCodexIds": [
         "codex-shizi-origin",
-        "codex-zhenqu"
+        "codex-zhenqu",
+        "codex-shizilin-jiashan",
+        "codex-shizilin-bei",
+        "codex-zhenqu-bian"
       ],
       "explanation": "狮子林始建于元代至正二年（1342年），由天如禅师弟子为其师所建。"
     },
@@ -330,7 +338,9 @@
       "rewardCodexIds": [
         "codex-zhuozheng-origin",
         "codex-wenzhengming",
-        "codex-shijieyichan"
+        "codex-shijieyichan",
+        "codex-zhuozheng-siming",
+        "codex-zhuozheng-layout"
       ],
       "explanation": "建园于明正德，文徵明图咏在明中后期，太平天国在清末，列入世界遗产是 1997 年。"
     },
@@ -367,7 +377,8 @@
       "rewardCodexIds": [
         "codex-subo-bei",
         "codex-pianshi",
-        "codex-zhongwangfu"
+        "codex-zhongwangfu",
+        "codex-subo-chuangyi"
       ],
       "explanation": "\"以壁为纸，以石为绘\"，贝聿铭借米芾山水画意，在白墙前叠石成山。"
     }
@@ -548,6 +559,96 @@
       "summary": "本平台剧情创作的一盏灯",
       "content": "\"守园灯\"是《城迹入戏》为本条路线创作的剧情意象：传说每座园林都有一盏守园灯，点亮它的人，会把这一路听到、看到的故事继续讲下去。本条目为艺术化虚构。",
       "source": "城迹入戏剧情创作（艺术化虚构）"
+    },
+    {
+      "id": "codex-zhenqu-bian",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "狮子林“真趣”匾",
+      "summary": "乾隆 1765 年游园时题写的匾额",
+      "content": "狮子林的“真趣”匾额为清乾隆帝于1765年游园时所题，园内后设真趣亭。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍"
+    },
+    {
+      "id": "codex-shizilin-jiashan",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "假山王国",
+      "summary": "国内现存最大的古代假山群",
+      "content": "狮子林拥有国内现存最大的古代假山群，以太湖石堆叠，被誉为“假山王国”。假山分上、中、下三层，共有9条山路、21个洞口，洞壑盘旋曲折。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍"
+    },
+    {
+      "id": "codex-shizilin-bei",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "贝润生与狮子林",
+      "summary": "1917 年购园整修，1954 年对外开放",
+      "content": "1917年，上海颜料巨商贝润生（建筑师贝聿铭的叔祖父）购得狮子林，斥资八十万银元、历时近七年整修，新增部分景点并沿用“狮子林”旧名。1954年，狮子林对公众开放。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍"
+    },
+    {
+      "id": "codex-zhuozheng-siming",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园的历史地位",
+      "summary": "中国四大名园之一，1961 年首批全国重点文保",
+      "content": "拙政园是中国四大名园（拙政园、留园、颐和园、承德避暑山庄）之一，也是其中历史最悠久者。1961年，拙政园被国务院列为首批全国重点文物保护单位；1997年列入《世界遗产名录》。",
+      "source": "苏州市园林和绿化管理局拙政园园史介绍"
+    },
+    {
+      "id": "codex-zhuozheng-layout",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园的布局",
+      "summary": "占地约 78 亩，东中西三部分",
+      "content": "拙政园占地约78亩，全园分东、中、西三部分。中部是全园精华，池水面积约占三分之一，以水为主、池广树茂；主要景点有远香堂、香洲、荷风四面亭、见山楼、小飞虹等。",
+      "source": "苏州市园林和绿化管理局拙政园园史介绍"
+    },
+    {
+      "id": "codex-ouyuan-jiashan",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "耦园的假山与对偶格局",
+      "summary": "东黄石、西湖石，阴阳相携",
+      "content": "耦园采用“住宅居中、东西花园”的对偶格局，形成东园—中宅—西园的布局。东花园以黄石假山居中，雄浑峭拔；西花园在织帘老屋前堆叠湖石假山，尽显阴柔，象征阴阳相携。",
+      "source": "苏州市园林和绿化管理局耦园园史介绍"
+    },
+    {
+      "id": "codex-ouyuan-zoumalou",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "耦园走马楼",
+      "summary": "楼廊串联东、中、西三部分",
+      "content": "耦园园北为枕河楼房，以楼上走廊和过道将东、中、西三部分连成一体，东达东花园双照楼，西至西花园藏书楼，俗称“走马楼”。",
+      "source": "苏州市园林和绿化管理局耦园园史介绍"
+    },
+    {
+      "id": "codex-dingxiang-ming",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "丁香巷的得名",
+      "summary": "因巷内多棵丁香树得名",
+      "content": "丁香巷西起平江路、东至仓街，因巷内有多棵丁香树而得名。",
+      "source": "苏州市文化广电和旅游局平江古巷专题"
+    },
+    {
+      "id": "codex-pingjiang-xiang",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "平江古巷",
+      "summary": "二十余条街巷、十三座古桥",
+      "content": "平江古巷是苏州现存最典型、最完整的古城历史文化保护区，堪称苏州古城的缩影。街区有二十余条纵横街巷和十三座古桥，并散布着众多古宅、古井、古树与古牌坊。",
+      "source": "苏州市文化广电和旅游局平江古巷专题"
+    },
+    {
+      "id": "codex-subo-chuangyi",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "苏博创意山水园",
+      "summary": "片石假山与拙政园笔断意连",
+      "content": "苏州博物馆新馆花园又名创意山水园，由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林等组成。片石假山以壁为纸、以石为画，呈现清晰的轮廓与剪影效果，与一旁拙政园的景致笔断意连。",
+      "source": "苏州市园林和绿化管理局苏州博物馆花园条目"
     }
   ],
   "knowledge": [
@@ -662,6 +763,86 @@
       "title": "守园灯（剧情创作）",
       "content": "\"守园灯\"为本平台剧情创作：传说每座园林都有一盏守园灯，点亮它的人，会把这一路的故事继续讲下去。",
       "source": "城迹入戏剧情创作（艺术化虚构）"
+    },
+    {
+      "id": "kn-zhenqu-bian",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "狮子林“真趣”匾",
+      "content": "狮子林的“真趣”匾额为清乾隆帝于1765年游园时所题，园内后设真趣亭。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-shizilin-jiashan",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "狮子林假山",
+      "content": "狮子林拥有国内现存最大的古代假山群，以太湖石堆叠，被誉为“假山王国”。假山分上、中、下三层，共有9条山路、21个洞口，洞壑盘旋曲折。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-shizilin-bei",
+      "spotId": "shizilin",
+      "type": "fact",
+      "title": "贝润生与狮子林",
+      "content": "1917年，上海颜料巨商贝润生（建筑师贝聿铭的叔祖父）购得狮子林，斥资八十万银元、历时近七年整修，新增部分景点并沿用“狮子林”旧名。1954年，狮子林对公众开放。",
+      "source": "苏州市园林和绿化管理局狮林园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-zhuozheng-siming",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园的历史地位",
+      "content": "拙政园是中国四大名园（拙政园、留园、颐和园、承德避暑山庄）之一，也是其中历史最悠久者。1961年，拙政园被国务院列为首批全国重点文物保护单位；1997年列入《世界遗产名录》。",
+      "source": "苏州市园林和绿化管理局拙政园园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-zhuozheng-layout",
+      "spotId": "zhuozhengyuan",
+      "type": "fact",
+      "title": "拙政园的布局",
+      "content": "拙政园占地约78亩，全园分东、中、西三部分。中部是全园精华，池水面积约占三分之一，以水为主、池广树茂；主要景点有远香堂、香洲、荷风四面亭、见山楼、小飞虹等。",
+      "source": "苏州市园林和绿化管理局拙政园园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-ouyuan-jiashan",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "耦园的假山与对偶格局",
+      "content": "耦园采用“住宅居中、东西花园”的对偶格局，形成东园—中宅—西园的布局。东花园以黄石假山居中，雄浑峭拔；西花园在织帘老屋前堆叠湖石假山，尽显阴柔，象征阴阳相携。",
+      "source": "苏州市园林和绿化管理局耦园园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-ouyuan-zoumalou",
+      "spotId": "ouyuan",
+      "type": "fact",
+      "title": "耦园走马楼",
+      "content": "耦园园北为枕河楼房，以楼上走廊和过道将东、中、西三部分连成一体，东达东花园双照楼，西至西花园藏书楼，俗称“走马楼”。",
+      "source": "苏州市园林和绿化管理局耦园园史介绍（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-dingxiang-ming",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "丁香巷的得名",
+      "content": "丁香巷西起平江路、东至仓街，因巷内有多棵丁香树而得名。",
+      "source": "苏州市文化广电和旅游局平江古巷专题（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-pingjiang-xiang",
+      "spotId": "pingjiang",
+      "type": "fact",
+      "title": "平江古巷",
+      "content": "平江古巷是苏州现存最典型、最完整的古城历史文化保护区，堪称苏州古城的缩影。街区有二十余条纵横街巷和十三座古桥，并散布着众多古宅、古井、古树与古牌坊。",
+      "source": "苏州市文化广电和旅游局平江古巷专题（演示数据，待正式审核）"
+    },
+    {
+      "id": "kn-subo-chuangyi",
+      "spotId": "subo",
+      "type": "fact",
+      "title": "苏博创意山水园",
+      "content": "苏州博物馆新馆花园又名创意山水园，由鹅卵石池塘、片石假山、直曲小桥、八角凉亭、竹林等组成。片石假山以壁为纸、以石为画，呈现清晰的轮廓与剪影效果，与一旁拙政园的景致笔断意连。",
+      "source": "苏州市园林和绿化管理局苏州博物馆花园条目（演示数据，待正式审核）"
     }
   ],
   "endings": [

@@ -235,7 +235,7 @@ def test_feedback_is_owned_by_session_and_npc(client, started):
 def test_admin_metrics_and_basic_configuration_are_database_backed(client, admin_config):
     login(client)
     metrics = client.get("/api/admin/metrics").json()
-    assert metrics["knowledge"] == 14 and metrics["reviewedKnowledge"] == metrics["chunks"] == 0
+    assert metrics["knowledge"] == 24 and metrics["reviewedKnowledge"] == metrics["chunks"] == 0
     assert metrics["source"] == "database_counts" and metrics["performance"] is None
     edited = client.patch("/api/admin/characters/zhou-bo", json={"name": "合成测试周伯", "greeting": "测试欢迎语", "knowledge_scope": "测试范围", "personality": ["合成"]})
     assert edited.status_code == 200 and edited.json()["data"]["name"] == "合成测试周伯"

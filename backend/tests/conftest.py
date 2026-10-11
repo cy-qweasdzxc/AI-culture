@@ -10,6 +10,19 @@ from app.core.database import get_db, make_engine
 from app.services.seed import seed_database
 
 
+def pytest_configure() -> None:
+    """Keep the test session hermetic: never inherit the developer's repo-root ``.env``.
+
+    A local ``.env`` (for example ``SESSION_COOKIE_SECURE=false`` when the stack is served over
+    plain HTTP) must not change test outcomes. Tests that need configuration set it explicitly
+    through ``monkeypatch``.
+    """
+    from app.core.config import Settings, get_settings
+
+    Settings.model_config["env_file"] = None
+    get_settings.cache_clear()
+
+
 @pytest.fixture
 def database(tmp_path):
     engine = make_engine(f"sqlite:///{tmp_path / 'test.db'}")

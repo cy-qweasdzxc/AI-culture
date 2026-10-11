@@ -69,6 +69,7 @@ SPOT_BY_KNOWLEDGE = {
     "kn-yuxiang": "pingjiang",
     "kn-shizi-origin": "shizilin",
     "kn-zhenqu": "shizilin",
+    "kn-zhenqu-bian": "shizilin",
     "kn-pianshi": "subo",
     "kn-shouyuandeng": "subo",
     "kn-subo-bei": "subo",
@@ -130,7 +131,7 @@ def build(research: dict, reviewer: str, *, reviewed_at: str | None = None,
         primary = cited[0]
         # A record flagged as needing re-wording must not republish the wording the research rejected.
         content = record["proposed_content"] if verdict in REWORD_VERDICTS else record["original_content"]
-        location_id = SPOT_BY_KNOWLEDGE.get(knowledge_id)
+        location_id = record.get("spot_id") or SPOT_BY_KNOWLEDGE.get(knowledge_id)
         if not location_id:
             excluded.append({"knowledge_id": knowledge_id, "verification_status": verdict,
                              "reason": "缺少点位归属映射，不能入库"})
