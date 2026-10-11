@@ -1,6 +1,18 @@
 # 前端依赖安全审计
 
-2026-10-11工程维护复验：完整npm审计仍为5 high、生产依赖0项；官方registry查询braces最新版仍为3.0.3。未强制迁移Tailwind4，锁文件与既有依赖环境保留。当前原始审计JSON在工程外`D:/Code/AIC-maintenance/logs/`，以下2026-10-10记录作为历史保留。
+2026-10-11工程维护复验：完整npm审计仍为5 high、生产依赖0项；官方registry查询braces最新版仍为3.0.3。未强制迁移Tailwind4，锁文件与既有依赖环境保留。
+
+2026-10-11全栈验收轮次复跑：`npm audit --omit=dev` 为 critical 0 / high 0 / moderate 0 / low 0，全量审计仍为 5 high（Tailwind 构建链，`braces` 上游无补丁版）。
+
+**原始审计 JSON 未长期留存**：早前保存于工程外 `D:/Code/AIC-maintenance/logs/`（该目录现为损坏的空目录项）与本工程 `.cache/` 下的副本已按冗余清理。审计结论随时可重放验证，无需依赖历史文件：
+
+```bash
+cd frontend
+npm.cmd audit --omit=dev --json   # 生产依赖
+npm.cmd audit --json              # 全量（含构建链）
+```
+
+以下 2026-10-10 记录作为历史保留。
 
 执行日期：2026-10-10（Asia/Shanghai）。本记录来自实际 npm 官方注册表审计，不代表全面渗透测试。
 
