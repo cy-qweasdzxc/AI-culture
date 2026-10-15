@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -86,11 +87,14 @@ export default function CluesPage() {
             const rel = relationLevel(count)
             return (
               <li key={n.id} className="card flex items-center justify-between p-4">
-                <div>
-                  <h2 className="font-medium text-ink">
-                    {n.name} <span className="text-xs font-normal text-bluegray">· {n.title}</span>
-                  </h2>
-                  <p className="mt-1 text-xs text-bluegray">对话 {count} 轮</p>
+                <div className="flex items-center gap-3">
+                  <PersonaAvatar id={n.id} name={n.name} size="lg" />
+                  <div>
+                    <h2 className="font-medium text-ink">
+                      {n.name} <span className="text-xs font-normal text-bluegray">· {n.title}</span>
+                    </h2>
+                    <p className="mt-1 text-xs text-bluegray">对话 {count} 轮</p>
+                  </div>
                 </div>
                 <span className={cn('chip', rel.cls)}>{rel.label}</span>
               </li>

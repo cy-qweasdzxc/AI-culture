@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
 import type { JourneyMode } from '@/types'
 import { cn } from '@/utils/cn'
@@ -56,14 +57,12 @@ export default function RolePage() {
               aria-checked={selected}
               onClick={() => setRoleId(r.id)}
               className={cn(
-                'card flex flex-col p-6 text-left transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar',
+                'card flex flex-col p-6 text-left transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.96] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar',
                 selected ? 'border-cinnabar ring-2 ring-cinnabar/25' : 'hover:border-bronze',
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="seal" aria-hidden>
-                  {r.name.slice(0, 2)}
-                </span>
+                <PersonaAvatar id={r.id} name={r.name} kind="user" size="xl" />
                 <span className="chip text-bluegray">{r.identity}</span>
               </div>
               <h2 className="mt-4 font-serif text-xl font-bold text-ink">{r.name}</h2>

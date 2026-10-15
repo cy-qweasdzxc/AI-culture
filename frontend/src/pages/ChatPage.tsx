@@ -4,6 +4,7 @@ import Drawer from '@/components/Drawer'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import TypeTag from '@/components/TypeTag'
 import { suggestedChoices } from '@/data/chatChoices'
+import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -38,6 +39,7 @@ export default function ChatPage() {
   const spot =
     spots.find((item) => item.id === currentSpotId && item.npcId === npcId) ??
     spots.find((item) => item.id === npc?.spotId)
+  const scene = sceneVisual(spot?.id)
   const evidence = messages
     .flatMap((message) => message.evidence ?? [])
     .find((item) => item.id === evidenceId)
@@ -77,11 +79,12 @@ export default function ChatPage() {
 
   const profilePanel = (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <PersonaAvatar id={npc.id} name={npc.name} size="lg" />
-        <div>
+      <div className="flex items-center gap-4">
+        <PersonaAvatar id={npc.id} name={npc.name} size="xl" />
+        <div className="min-w-0">
           <p className="font-serif text-lg font-bold text-ink">{npc.name}</p>
-          <p className="text-xs text-bluegray">{npc.title}</p>
+          <p className="mt-0.5 text-xs text-bluegray">{npc.title}</p>
+          {spot ? <p className="mt-2 text-xs text-bronze">此刻在 · {spot.name}</p> : null}
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -159,8 +162,8 @@ export default function ChatPage() {
         <aside className="card hidden self-start p-5 lg:block">{profilePanel}</aside>
 
         {/* 中：对话区 */}
-        <section className="card flex h-[70vh] min-h-[480px] flex-col">
-          <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <section className="card flex h-[70vh] min-h-[480px] flex-col overflow-hidden">
+          <header className="relative z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex min-w-0 items-center gap-3">
               <PersonaAvatar id={npc.id} name={npc.name} />
               <div className="min-w-0">
@@ -191,104 +194,127 @@ export default function ChatPage() {
             </div>
           </header>
 
-          <div
-            ref={listRef}
-            className="chat-canvas flex-1 space-y-4 overflow-y-auto px-4 py-4"
-            aria-live="polite"
-          >
-            <div className="anim-fade-rise flex items-end gap-2.5">
-              <PersonaAvatar id={npc.id} name={npc.name} />
-              <div className="max-w-[85%] rounded-lg rounded-tl-none border border-line/70 bg-surface px-3.5 py-2.5 text-sm leading-relaxed text-ink shadow-sm">
-                {npc.greeting}
+          <div className="chat-canvas relative flex-1 overflow-hidden">
+            {scene ? (
+              <div
+                className="chat-scene-image absolute inset-0"
+                style={{
+                  backgroundImage: `url(${scene.src})`,
+                  backgroundPosition: scene.position,
+                }}
+                role="img"
+                aria-label={scene.alt}
+              />
+            ) : null}
+            <div className="chat-scene-veil absolute inset-0" aria-hidden />
+            <div
+              ref={listRef}
+              className="relative z-10 h-full space-y-4 overflow-y-auto px-4 py-4"
+              aria-live="polite"
+            >
+              {spot ? (
+                <div className="sticky top-0 z-20 flex justify-center" aria-hidden>
+                  <span className="rounded-full border border-white/60 bg-surface/[0.85] px-3 py-1 text-[11px] text-ink-soft shadow-sm backdrop-blur-md">
+                    {spot.name} · 场景画面
+                  </span>
+                </div>
+              ) : null}
+              <div className="anim-fade-rise flex items-end gap-2.5">
+                <PersonaAvatar id={npc.id} name={npc.name} />
+                <div className="max-w-[85%] rounded-xl rounded-tl-none border border-white/70 bg-surface/[0.92] px-3.5 py-2.5 text-sm leading-relaxed text-ink shadow-[0_5px_18px_rgba(32,28,22,0.1)] backdrop-blur-sm">
+                  {npc.greeting}
+                </div>
               </div>
-            </div>
 
-            {messages.map((m) => {
-              if (m.from === 'system') {
+              {messages.map((m) => {
+                if (m.from === 'system') {
+                  return (
+                    <div key={m.id} className="anim-fade-rise flex justify-center">
+                      <span className="chip border-white/60 bg-surface/[0.85] text-bronze shadow-sm backdrop-blur-sm">
+                        {m.text}
+                      </span>
+                    </div>
+                  )
+                }
+                const isUser = m.from === 'user'
                 return (
-                  <div key={m.id} className="anim-fade-rise flex justify-center">
-                    <span className="chip bg-bronze/10 text-bronze">{m.text}</span>
-                  </div>
-                )
-              }
-              const isUser = m.from === 'user'
-              return (
-                <div
-                  key={m.id}
-                  className={cn(
-                    'anim-fade-rise flex items-end gap-2.5',
-                    isUser ? 'justify-end' : 'justify-start',
-                  )}
-                >
-                  {!isUser ? <PersonaAvatar id={npc.id} name={npc.name} /> : null}
                   <div
+                    key={m.id}
                     className={cn(
-                      'max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
-                      isUser
-                        ? 'rounded-tr-none bg-cinnabar text-white'
-                        : 'rounded-tl-none border border-line/70 bg-surface text-ink',
+                      'anim-fade-rise flex items-end gap-2.5',
+                      isUser ? 'justify-end' : 'justify-start',
                     )}
                   >
-                    <p className="whitespace-pre-wrap">{m.text}</p>
-                    {!isUser ? (
-                      <p className="mt-2 text-xs text-bluegray">
-                        {m.provider === 'none'
-                          ? '规则拒答 · 未调用模型'
-                          : m.mock || m.provider === 'mock'
-                            ? 'Mock 模型 · 开发演示'
-                            : m.provider
-                              ? `模型提供方：${m.provider}`
-                              : '服务端回答'}
-                        {m.dataScope ? ` · 资料范围：${m.dataScope}` : ''}
-                      </p>
-                    ) : null}
-                    {!isUser && m.evidenceIds && m.evidenceIds.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1.5 border-t border-line/60 pt-2">
-                        {m.evidenceIds.map((eid) => {
-                          const ev = m.evidence?.find((item) => item.id === eid)
-                          if (!ev) return null
-                          return (
-                            <button
-                              key={eid}
-                              type="button"
-                              onClick={() => setEvidenceId(eid)}
-                              className="chip border-bronze/40 bg-surface text-bronze hover:border-bronze"
-                            >
-                              证据 · {ev.title}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    ) : null}
-                    {!isUser ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReportingId(m.id)
-                          setReportReason('')
-                        }}
-                        className="mt-1.5 block text-xs text-bluegray underline underline-offset-2 hover:text-cinnabar"
-                      >
-                        内容可能不准确？
-                      </button>
-                    ) : null}
+                    {!isUser ? <PersonaAvatar id={npc.id} name={npc.name} /> : null}
+                    <div
+                      className={cn(
+                        'max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed shadow-[0_5px_18px_rgba(32,28,22,0.1)]',
+                        isUser
+                          ? 'rounded-tr-none bg-cinnabar/95 text-white'
+                          : 'rounded-tl-none border border-white/70 bg-surface/[0.92] text-ink backdrop-blur-sm',
+                      )}
+                    >
+                      <p className="whitespace-pre-wrap">{m.text}</p>
+                      {!isUser ? (
+                        <p className="mt-2 text-xs text-bluegray">
+                          {m.provider === 'none'
+                            ? '规则拒答 · 未调用模型'
+                            : m.mock || m.provider === 'mock'
+                              ? 'Mock 模型 · 开发演示'
+                              : m.provider
+                                ? `模型提供方：${m.provider}`
+                                : '服务端回答'}
+                          {m.dataScope ? ` · 资料范围：${m.dataScope}` : ''}
+                        </p>
+                      ) : null}
+                      {!isUser && m.evidenceIds && m.evidenceIds.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5 border-t border-line/60 pt-2">
+                          {m.evidenceIds.map((eid) => {
+                            const ev = m.evidence?.find((item) => item.id === eid)
+                            if (!ev) return null
+                            return (
+                              <button
+                                key={eid}
+                                type="button"
+                                onClick={() => setEvidenceId(eid)}
+                                className="chip border-bronze/40 bg-surface text-bronze hover:border-bronze"
+                              >
+                                证据 · {ev.title}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : null}
+                      {!isUser ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReportingId(m.id)
+                            setReportReason('')
+                          }}
+                          className="mt-1.5 block text-xs text-bluegray underline underline-offset-2 hover:text-cinnabar"
+                        >
+                          内容可能不准确？
+                        </button>
+                      ) : null}
+                    </div>
+                    {isUser ? <PersonaAvatar id={roleId} name={roleName} kind="user" /> : null}
                   </div>
-                  {isUser ? <PersonaAvatar id={roleId} name={roleName} kind="user" /> : null}
-                </div>
-              )
-            })}
+                )
+              })}
 
-            {thinking ? (
-              <div className="anim-fade-rise flex items-end gap-2.5 justify-start">
-                <PersonaAvatar id={npc.id} name={npc.name} />
-                <div
-                  className="rounded-lg rounded-tl-none border border-line/70 bg-surface px-3.5 py-2.5 text-sm text-bluegray shadow-sm"
-                  role="status"
-                >
-                  正在检索文化资料<span className="animate-pulse">…</span>
+              {thinking ? (
+                <div className="anim-fade-rise flex items-end justify-start gap-2.5">
+                  <PersonaAvatar id={npc.id} name={npc.name} />
+                  <div
+                    className="rounded-xl rounded-tl-none border border-white/70 bg-surface/[0.92] px-3.5 py-2.5 text-sm text-bluegray shadow-[0_5px_18px_rgba(32,28,22,0.1)] backdrop-blur-sm"
+                    role="status"
+                  >
+                    正在检索文化资料<span className="animate-pulse">…</span>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
           {/* 推荐选项 */}

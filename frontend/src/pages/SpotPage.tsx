@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import PersonaAvatar from '@/components/PersonaAvatar'
 import SealMark from '@/components/SealMark'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
@@ -98,13 +99,18 @@ export default function SpotPage() {
           {npc ? (
             <section className="card flex flex-col p-6">
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-lg font-bold text-inkgreen">守在这里的人</h2>
+                <div className="flex items-center gap-3">
+                  <PersonaAvatar id={npc.id} name={npc.name} size="lg" />
+                  <div>
+                    <h2 className="font-serif text-lg font-bold text-inkgreen">守在这里的人</h2>
+                    <p className="mt-0.5 text-sm font-medium text-ink">
+                      {npc.name} · {npc.title}
+                    </p>
+                  </div>
+                </div>
                 <span className="chip text-bluegray">虚构角色</span>
               </div>
-              <p className="mt-3 text-sm font-medium text-ink">
-                {npc.name} · {npc.title}
-              </p>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
                 知识边界：{npc.knowledgeScope}。越界的问题他会明说不知道。
               </p>
               <Link to={`/chat/${npc.id}`} className="btn-primary mt-4 self-start">

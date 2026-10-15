@@ -60,6 +60,8 @@ export interface Role {
   perk: string
   /** 剧情影响：NPC 态度 / 选项 / 结局变量 */
   storyEffect: string
+  /** 对话角色提示词：只控制称呼、语气与提问偏好，不扩大事实知识。 */
+  personaPrompt: string
   startClueId: string
   isFictional: true
 }
@@ -73,6 +75,8 @@ export interface Npc {
   greeting: string
   /** 知识边界：该 NPC 能回答的文化领域 */
   knowledgeScope: string
+  /** 对话角色提示词：服从证据约束，不得虚构亲历或史实。 */
+  personaPrompt: string
   isFictional: true
 }
 

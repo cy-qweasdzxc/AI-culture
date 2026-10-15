@@ -14,6 +14,7 @@ const SIZE = {
   sm: 'h-8 w-8 text-xs',
   md: 'h-10 w-10 text-sm',
   lg: 'h-14 w-14 text-lg',
+  xl: 'h-24 w-24 text-2xl',
 } as const
 
 interface PersonaAvatarProps {
@@ -26,8 +27,8 @@ interface PersonaAvatarProps {
 }
 
 /**
- * 印章式头像：方印 + 人物用字 + 内圈细边。
- * 不以颜色作为唯一标识——每个人物用字不同，颜色只做辅助。
+ * 人物头像：优先显示生成式人物图，加载失败时回退到专属方印。
+ * 不以颜色作为唯一标识——人物图、姓名用字与颜色共同构成识别。
  */
 export default function PersonaAvatar({
   id,
@@ -43,18 +44,29 @@ export default function PersonaAvatar({
       aria-hidden
       title={name}
       className={cn(
-        'inline-flex shrink-0 select-none items-center justify-center rounded-[6px] border font-serif font-bold leading-none',
+        'relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-[10px] border font-serif font-bold leading-none',
         SIZE[size],
         solid
-          ? 'border-cinnabar bg-cinnabar text-white shadow-sm'
+          ? 'border-cinnabar bg-cinnabar text-white shadow-[0_3px_10px_color-mix(in_oklch,var(--cinnabar)_18%,transparent)]'
           : cn(
               TONE[visual.tone],
-              'shadow-[inset_0_0_0_1px_color-mix(in_oklch,currentColor_20%,transparent)]',
+              'shadow-[0_3px_12px_color-mix(in_oklch,var(--ink)_12%,transparent)]',
             ),
         className,
       )}
     >
-      {visual.char}
+      <span>{visual.char}</span>
+      {visual.avatarSrc ? (
+        <img
+          src={visual.avatarSrc}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover outline outline-1 -outline-offset-1 outline-black/10"
+          loading={size === 'sm' || size === 'md' ? 'lazy' : 'eager'}
+          onError={(event) => {
+            event.currentTarget.hidden = true
+          }}
+        />
+      ) : null}
     </span>
   )
 }

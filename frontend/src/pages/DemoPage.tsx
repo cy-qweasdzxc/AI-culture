@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -59,7 +60,7 @@ export default function DemoPage() {
             <label
               key={r.id}
               className={cn(
-                'card cursor-pointer p-4 text-sm',
+                'card flex cursor-pointer items-center gap-3 p-4 text-sm transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.96]',
                 roleId === r.id ? 'border-cinnabar ring-2 ring-cinnabar/25' : 'hover:border-bronze',
               )}
             >
@@ -70,8 +71,11 @@ export default function DemoPage() {
                 checked={roleId === r.id}
                 onChange={() => setRoleId(r.id)}
               />
-              <span className="block font-medium text-ink">{r.name}</span>
-              <span className="mt-1 block text-xs text-bluegray">{r.tagline}</span>
+              <PersonaAvatar id={r.id} name={r.name} kind="user" size="lg" />
+              <span className="min-w-0">
+                <span className="block font-medium text-ink">{r.name}</span>
+                <span className="mt-1 block text-xs leading-relaxed text-bluegray">{r.tagline}</span>
+              </span>
             </label>
           ))}
         </div>

@@ -242,6 +242,31 @@ def test_prompt_states_the_closed_enum_values_the_schema_enforces():
     assert "JSON" in system
 
 
+def test_known_character_personas_are_injected_without_widening_authority(monkeypatch):
+    captured: dict = {}
+
+    def fake_generate(self, messages, mock_reply):
+        captured["system"] = messages[0]["content"]
+        captured["payload"] = json.loads(messages[1]["content"])
+        return Generation(json.dumps({**mock_reply, "emotion": "calm"}), "mock", "fixture", True)
+
+    monkeypatch.setattr(ChatProvider, "generate", fake_generate)
+    reply = respond(
+        "古桥",
+        retrieve("古桥", [evidence()], {"pingjiang"}, 1),
+        {"id": "zhou-bo", "name": "周伯"},
+        {"id": "scholar", "name": "沈观澜"},
+        {},
+        [],
+        ChatProvider(AISettings()),
+    )
+
+    assert reply.reason is None
+    assert "老茶客" in captured["payload"]["npc"]["personaPrompt"]
+    assert "寻访学者" in captured["payload"]["player"]["personaPrompt"]
+    assert "不能扩大知识边界" in captured["system"]
+
+
 def test_seed_demo_is_not_approved_for_retrieval(db):
     assert approved_records(db, "suzhou-pingjiang") == []
 
