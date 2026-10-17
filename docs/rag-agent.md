@@ -56,6 +56,8 @@ flowchart LR
 
 证据ID校验不能证明每句话完全被资料支持，关键词注入检测也不是对所有攻击的保证。本次合成测试只验证指定机制；真实模型的幻觉、角色表达和文化质量需要真实样本、人工复核及对抗测试。
 
+2026-10-17 起，事实正文改用经过核对的原文片段：模型提供 `evidence_quotes[{evidence_id,quote}]`，每段必须属于本轮引用，且是对应原文的完整句子/完整块，保留否定和限定。界面不直接展示模型自由改写的 `dialogue`。无片段的旧格式安全回退至所引原文（`grounding_mode=source_fallback`），有效片段标为 `verified_excerpt`；伪造、半句或越引用片段以 `EVIDENCE_TEXT_INVALID` 拒绝。角色称呼仍由服务端生成。此机制保证展示文字可在本轮资料中找到，不证明资料本身真实，也不代替人工文化评分；不再把引用 ID 有效当作模型事实改写已验收。
+
 ## 分开配置生成与 Embedding
 
 `.env.example`列出全部变量。生成选择 LLM_PROVIDER=deepseek/qwen/ollama/mock，并显式设置 LLM_BASE_URL、LLM_MODEL 和对应密钥。远程聊天缺密钥降为 provider=mock、mock=true，并记录 API_KEY_MISSING；正常Mock为审核证据的抽取式表达，不是LLM生成。
