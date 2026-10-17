@@ -20,12 +20,14 @@ export default function TaskPage() {
   const [password, setPassword] = useState('')
   const [order, setOrder] = useState<number[]>(task?.sortingItems?.map((_, i) => i) ?? [])
   const [result, setResult] = useState<{ ok: boolean; feedback: string } | null>(null)
+  const sortingItemsSignature = JSON.stringify(task?.sortingItems ?? [])
   useEffect(() => {
     setSelected(null)
     setPassword('')
     setResult(null)
-    setOrder(task?.sortingItems?.map((_, i) => i) ?? [])
-  }, [taskId, task?.sortingItems])
+    const items: string[] = JSON.parse(sortingItemsSignature)
+    setOrder(items.map((_, i) => i))
+  }, [taskId, sortingItemsSignature])
 
   if (!task) {
     return (
