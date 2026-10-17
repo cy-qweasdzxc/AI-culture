@@ -24,7 +24,7 @@ export default function Drawer({ open, onClose, title, children, side = 'right' 
     <dialog
       ref={ref}
       onClose={onClose}
-      className={`fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} m-0 h-full max-h-none w-80 max-w-[85vw] border-line bg-surface p-0 shadow-xl backdrop:bg-black/30 ${side === 'right' ? 'border-l' : 'border-r'}`}
+      className={`fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} m-0 h-full max-h-none w-96 max-w-[92vw] border-line bg-surface p-0 backdrop:bg-ink/40 ${side === 'right' ? 'border-l' : 'border-r'}`}
       aria-label={title}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
@@ -32,12 +32,17 @@ export default function Drawer({ open, onClose, title, children, side = 'right' 
     >
       <div className="flex h-full flex-col">
         <header className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 className="font-serif text-lg font-bold text-inkgreen">{title}</h2>
-          <button type="button" onClick={onClose} className="btn-ghost min-h-9 px-2 py-1 text-sm" aria-label="关闭">
+          <h2 className="text-base font-semibold text-inkgreen">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost min-h-11 px-3 text-sm"
+            aria-label="关闭"
+          >
             关闭
           </button>
         </header>
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto p-5">{children}</div>
       </div>
     </dialog>
   )

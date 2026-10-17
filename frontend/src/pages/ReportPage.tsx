@@ -12,6 +12,7 @@ const kindLabel: Record<string, string> = {
   choice: '选择',
   ending: '结局',
   mode: '模式',
+  scene: '剧情',
 }
 
 export default function ReportPage() {
@@ -21,9 +22,10 @@ export default function ReportPage() {
 
   if (s.state === 'CREATED') {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="font-serif text-2xl font-bold text-ink">暂无数据</h1>
-        <p className="mt-3 text-sm text-bluegray">
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:py-24">
+        <p className="mb-4 text-sm font-medium text-inkgreen">体验报告</p>
+        <h1 className="font-serif text-3xl font-bold text-ink">暂无数据</h1>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-bluegray">
           开始一段旅程后，这里会生成由真实旅程状态计算的体验报告。
         </p>
         <Link to="/role" className="btn-primary mt-6 inline-flex">
@@ -35,9 +37,15 @@ export default function ReportPage() {
 
   if (!s.report)
     return (
-      <p role="status" className="mx-auto max-w-3xl px-4 py-16 text-sm text-bluegray">
-        报告暂未同步，请刷新旅程。
-      </p>
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:py-24">
+        <h1 className="font-serif text-3xl font-bold text-ink">体验报告</h1>
+        <p role="status" className="mt-5 text-sm leading-7 text-bluegray">
+          报告暂未同步，请刷新旅程。
+        </p>
+        <Link to="/map" className="btn-secondary mt-6">
+          返回路线地图
+        </Link>
+      </div>
     )
   const report = s.report
   const doneTasks = report.completedTaskCount
@@ -72,57 +80,74 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:py-10">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-line pb-7 sm:pb-9">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-ink">体验报告</h1>
-          <p className="mt-2 text-sm text-bluegray">
+          <h1 className="font-serif text-3xl font-bold text-ink sm:text-4xl">体验报告</h1>
+          <p className="mt-3 max-w-prose text-sm leading-7 text-bluegray">
             由本次旅程的真实状态计算生成{role ? ` · ${role.name}（${role.identity}）` : ''}
           </p>
         </div>
         {ending ? (
-          <span className="chip border-cinnabar bg-cinnabar text-white">结局：{ending.name}</span>
+          <span className="chip border-inkgreen/20 bg-inkgreen/5 text-inkgreen">
+            结局：{ending.name}
+          </span>
         ) : (
           <span className="chip text-bluegray">旅程进行中</span>
         )}
-      </div>
+      </header>
 
       {/* 总览 */}
-      <div className="card mt-6 grid gap-6 p-6 sm:grid-cols-2">
-        <ProgressBar
-          value={doneSpots}
-          max={report.totalSpotCount}
-          label={`点位 ${doneSpots}/${report.totalSpotCount}`}
-        />
-        <ProgressBar
-          value={doneTasks}
-          max={report.totalTaskCount}
-          label={`任务 ${doneTasks}/${report.totalTaskCount}`}
-        />
-        <ProgressBar value={score} max={maxScore} label={`知识分 ${score}/${maxScore}`} />
-        <ProgressBar
-          value={report.unlockedCodexCount}
-          max={report.totalCodexCount}
-          label={`图鉴 ${report.unlockedCodexCount}/${report.totalCodexCount}`}
-        />
-      </div>
+      <section
+        className="mt-7 rounded-xl border border-line bg-surface p-5 sm:p-7"
+        aria-labelledby="report-overview-title"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="report-overview-title" className="text-lg font-semibold text-ink">
+            旅程总览
+          </h2>
+          <p className="text-xs tabular-nums text-bluegray">本次体验约 {minutes} 分钟</p>
+        </div>
+        <div className="mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2">
+          <ProgressBar
+            value={doneSpots}
+            max={report.totalSpotCount}
+            label={`点位 ${doneSpots}/${report.totalSpotCount}`}
+          />
+          <ProgressBar
+            value={doneTasks}
+            max={report.totalTaskCount}
+            label={`任务 ${doneTasks}/${report.totalTaskCount}`}
+          />
+          <ProgressBar value={score} max={maxScore} label={`知识分 ${score}/${maxScore}`} />
+          <ProgressBar
+            value={report.unlockedCodexCount}
+            max={report.totalCodexCount}
+            label={`图鉴 ${report.unlockedCodexCount}/${report.totalCodexCount}`}
+          />
+        </div>
+      </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-9 grid gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
         {/* 知识得分与图鉴 */}
-        <section className="card p-6">
-          <h2 className="font-serif text-lg font-bold text-inkgreen">文化学习</h2>
-          <p className="mt-3 text-sm text-ink-soft">
-            知识得分 <strong className="font-serif text-xl text-ink">{score}</strong> / {maxScore}{' '}
-            分 · 用时约 {minutes} 分钟
+        <section>
+          <h2 className="text-xl font-semibold text-ink">文化学习</h2>
+          <p className="mt-4 text-sm leading-7 text-ink-soft">
+            知识得分 <strong className="font-semibold tabular-nums text-ink">{score}</strong> /{' '}
+            {maxScore} 分 · 用时约 {minutes} 分钟
           </p>
-          <h3 className="mt-5 text-xs font-medium text-ink">知识条目的内容分类分布（自动发布，未经人工核验）</h3>
+          <h3 className="mt-5 border-t border-line pt-5 text-sm font-medium leading-6 text-ink">
+            知识条目的内容分类分布（自动发布，未经人工核验）
+          </h3>
           {unlocked.length === 0 ? (
-            <p className="mt-2 text-sm text-bluegray">尚未解锁条目。</p>
+            <p className="mt-3 text-sm leading-7 text-bluegray">
+              尚未解锁条目。完成路线任务后，文化知识会收录在这里。
+            </p>
           ) : (
-            <ul className="mt-2 space-y-2">
+            <ul className="mt-3 divide-y divide-line">
               {(['fact', 'disputed', 'legend', 'fiction'] as const).map((t) =>
                 typeCounts[t] ? (
-                  <li key={t} className="flex items-center justify-between text-sm">
+                  <li key={t} className="flex items-center justify-between gap-3 py-3 text-sm">
                     <TypeTag type={t} />
                     <span className="tabular-nums text-ink-soft">{typeCounts[t]} 条</span>
                   </li>
@@ -133,36 +158,47 @@ export default function ReportPage() {
         </section>
 
         {/* 学习建议 */}
-        <section className="card p-6">
-          <h2 className="font-serif text-lg font-bold text-inkgreen">下一步建议</h2>
-          <ul className="mt-3 space-y-3">
+        <section className="border-t border-line pt-6 lg:border-t-0 lg:pt-0">
+          <h2 className="text-xl font-semibold text-ink">下一步建议</h2>
+          <ul className="mt-4 space-y-4">
             {suggestions.map((g, i) => (
-              <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-soft">
+              <li key={i} className="flex gap-3 text-sm leading-7 text-ink-soft">
                 <span
-                  className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cinnabar"
+                  className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-inkgreen"
                   aria-hidden
                 />
                 {g}
               </li>
             ))}
           </ul>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/map" className="btn-secondary">
+              回到路线
+            </Link>
+            <Link to="/codex" className="btn-ghost">
+              翻看文化图鉴
+            </Link>
+          </div>
         </section>
       </div>
 
       {/* 时间线 */}
-      <section className="card mt-6 p-6">
-        <h2 className="font-serif text-lg font-bold text-inkgreen">旅程时间线</h2>
+      <section className="mt-9 border-t border-line pt-7 sm:mt-12">
+        <h2 className="text-xl font-semibold text-ink">旅程时间线</h2>
         {report.events.length === 0 ? (
-          <p className="mt-3 text-sm text-bluegray">暂无记录。</p>
+          <p className="mt-4 text-sm leading-7 text-bluegray">
+            暂无记录。抵达点位、完成任务和获得线索后，会在这里留下记录。
+          </p>
         ) : (
-          <ol className="mt-4 space-y-2.5">
+          <ol className="mt-5 divide-y divide-line">
             {report.events.map((e, i) => (
-              <li key={i} className="flex items-baseline gap-3 text-sm">
-                <span className="chip w-14 shrink-0 justify-center text-bluegray">
-                  {kindLabel[e.kind]}
-                </span>
-                <span className="flex-1 text-ink-soft">{e.text}</span>
-                <time className="shrink-0 text-xs tabular-nums text-bluegray">
+              <li
+                key={i}
+                className="grid grid-cols-[3rem_minmax(0,1fr)] items-baseline gap-x-3 gap-y-1 py-4 text-sm sm:grid-cols-[3rem_minmax(0,1fr)_3rem] sm:gap-x-5"
+              >
+                <span className="text-xs font-medium text-bluegray">{kindLabel[e.kind]}</span>
+                <span className="min-w-0 break-words leading-7 text-ink-soft">{e.text}</span>
+                <time className="col-start-2 text-xs tabular-nums text-bluegray sm:col-start-auto sm:text-right">
                   {new Date(e.at).toLocaleTimeString('zh-CN', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -174,7 +210,7 @@ export default function ReportPage() {
         )}
       </section>
 
-      <p className="mt-4 text-xs text-bluegray">
+      <p className="mt-6 border-t border-line pt-5 text-xs leading-6 text-bluegray">
         说明：本报告来自服务端保存的本次匿名旅程，知识分表示剧情任务得分，不代表经过验证的学习效果。
       </p>
     </div>

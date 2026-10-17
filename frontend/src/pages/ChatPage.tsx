@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
 import PersonaAvatar from '@/components/PersonaAvatar'
+import SceneDirectorPanel from '@/components/SceneDirectorPanel'
+import SceneParticipants from '@/components/SceneParticipants'
 import TypeTag from '@/components/TypeTag'
-import TypewriterText from '@/components/TypewriterText'
 import { suggestedChoices } from '@/data/chatChoices'
 import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
+import type { ChatMessage, SceneDirection, SceneStreamEvent } from '@/types'
 import { cn } from '@/utils/cn'
 
 const CLUE_NOTICE_MARK = '\n（已发放演示剧情线索'
 
-/** System notices are shown at once; only the NPC's spoken answer is typed. */
+/** Keep server-awarded clue notices separate from character dialogue. */
 function splitClueNotice(text: string): [string, string | null] {
   const index = text.indexOf(CLUE_NOTICE_MARK)
   return index < 0 ? [text, null] : [text.slice(0, index), text.slice(index + 1)]
@@ -25,8 +27,11 @@ export default function ChatPage() {
   const busy = useJourney((s) => s.busy)
   const npc = npcs.find((item) => item.id === npcId)
 
-  const messages = useJourney((s) => (npcId ? (s.messages[npcId] ?? []) : []))
+  const allMessages = useJourney((s) => s.messages)
+  const messages = npcId ? (allMessages[npcId] ?? []) : []
   const sendChat = useJourney((s) => s.sendChat)
+  const sendSceneChat = useJourney((s) => s.sendSceneChat)
+  const savedDirection = useJourney((s) => (npcId ? s.sceneDirections[npcId] : undefined))
   const reportIssue = useJourney((s) => s.reportIssue)
   const inventory = useJourney((s) => s.inventory)
   const taskStates = useJourney((s) => s.taskStates)
@@ -34,14 +39,27 @@ export default function ChatPage() {
 
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
+  const [stopping, setStopping] = useState(false)
+  const [multiAgent, setMultiAgent] = useState(true)
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[] | null>(null)
+  const [sceneOpen, setSceneOpen] = useState(false)
+  const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([])
+  const [liveDirection, setLiveDirection] = useState<SceneDirection | null>(null)
+  const [phase, setPhase] = useState('')
   const [evidenceId, setEvidenceId] = useState<string | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [contextOpen, setContextOpen] = useState(false)
   const [reportingId, setReportingId] = useState<string | null>(null)
+  const [reportingNpcId, setReportingNpcId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState('')
+  const [reportError, setReportError] = useState<string | null>(null)
+  const [reportSubmitting, setReportSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choiceOffset, setChoiceOffset] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
+  const reportRequestRef = useRef(0)
+  const turnRequestRef = useRef(0)
+  const abortRef = useRef<AbortController | null>(null)
 
   const currentSpotId = useJourney((s) => s.currentSpotId)
   const roleId = useJourney((s) => s.roleId)
@@ -50,7 +68,30 @@ export default function ChatPage() {
     spots.find((item) => item.id === currentSpotId && item.npcId === npcId) ??
     spots.find((item) => item.id === npc?.spotId)
   const scene = sceneVisual(spot?.id)
-  const evidence = messages
+  const pendingMessages =
+    liveDirection && savedDirection?.turnId === liveDirection.turnId ? [] : liveMessages
+  const displayedMessages = [
+    ...messages,
+    ...pendingMessages.filter((message) => !messages.some((saved) => saved.id === message.id)),
+  ]
+  const direction = liveDirection ?? savedDirection ?? null
+  const encounteredIds = new Set(
+    Object.entries(allMessages).flatMap(([threadId, thread]) =>
+      thread
+        .filter((message) => message.from === 'npc')
+        .map((message) => message.npcId ?? threadId),
+    ),
+  )
+  const participants = npcs.filter((item) => item.id === npcId || encounteredIds.has(item.id))
+  const participantIds = participants
+    .filter(
+      (item) =>
+        item.id === npcId ||
+        selectedParticipantIds === null ||
+        selectedParticipantIds.includes(item.id),
+    )
+    .map((item) => item.id)
+  const evidence = displayedMessages
     .flatMap((message) => message.evidence ?? [])
     .find((item) => item.id === evidenceId)
   const asked = messages.filter((message) => message.from === 'user').map((message) => message.text)
@@ -64,21 +105,27 @@ export default function ChatPage() {
       })
     : []
   const hasChoices = choices.length > 0
-  const latestNpc = [...messages].reverse().find((message) => message.from === 'npc')
-  // A freshly stored reply starts typing; restored history is shown in full.
-  const streamingId = latestNpc && Date.now() - latestNpc.at < 8000 ? latestNpc.id : null
-
-  const followTyping = useCallback(() => {
-    const list = listRef.current
-    if (!list) return
-    if (list.scrollHeight - list.scrollTop - list.clientHeight < 180) {
-      list.scrollTop = list.scrollHeight
-    }
-  }, [])
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages.length, thinking])
+    setThinking(false)
+    setStopping(false)
+    setLiveMessages([])
+    setLiveDirection(null)
+    setSelectedParticipantIds(null)
+    setError(null)
+    return () => {
+      turnRequestRef.current += 1
+      abortRef.current?.abort()
+    }
+  }, [npcId])
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    })
+  }, [displayedMessages.length, thinking, phase])
 
   if (!npc) {
     return (
@@ -93,29 +140,115 @@ export default function ChatPage() {
 
   const send = async (text: string) => {
     const trimmed = text.trim()
-    if (!trimmed || thinking) return
+    if (!trimmed || thinking || busy) return
+    const request = ++turnRequestRef.current
+    const controller = new AbortController()
+    abortRef.current = controller
     setThinking(true)
+    setStopping(false)
     setError(null)
+    setLiveMessages([])
+    setLiveDirection(null)
+    setPhase(multiAgent ? '导演正在阅读对话，安排这一幕。' : '正在检索文化资料…')
     try {
-      await sendChat(npc.id, trimmed)
-      setInput('')
+      if (multiAgent) {
+        const pendingId = `pending-${request}`
+        setLiveMessages([{ id: pendingId, from: 'user', text: trimmed, at: Date.now() }])
+        const onEvent = (event: SceneStreamEvent) => {
+          if (request !== turnRequestRef.current || controller.signal.aborted) return
+          if (event.type === 'status') {
+            const { phase: nextPhase, speaker_name: speakerName, message } = event.data
+            setPhase(
+              nextPhase === 'directing'
+                ? '导演正在阅读对话，安排这一幕。'
+                : nextPhase === 'narrating'
+                  ? '旁白正在衔接场景。'
+                  : nextPhase === 'speaking'
+                    ? `${speakerName ?? '角色'}正在组织回应。`
+                    : message || '正在保存本轮剧情…',
+            )
+          } else if (event.type === 'director') {
+            setLiveDirection(event.data)
+          } else if (event.type === 'message') {
+            setLiveMessages((current) => [
+              ...current.filter(
+                (item) =>
+                  item.id !== event.data.id &&
+                  !(event.data.from === 'user' && item.id === pendingId),
+              ),
+              event.data,
+            ])
+          }
+        }
+        await sendSceneChat(npc.id, trimmed, participantIds, onEvent, controller.signal)
+      } else {
+        await sendChat(npc.id, trimmed)
+      }
+      if (request === turnRequestRef.current) setInput('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '对话请求失败，请重试。')
+      if (request === turnRequestRef.current) {
+        setError(
+          controller.signal.aborted
+            ? '本轮已停止，已同步保存的对话。你可以修改问题后重试。'
+            : err instanceof Error
+              ? err.message
+              : '对话请求失败，请重试。',
+        )
+        setInput(trimmed)
+      }
     } finally {
-      setThinking(false)
+      if (request === turnRequestRef.current) {
+        setThinking(false)
+        setStopping(false)
+        setLiveMessages([])
+        setLiveDirection(null)
+        setPhase('')
+        abortRef.current = null
+      }
     }
   }
 
   const spotTasks = tasks.filter((task) => task.spotId === spot?.id)
 
+  const participantsPanel = (
+    <SceneParticipants
+      npcs={participants}
+      anchorId={npc.id}
+      selectedIds={participantIds}
+      disabled={thinking || busy}
+      onChange={(id, selected) =>
+        setSelectedParticipantIds(
+          selected ? [...participantIds, id] : participantIds.filter((item) => item !== id),
+        )
+      }
+    />
+  )
+
+  const directorPanel = (
+    <SceneDirectorPanel
+      direction={direction}
+      npcs={npcs}
+      running={thinking || busy}
+      onContinue={() => send('请根据刚才的对话和当前旅程进度继续剧情，安排合适的角色接话。')}
+    />
+  )
+
+  const closeReport = () => {
+    reportRequestRef.current += 1
+    setReportingId(null)
+    setReportingNpcId(null)
+    setReportError(null)
+    setReportSubmitting(false)
+  }
+
   const profilePanel = (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <PersonaAvatar id={npc.id} name={npc.name} size="xl" />
         <div className="min-w-0">
-          <p className="font-serif text-lg font-bold text-ink">{npc.name}</p>
-          <p className="mt-0.5 text-xs text-bluegray">{npc.title}</p>
-          {spot ? <p className="mt-2 text-xs text-bronze">此刻在 · {spot.name}</p> : null}
+          <p className="text-lg font-semibold text-ink">{npc.name}</p>
+          <p className="mt-1 text-sm text-bluegray">{npc.title}</p>
+          {spot ? <p className="mt-2 text-xs text-bluegray">此刻在 · {spot.name}</p> : null}
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -127,37 +260,38 @@ export default function ChatPage() {
         <span className="chip text-bluegray">虚构角色</span>
       </div>
       <div>
-        <h3 className="text-xs font-medium text-ink">知识边界</h3>
-        <p className="mt-1 text-sm leading-relaxed text-ink-soft">{npc.knowledgeScope}</p>
+        <h3 className="text-sm font-semibold text-ink">知识边界</h3>
+        <p className="mt-2 text-sm leading-7 text-ink-soft">{npc.knowledgeScope}</p>
       </div>
-      <p className="rounded-md bg-paper-deep p-3 text-xs leading-relaxed text-bluegray">
+      <p className="border-t border-line pt-4 text-xs leading-6 text-bluegray">
         {npc.name}只回答自己领域内、且有证据支撑的问题；越界或证据不足时会明确拒答。
       </p>
+      {multiAgent ? <div className="border-t border-line pt-5">{participantsPanel}</div> : null}
     </div>
   )
 
   const contextPanel = (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {spot ? (
         <div>
-          <h3 className="text-xs font-medium text-ink">当前位置</h3>
+          <h3 className="text-sm font-semibold text-ink">当前位置</h3>
           <Link
             to={`/spot/${spot.id}`}
-            className="mt-1 block text-sm text-cinnabar underline underline-offset-4"
+            className="mt-1 flex min-h-11 items-center text-sm text-cinnabar underline underline-offset-4"
           >
             {spot.name}（{spotStatus[spot.id] === 'completed' ? '已完成' : '进行中'}）
           </Link>
         </div>
       ) : null}
       <div>
-        <h3 className="text-xs font-medium text-ink">这里的任务</h3>
-        <ul className="mt-1.5 space-y-1.5">
+        <h3 className="text-sm font-semibold text-ink">这里的任务</h3>
+        <ul className="mt-2 divide-y divide-line">
           {spotTasks.map((t) =>
             t ? (
               <li key={t.id}>
                 <Link
                   to={`/task/${t.id}`}
-                  className="flex items-center justify-between rounded border border-line px-2.5 py-1.5 text-sm hover:border-bronze"
+                  className="flex min-h-14 items-center justify-between gap-3 py-3 text-sm transition-colors hover:text-cinnabar"
                 >
                   <span className="text-ink">{t.title}</span>
                   <span
@@ -175,10 +309,13 @@ export default function ChatPage() {
         </ul>
       </div>
       <div>
-        <h3 className="text-xs font-medium text-ink">背包里的线索</h3>
+        <h3 className="text-sm font-semibold text-ink">背包里的线索</h3>
         <p className="mt-1.5 text-sm text-bluegray">
           {inventory.length} 件 ·{' '}
-          <Link to="/clues" className="text-cinnabar underline underline-offset-4">
+          <Link
+            to="/clues"
+            className="inline-flex min-h-11 items-center text-cinnabar underline underline-offset-4"
+          >
             查看背包
           </Link>
         </p>
@@ -187,37 +324,35 @@ export default function ChatPage() {
   )
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="grid gap-5 lg:grid-cols-[260px_1fr_260px]">
+    <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:py-8">
+      <div className="grid gap-6 xl:grid-cols-[190px_minmax(0,1fr)_220px] 2xl:gap-8">
         {/* 左：NPC 档案（桌面端） */}
-        <aside className="card hidden self-start p-5 lg:block">{profilePanel}</aside>
+        <aside className="hidden self-start py-5 xl:block">{profilePanel}</aside>
 
         {/* 中：对话区 */}
-        <section className="card flex h-[70vh] min-h-[480px] flex-col overflow-hidden">
-          <header className="relative z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur-sm">
+        <section className="flex h-[calc(100dvh-11rem)] min-h-[660px] min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface md:h-[calc(100dvh-8rem)] md:min-h-[600px] xl:h-[calc(100dvh-10rem)]">
+          <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4 py-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <PersonaAvatar id={npc.id} name={npc.name} />
               <div className="min-w-0">
-                <h1 className="truncate font-serif text-base font-bold text-ink">
-                  与{npc.name}对话
-                </h1>
-                <p className="truncate text-xs text-bluegray">
+                <h1 className="truncate font-serif text-xl font-bold text-ink">与{npc.name}对话</h1>
+                <p className="mt-1 truncate text-xs text-bluegray">
                   {npc.title}
                   {spot ? ` · ${spot.name}` : ''}
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 gap-2 lg:hidden">
+            <div className="flex shrink-0 gap-1 xl:hidden">
               <button
                 type="button"
-                className="btn-ghost min-h-9 px-2 py-1 text-xs"
+                className="btn-ghost min-h-11 px-2 text-xs"
                 onClick={() => setProfileOpen(true)}
               >
                 档案
               </button>
               <button
                 type="button"
-                className="btn-ghost min-h-9 px-2 py-1 text-xs"
+                className="btn-ghost min-h-11 px-2 text-xs"
                 onClick={() => setContextOpen(true)}
               >
                 任务
@@ -225,7 +360,54 @@ export default function ChatPage() {
             </div>
           </header>
 
-          <div className="chat-canvas relative flex-1 overflow-hidden">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 sm:px-5">
+            <div
+              className="flex gap-1 rounded-md bg-paper-deep p-1"
+              role="group"
+              aria-label="对话模式"
+            >
+              {[
+                { enabled: true, label: '多人同场' },
+                { enabled: false, label: '单人对话' },
+              ].map((mode) => (
+                <button
+                  key={mode.label}
+                  type="button"
+                  aria-pressed={multiAgent === mode.enabled}
+                  disabled={thinking || busy}
+                  onClick={() => setMultiAgent(mode.enabled)}
+                  className={cn(
+                    'min-h-11 rounded px-3 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar disabled:opacity-50',
+                    multiAgent === mode.enabled
+                      ? 'bg-surface font-semibold text-inkgreen'
+                      : 'text-bluegray hover:text-ink',
+                  )}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+            {multiAgent ? (
+              <button
+                type="button"
+                onClick={() => setSceneOpen(true)}
+                className="min-h-11 text-xs text-inkgreen underline underline-offset-4 xl:hidden"
+                aria-label={`查看导演调度与${participantIds.length}位同场角色`}
+              >
+                导演 · {participantIds.length} 位角色
+              </button>
+            ) : null}
+          </div>
+          {multiAgent ? (
+            <div className="flex shrink-0 items-start gap-2 border-b border-line bg-paper-deep px-4 py-2.5 text-xs leading-5 sm:px-6">
+              <span className="shrink-0 font-medium text-inkgreen">当前节拍</span>
+              <span className="line-clamp-2 min-w-0 break-words text-ink-soft">
+                {direction?.beat ?? '从你的问题开始，由导演安排角色回应。'}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="chat-canvas relative min-h-0 flex-1 overflow-hidden">
             {scene ? (
               <div
                 className="chat-scene-image absolute inset-0"
@@ -240,34 +422,56 @@ export default function ChatPage() {
             <div className="chat-scene-veil absolute inset-0" aria-hidden />
             <div
               ref={listRef}
-              className="relative z-10 h-full space-y-4 overflow-y-auto px-4 py-4"
+              className="relative z-10 h-full space-y-6 overflow-y-auto overscroll-contain px-3 py-5 sm:px-6"
               aria-live="polite"
             >
               {spot ? (
-                <div className="sticky top-0 z-20 flex justify-center" aria-hidden>
-                  <span className="rounded-full border border-white/60 bg-surface/[0.85] px-3 py-1 text-[11px] text-ink-soft shadow-sm backdrop-blur-md">
+                <div className="flex justify-center" aria-hidden>
+                  <span className="rounded-full bg-surface px-3 py-1 text-xs text-bluegray">
                     {spot.name} · 场景画面
                   </span>
                 </div>
               ) : null}
               <div className="anim-fade-rise flex items-end gap-2.5">
                 <PersonaAvatar id={npc.id} name={npc.name} />
-                <div className="max-w-[85%] rounded-xl rounded-tl-none border border-white/70 bg-surface/[0.92] px-3.5 py-2.5 text-sm leading-relaxed text-ink shadow-[0_5px_18px_rgba(32,28,22,0.1)] backdrop-blur-sm">
+                <div className="max-w-[85%] rounded-xl rounded-bl-sm bg-surface px-4 py-3 text-sm leading-7 text-ink">
                   {npc.greeting}
                 </div>
               </div>
 
-              {messages.map((m) => {
+              {displayedMessages.map((m) => {
                 if (m.from === 'system') {
                   return (
                     <div key={m.id} className="anim-fade-rise flex justify-center">
-                      <span className="chip border-white/60 bg-surface/[0.85] text-bronze shadow-sm backdrop-blur-sm">
+                      <span className="max-w-[90%] rounded-md bg-surface px-3 py-2 text-center text-xs leading-6 text-ink-soft">
                         {m.text}
                       </span>
                     </div>
                   )
                 }
+                if (m.from === 'narrator' || m.agentRole === 'narrator') {
+                  return (
+                    <article
+                      key={m.id}
+                      className="mx-auto max-w-prose rounded-lg bg-surface/95 px-4 py-4 sm:px-5"
+                    >
+                      <p className="text-xs font-semibold text-inkgreen">剧情旁白 · 虚构</p>
+                      <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-8 text-ink-soft">
+                        {m.text}
+                      </p>
+                      {thinking && pendingMessages.some((item) => item.id === m.id) ? (
+                        <p className="mt-2 text-xs text-bluegray">本轮进行中 · 保存后加入历史</p>
+                      ) : null}
+                    </article>
+                  )
+                }
                 const isUser = m.from === 'user'
+                const speakerId = m.npcId ?? npc.id
+                const speakerName =
+                  m.speakerName ?? npcs.find((item) => item.id === speakerId)?.name ?? npc.name
+                const isTemporary =
+                  !messages.some((item) => item.id === m.id) &&
+                  pendingMessages.some((item) => item.id === m.id)
                 const [body, notice] = splitClueNotice(m.text)
                 return (
                   <div
@@ -277,21 +481,21 @@ export default function ChatPage() {
                       isUser ? 'justify-end' : 'justify-start',
                     )}
                   >
-                    {!isUser ? <PersonaAvatar id={npc.id} name={npc.name} /> : null}
+                    {!isUser ? <PersonaAvatar id={speakerId} name={speakerName} /> : null}
                     <div
                       className={cn(
-                        'max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed shadow-[0_5px_18px_rgba(32,28,22,0.1)]',
+                        'min-w-0 max-w-[85%] break-words rounded-xl px-4 py-3 text-sm leading-7',
                         isUser
-                          ? 'rounded-tr-none bg-cinnabar/95 text-white'
-                          : 'rounded-tl-none border border-white/70 bg-surface/[0.92] text-ink backdrop-blur-sm',
+                          ? 'rounded-br-sm bg-inkgreen text-white'
+                          : 'rounded-bl-sm bg-surface text-ink',
                       )}
                     >
-                      <TypewriterText
-                        text={body}
-                        animate={m.id === streamingId}
-                        className="whitespace-pre-wrap"
-                        onProgress={m.id === streamingId ? followTyping : undefined}
-                      />
+                      {!isUser ? (
+                        <p className="mb-1 text-xs font-semibold text-inkgreen">
+                          {speakerName} · 虚构角色
+                        </p>
+                      ) : null}
+                      <p className="whitespace-pre-wrap">{body}</p>
                       {notice ? (
                         <p className="mt-1.5 border-t border-line/60 pt-1.5 text-xs leading-relaxed text-bluegray">
                           {notice}
@@ -299,16 +503,19 @@ export default function ChatPage() {
                       ) : null}
                       {!isUser ? (
                         <p className="mt-2 text-xs text-bluegray">
-                          {m.provider === 'none'
-                            ? m.reason === 'CONTEXT_AMBIGUOUS' || m.reason === 'CONTEXT_REQUIRED'
-                              ? '确认话题 · 未调用模型'
-                              : '规则拒答 · 未调用模型'
-                            : m.mock || m.provider === 'mock'
-                              ? 'Mock 模型 · 开发演示'
-                              : m.provider
-                                ? `模型提供方：${m.provider}`
-                                : '服务端回答'}
+                          {m.reason === 'NARRATIVE_GUIDANCE'
+                            ? '剧情引导 · 未调用模型'
+                            : m.provider === 'none'
+                              ? m.reason === 'CONTEXT_AMBIGUOUS' || m.reason === 'CONTEXT_REQUIRED'
+                                ? '确认话题 · 未调用模型'
+                                : '规则拒答 · 未调用模型'
+                              : m.mock || m.provider === 'mock'
+                                ? 'Mock 模型 · 开发演示'
+                                : m.provider
+                                  ? `模型提供方：${m.provider}`
+                                  : '服务端回答'}
                           {m.dataScope ? ` · 资料范围：${m.dataScope}` : ''}
+                          {isTemporary ? ' · 本轮尚未保存' : ''}
                         </p>
                       ) : null}
                       {!isUser && m.evidenceIds && m.evidenceIds.length > 0 ? (
@@ -321,7 +528,7 @@ export default function ChatPage() {
                                 key={eid}
                                 type="button"
                                 onClick={() => setEvidenceId(eid)}
-                                className="chip border-bronze/40 bg-surface text-bronze hover:border-bronze"
+                                className="min-h-11 rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-5 text-inkgreen transition-colors hover:border-inkgreen focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar"
                               >
                                 证据 · {ev.title}
                               </button>
@@ -329,14 +536,18 @@ export default function ChatPage() {
                           })}
                         </div>
                       ) : null}
-                      {!isUser ? (
+                      {!isUser && !isTemporary ? (
                         <button
                           type="button"
                           onClick={() => {
-                            setReportingId(m.id)
+                            reportRequestRef.current += 1
+                            setReportingId(m.feedbackMessageId ?? m.id)
+                            setReportingNpcId(m.feedbackNpcId ?? speakerId)
                             setReportReason('')
+                            setReportError(null)
+                            setReportSubmitting(false)
                           }}
-                          className="mt-1.5 block text-xs text-bluegray underline underline-offset-2 hover:text-cinnabar"
+                          className="mt-1 flex min-h-11 items-center text-left text-xs text-bluegray underline underline-offset-4 hover:text-cinnabar"
                         >
                           内容可能不准确？
                         </button>
@@ -348,21 +559,30 @@ export default function ChatPage() {
               })}
 
               {thinking ? (
-                <div className="anim-fade-rise flex items-end justify-start gap-2.5">
-                  <PersonaAvatar id={npc.id} name={npc.name} />
-                  <div
-                    className="rounded-xl rounded-tl-none border border-white/70 bg-surface/[0.92] px-3.5 py-2.5 text-sm text-bluegray shadow-[0_5px_18px_rgba(32,28,22,0.1)] backdrop-blur-sm"
-                    role="status"
-                  >
-                    正在检索文化资料<span className="animate-pulse">…</span>
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3">
+                  <div className="text-sm leading-7 text-ink-soft" role="status">
+                    {stopping ? '正在停止并同步已保存的对话…' : phase}
                   </div>
+                  {multiAgent ? (
+                    <button
+                      type="button"
+                      disabled={stopping}
+                      onClick={() => {
+                        setStopping(true)
+                        abortRef.current?.abort()
+                      }}
+                      className="min-h-11 shrink-0 text-xs text-cinnabar underline underline-offset-4 disabled:opacity-50"
+                    >
+                      停止本轮
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>
           </div>
 
           {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
-          <div className="border-t border-line p-3">
+          <div className="shrink-0 border-t border-line bg-surface p-3 sm:p-4">
             <div className="flex flex-col gap-2">
               {choices.map((c) => (
                 <button
@@ -370,7 +590,7 @@ export default function ChatPage() {
                   type="button"
                   disabled={thinking || busy}
                   onClick={() => send(c)}
-                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-bronze hover:text-ink disabled:opacity-50"
+                  className="min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-inkgreen hover:bg-paper-deep hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {c}
                 </button>
@@ -387,7 +607,7 @@ export default function ChatPage() {
                 </label>
                 <input
                   id="chat-input"
-                  className="input min-w-0 flex-1"
+                  className="input min-w-0 flex-1 max-sm:px-3"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={`问${npc.name}…`}
@@ -401,14 +621,14 @@ export default function ChatPage() {
                     disabled={thinking || busy}
                     aria-label="换一批推荐问题"
                     title="换一批推荐问题"
-                    className="shrink-0 text-xs text-bluegray underline underline-offset-2 hover:text-ink disabled:opacity-50"
+                    className="min-h-11 shrink-0 px-1 text-xs text-bluegray underline underline-offset-4 hover:text-ink disabled:opacity-50"
                   >
                     换一批
                   </button>
                 ) : null}
                 <button
                   type="submit"
-                  className="btn-primary shrink-0"
+                  className="btn-primary shrink-0 max-sm:px-3"
                   disabled={thinking || busy || !input.trim()}
                 >
                   发送
@@ -424,7 +644,10 @@ export default function ChatPage() {
         </section>
 
         {/* 右：上下文（桌面端） */}
-        <aside className="card hidden self-start p-5 lg:block">{contextPanel}</aside>
+        <aside className="hidden self-start space-y-7 py-5 xl:block">
+          {multiAgent ? <div className="border-b border-line pb-6">{directorPanel}</div> : null}
+          {contextPanel}
+        </aside>
       </div>
 
       {/* 移动端抽屉 */}
@@ -433,6 +656,12 @@ export default function ChatPage() {
       </Drawer>
       <Drawer open={contextOpen} onClose={() => setContextOpen(false)} title="任务与线索">
         {contextPanel}
+      </Drawer>
+      <Drawer open={sceneOpen} onClose={() => setSceneOpen(false)} title="同场与导演调度">
+        <div className="space-y-7">
+          {participantsPanel}
+          <div className="border-t border-line pt-6">{directorPanel}</div>
+        </div>
       </Drawer>
 
       {/* 证据详情抽屉 */}
@@ -444,7 +673,7 @@ export default function ChatPage() {
         {evidence ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="font-serif text-lg font-bold text-ink">{evidence.title}</h3>
+              <h3 className="text-lg font-semibold text-ink">{evidence.title}</h3>
               <TypeTag type={evidence.type} />
             </div>
             <p className="text-sm leading-relaxed text-ink-soft">{evidence.content}</p>
@@ -453,7 +682,7 @@ export default function ChatPage() {
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
               {evidence.source_url || evidence.sourceUrl ? (
                 <a
-                  className="mt-2 block text-xs text-cinnabar underline"
+                  className="mt-2 flex min-h-11 items-center text-sm text-cinnabar underline underline-offset-4"
                   href={evidence.source_url ?? evidence.sourceUrl ?? undefined}
                   target="_blank"
                   rel="noreferrer"
@@ -470,7 +699,7 @@ export default function ChatPage() {
       </Drawer>
 
       {/* 纠错反馈 */}
-      <Drawer open={!!reportingId} onClose={() => setReportingId(null)} title="纠错反馈">
+      <Drawer open={!!reportingId} onClose={closeReport} title="纠错反馈">
         <p className="text-sm leading-relaxed text-ink-soft">
           指出 AI 回答中可能不准确的地方，会写入反馈记录，帮助后续更新资料与提示。
         </p>
@@ -482,23 +711,38 @@ export default function ChatPage() {
           className="input mt-2 min-h-24"
           value={reportReason}
           onChange={(e) => setReportReason(e.target.value)}
+          disabled={reportSubmitting}
           placeholder="例如：把始建年代说错了，应该是……"
           maxLength={300}
         />
+        {reportError ? (
+          <p role="alert" className="mt-3 text-sm leading-7 text-danger">
+            {reportError}
+          </p>
+        ) : null}
         <button
           type="button"
           className="btn-primary mt-4"
-          disabled={reportReason.trim().length < 4}
+          disabled={reportSubmitting || reportReason.trim().length < 4}
+          aria-busy={reportSubmitting}
           onClick={async () => {
+            if (!reportingId || reportSubmitting) return
+            const request = ++reportRequestRef.current
+            setReportSubmitting(true)
+            setReportError(null)
             try {
-              if (reportingId) await reportIssue(npc.id, reportingId, reportReason.trim())
-              setReportingId(null)
+              await reportIssue(reportingNpcId ?? npc.id, reportingId, reportReason.trim())
+              if (request === reportRequestRef.current) closeReport()
             } catch (err) {
-              setError(err instanceof Error ? err.message : '纠错提交失败。')
+              if (request === reportRequestRef.current) {
+                setReportError(err instanceof Error ? err.message : '纠错提交失败。')
+              }
+            } finally {
+              if (request === reportRequestRef.current) setReportSubmitting(false)
             }
           }}
         >
-          提交纠错
+          {reportSubmitting ? '正在提交…' : '提交纠错'}
         </button>
       </Drawer>
     </div>

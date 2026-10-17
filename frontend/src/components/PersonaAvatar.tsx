@@ -46,12 +46,7 @@ export default function PersonaAvatar({
       className={cn(
         'relative inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-[10px] border font-serif font-bold leading-none',
         SIZE[size],
-        solid
-          ? 'border-cinnabar bg-cinnabar text-white shadow-[0_3px_10px_color-mix(in_oklch,var(--cinnabar)_18%,transparent)]'
-          : cn(
-              TONE[visual.tone],
-              'shadow-[0_3px_12px_color-mix(in_oklch,var(--ink)_12%,transparent)]',
-            ),
+        solid ? 'border-cinnabar bg-cinnabar text-white' : TONE[visual.tone],
         className,
       )}
     >

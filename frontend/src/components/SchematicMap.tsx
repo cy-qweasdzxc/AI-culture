@@ -62,10 +62,15 @@ export default function SchematicMap({
     <div className="flex h-full flex-col">
       {reason ? (
         <p className="border-b border-line bg-paper-deep px-3 py-1.5 text-xs text-bluegray">
-          在线地图暂不可用（{reason}），已切换为示意路线，功能不受影响。
+          当前显示路线示意图，点击已发现的点位继续探索。
         </p>
       ) : null}
-      <svg viewBox="0 0 560 470" className="h-full w-full" role="img" aria-label="文化路线示意图">
+      <svg
+        viewBox="0 0 560 470"
+        className="min-h-0 w-full flex-1"
+        role="group"
+        aria-label="文化路线示意图"
+      >
         {/* 水巷 */}
         <path
           d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60"
@@ -115,6 +120,7 @@ export default function SchematicMap({
               }}
               aria-label={`${s.name}：${c.label}`}
             >
+              <circle r="40" fill="transparent" />
               <circle r="20" className={cn(c.fill, c.ring)} strokeWidth="2.5" />
               <text textAnchor="middle" dy="5" fontSize="13" className={c.text} fontWeight="700">
                 {st === 'completed' ? '✓' : st === 'undiscovered' ? '?' : s.order}

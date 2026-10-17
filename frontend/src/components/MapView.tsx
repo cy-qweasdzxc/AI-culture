@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import SchematicMap from '@/components/SchematicMap'
 import type { Spot, SpotStatus } from '@/types'
 
 /**
@@ -47,6 +48,15 @@ const STATUS_COLOR: Record<SpotStatus, { bg: string; fg: string; glyph: string }
   completed: { bg: '#1E5A46', fg: '#ffffff', glyph: '✓' },
 }
 
+function hasCoordinates(spot: Spot): boolean {
+  return (
+    Number.isFinite(spot.lat) &&
+    Number.isFinite(spot.lng) &&
+    Math.abs(spot.lat) <= 90 &&
+    Math.abs(spot.lng) <= 180
+  )
+}
+
 function markerIcon(status: SpotStatus): string {
   const c = STATUS_COLOR[status]
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40"><path d="M15 1C7.8 1 2 6.8 2 14c0 9.5 11 24 12.4 25.5a1 1 0 0 0 1.2 0C17 38 28 23.5 28 14 28 6.8 22.2 1 15 1z" fill="${c.bg}" stroke="#fff" stroke-width="1.5"/><text x="15" y="18" text-anchor="middle" font-size="13" fill="${c.fg}" font-family="sans-serif">${c.glyph}</text></svg>`
@@ -90,6 +100,10 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
 
   useEffect(() => {
     let cancelled = false
+    setReady(false)
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) onUnavailable('在线地图加载超时')
+    }, 10000)
     loadTMap()
       .then(() => {
         if (cancelled || !containerRef.current || !window.TMap) return
@@ -100,24 +114,27 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
         })
         mapRef.current = map
 
-        new TMap.MultiPolyline({
-          map,
-          styles: {
-            route: new TMap.PolylineStyle({
-              color: '#A6352B',
-              width: 3,
-              borderWidth: 1,
-              borderColor: '#ffffff',
-            }),
-          },
-          geometries: [
-            {
-              id: 'route',
-              styleId: 'route',
-              paths: spots.map((s) => new TMap.LatLng(s.lat, s.lng)),
+        const locatedSpots = spots.filter(hasCoordinates)
+        // 服务端只披露已发现点位。单站尚不能构成地图 SDK 要求的折线。
+        if (locatedSpots.length > 1)
+          new TMap.MultiPolyline({
+            map,
+            styles: {
+              route: new TMap.PolylineStyle({
+                color: '#A6352B',
+                width: 3,
+                borderWidth: 1,
+                borderColor: '#ffffff',
+              }),
             },
-          ],
-        })
+            geometries: [
+              {
+                id: 'route',
+                styleId: 'route',
+                paths: locatedSpots.map((s) => new TMap.LatLng(s.lat, s.lng)),
+              },
+            ],
+          })
 
         const styles: Record<string, object> = {}
         for (const st of Object.keys(STATUS_COLOR) as SpotStatus[]) {
@@ -126,7 +143,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
         const markers = new TMap.MultiMarker({
           map,
           styles,
-          geometries: spots.map((s) => ({
+          geometries: locatedSpots.map((s) => ({
             id: s.id,
             styleId: spotStatus[s.id] ?? 'undiscovered',
             position: new TMap.LatLng(s.lat, s.lng),
@@ -138,13 +155,16 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
           if (id && onSpotClick) onSpotClick(id)
         })
         markersRef.current = markers
+        window.clearTimeout(timeout)
         setReady(true)
       })
       .catch((err: Error) => {
+        window.clearTimeout(timeout)
         if (!cancelled) onUnavailable(err.message)
       })
     return () => {
       cancelled = true
+      window.clearTimeout(timeout)
       mapRef.current?.destroy()
       mapRef.current = null
     }
@@ -156,7 +176,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
     if (!ready || !markersRef.current || !window.TMap) return
     const TMap = window.TMap
     markersRef.current.setGeometries(
-      spots.map((s) => ({
+      spots.filter(hasCoordinates).map((s) => ({
         id: s.id,
         styleId: spotStatus[s.id] ?? 'undiscovered',
         position: new TMap.LatLng(s.lat, s.lng),
@@ -165,5 +185,26 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
     )
   }, [spotStatus, spots, ready])
 
-  return <div ref={containerRef} className="h-full w-full" aria-label="文化路线地图" />
+  return (
+    <div className="relative h-full w-full bg-paper-deep">
+      <div ref={containerRef} className="absolute inset-0" aria-label="文化路线地图" />
+      {!ready && (
+        <div className="absolute inset-0 bg-paper-deep">
+          <SchematicMap spots={spots} spotStatus={spotStatus} onSpotClick={onSpotClick} />
+          <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-line bg-surface px-4 py-2">
+            <p role="status" className="text-xs text-bluegray">
+              正在载入在线地图，示意路线已可操作。
+            </p>
+            <button
+              type="button"
+              className="min-h-11 text-xs font-medium text-inkgreen underline underline-offset-4"
+              onClick={() => onUnavailable('已选择示意路线')}
+            >
+              使用示意路线
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }

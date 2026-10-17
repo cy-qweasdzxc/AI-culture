@@ -1,26 +1,84 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import Icon from '@/components/Icon'
+import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
 const navItems = [
   { to: '/', label: '首页', end: true },
-  { to: '/intro', label: '玩法说明' },
   { to: '/theme', label: '文化主题' },
+  { to: '/intro', label: '玩法说明' },
   { to: '/codex', label: '文化图鉴' },
 ]
 
-/** 公共区布局 */
 export default function PublicLayout() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const { pathname, hash } = useLocation()
+  const inJourney = useJourney((s) => s.state !== 'CREATED')
+  useEffect(() => {
+    setMenuOpen(false)
+    if (!hash) window.scrollTo({ top: 0, behavior: 'instant' })
+    else requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView())
+  }, [pathname, hash])
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-        <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <span className="seal" aria-hidden>
+      <a href="#main-content" className="skip-link">
+        跳至主要内容
+      </a>
+      <header className="public-header sticky top-0 z-40 border-b border-line bg-surface">
+        <div className="page-width flex h-[76px] items-center justify-between gap-4">
+          <Link to="/" className="brand-link" aria-label="城迹入戏首页">
+            <span className="brand-mark" aria-hidden>
               城迹
             </span>
-            <span className="font-serif text-lg font-bold text-ink">城迹入戏</span>
+            <span>
+              <span className="block font-serif text-xl font-bold tracking-[0.08em] text-ink">
+                城迹入戏
+              </span>
+              <span className="mt-0.5 block text-[10px] tracking-[0.14em] text-bluegray">
+                在城市里，遇见故事
+              </span>
+            </span>
           </Link>
-          <div className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-6 md:flex" aria-label="主要导航">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => cn('public-nav-link', isActive && 'is-active')}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link to={inJourney ? '/map' : '/role'} className="btn-primary gap-4 px-4 sm:px-5">
+              {inJourney ? '继续旅程' : '开始体验'}
+              <Icon name="arrow" className="hidden h-4 w-4 sm:block" />
+            </Link>
+            <button
+              type="button"
+              className="btn-ghost w-11 px-0 md:hidden"
+              aria-label={menuOpen ? '关闭导航菜单' : '打开导航菜单'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-public-nav"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <Icon name={menuOpen ? 'close' : 'menu'} />
+            </button>
+          </div>
+        </div>
+        {menuOpen && (
+          <nav
+            id="mobile-public-nav"
+            className="grid grid-cols-2 gap-1 border-t border-line bg-surface px-5 py-3 md:hidden"
+            aria-label="移动端主要导航"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setMenuOpen(false)
+            }}
+          >
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -28,35 +86,49 @@ export default function PublicLayout() {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-md px-3 py-2 text-sm transition-colors',
-                    isActive ? 'font-medium text-cinnabar' : 'text-ink-soft hover:text-ink',
+                    'rounded-md px-4 py-3 text-sm',
+                    isActive
+                      ? 'bg-cinnabar/5 font-medium text-cinnabar'
+                      : 'text-ink-soft hover:bg-paper-deep',
                   )
                 }
               >
                 {item.label}
               </NavLink>
             ))}
-            <Link to="/role" className="btn-primary ml-3 min-h-9 px-4 py-1.5">
-              开始体验
-            </Link>
-          </div>
-          <Link to="/role" className="btn-primary min-h-9 px-4 py-1.5 md:hidden">
-            开始体验
-          </Link>
-        </nav>
+          </nav>
+        )}
       </header>
-
-      <main className="flex-1">
+      <main id="main-content" className="flex-1" tabIndex={-1}>
         <Outlet />
       </main>
-
-      <footer className="border-t border-line bg-paper-deep">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-xs leading-relaxed text-bluegray">
-          <p>
-            城迹入戏 · AI 地方文化剧本游平台（演示原型）。文化内容按史实 / 争议 / 传说 / 虚构四级标注，AI
-            回答附证据引用，证据不足时拒答。
-          </p>
-          <p className="mt-1">定位信息仅用于点位触发，可在「设置与隐私」中随时清除全部旅程数据。</p>
+      <footer className="border-t border-line bg-surface">
+        <div className="page-width grid gap-6 py-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="font-serif text-base font-bold text-ink">
+              城迹入戏
+              <span className="ml-3 font-sans text-xs font-normal text-ink-soft">
+                让文化，成为沿途的故事。
+              </span>
+            </p>
+            <p className="mt-3 max-w-xl text-xs leading-6 text-bluegray">
+              AI 地方文化剧本游 · 演示原型。文化内容分级标注，回答附证据引用，资料不足时明确告知。
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 text-xs text-bluegray">
+            <div className="flex gap-5">
+              <Link to="/intro" className="footer-link">
+                体验说明
+              </Link>
+              <Link to="/settings" className="footer-link">
+                设置与隐私
+              </Link>
+              <Link to="/demo" className="footer-link">
+                演示入口
+              </Link>
+            </div>
+            <p>位置仅用于点位触发，旅程数据可随时清除。</p>
+          </div>
         </div>
       </footer>
     </div>

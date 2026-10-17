@@ -67,16 +67,22 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     audit = []
     evidence: dict[str, dict[str, Any]] = {}
     for log in db.scalars(select(DialogueLog).where(DialogueLog.journey_id == journey.id).order_by(DialogueLog.created_at, DialogueLog.id)):
-        thread = messages.setdefault(log.npc_id, [])
         at = timestamp_ms(log.created_at)
-        thread.extend([
-            {"id": f"{log.id}-user", "from": "user", "text": log.user_input, "at": at},
-            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": log.response.get("evidence", []), "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
-        ])
         if log.feedback:
             audit.append({"at": at, "npcId": log.npc_id, "messageId": f"{log.id}-npc", "reason": log.feedback})
         for entry in log.response.get("evidence", []):
             evidence[entry["id"]] = entry
+        if log.response.get("scene_hidden"):
+            continue
+        thread = messages.setdefault(log.response.get("scene_anchor", log.npc_id), [])
+        if log.response.get("scene_envelope"):
+            thread.append(log.response["scene_user_message"])
+            thread.extend(log.response.get("scene_messages", []))
+            continue
+        thread.extend([
+            {"id": f"{log.id}-user", "from": "user", "text": log.user_input, "at": at},
+            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": log.response.get("evidence", []), "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
+        ])
     data = journey.state_data
     return {
         "sessionId": journey.user_id,
@@ -93,6 +99,7 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
         "flags": data.get("flags", {}),
         "events": data.get("events", []),
         "messages": messages,
+        "sceneDirections": data.get("sceneDirections", {}),
         "auditLog": audit,
         "evidence": evidence,
         "endingId": journey.ending_id,

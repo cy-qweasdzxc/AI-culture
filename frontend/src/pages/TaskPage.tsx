@@ -74,22 +74,27 @@ export default function TaskPage() {
       ((task.type === 'quiz' || task.type === 'combine') && selected !== null))
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <nav className="text-xs text-bluegray" aria-label="面包屑">
-        <Link to="/map" className="hover:text-cinnabar">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-10">
+      <nav
+        className="flex flex-wrap items-center gap-x-2 text-xs leading-6 text-bluegray"
+        aria-label="面包屑"
+      >
+        <Link to="/map" className="inline-flex min-h-11 items-center hover:text-cinnabar">
           路线地图
         </Link>
-        <span className="mx-1">/</span>
-        <Link to={`/spot/${task.spotId}`} className="hover:text-cinnabar">
+        <span aria-hidden>/</span>
+        <Link
+          to={`/spot/${task.spotId}`}
+          className="inline-flex min-h-11 items-center hover:text-cinnabar"
+        >
           {spot?.name}
         </Link>
-        <span className="mx-1">/</span>
+        <span aria-hidden>/</span>
         <span>{task.title}</span>
       </nav>
 
-      <header className="mt-4">
-        <div className="flex items-center gap-3">
-          <h1 className="font-serif text-2xl font-bold text-ink">{task.title}</h1>
+      <header className="mt-4 border-b border-line pb-7 sm:mt-6 sm:pb-9">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="chip text-bluegray">
             {
               {
@@ -101,10 +106,15 @@ export default function TaskPage() {
               }[task.type]
             }
           </span>
-          <span className="chip bg-bronze/10 text-bronze">{task.knowledgeScore} 分</span>
+          <span className="text-xs font-medium tabular-nums text-bluegray">
+            完成可得 {task.knowledgeScore} 分
+          </span>
         </div>
+        <h1 className="font-serif text-3xl font-bold leading-snug text-ink sm:text-4xl">
+          {task.title}
+        </h1>
         <p
-          className="mt-3 max-w-prose text-sm leading-relaxed text-ink-soft"
+          className="mt-4 max-w-prose text-base leading-8 text-ink-soft"
           style={{ textWrap: 'pretty' }}
         >
           {task.briefing}
@@ -112,18 +122,24 @@ export default function TaskPage() {
       </header>
 
       {/* 前置线索状态（密码 / 线索组合类） */}
-      <div className="mt-4">
+      <div className="mt-5">
         <DemoDataNotice />
       </div>
       {task.requiredClues?.length ? (
-        <div className="mt-5 rounded-md border border-line bg-paper-deep p-4">
-          <h2 className="text-xs font-medium text-ink">所需线索</h2>
-          <ul className="mt-2 space-y-1">
+        <div className="mt-6 border-b border-line pb-6">
+          <h2 className="text-sm font-semibold text-ink">所需线索</h2>
+          <ul className="mt-3 flex flex-wrap gap-x-7 gap-y-3">
             {task.requiredClues.map((cid) => {
               const has = inventory.includes(cid)
               return (
-                <li key={cid} className="flex items-center gap-2 text-sm">
-                  <span aria-hidden className={has ? 'text-inkgreen' : 'text-bluegray'}>
+                <li key={cid} className="flex items-center gap-2.5 text-sm">
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs',
+                      has ? 'bg-inkgreen/10 text-inkgreen' : 'bg-paper-deep text-bluegray',
+                    )}
+                  >
                     {has ? '✓' : '？'}
                   </span>
                   <span className={has ? 'text-ink' : 'text-bluegray'}>
@@ -137,36 +153,42 @@ export default function TaskPage() {
       ) : null}
 
       {/* 交互区 */}
-      <div className="card mt-6 p-6">
+      <div className="mt-7 overflow-hidden rounded-xl border border-line bg-surface p-4 sm:p-7 lg:p-8">
         {done ? (
-          <div className="rounded-md bg-inkgreen/10 p-4" role="status">
-            <p className="font-medium text-inkgreen">
+          <div role="status">
+            <span className="chip border-inkgreen/20 bg-inkgreen/5 text-inkgreen">已完成</span>
+            <p className="mt-4 text-lg font-semibold text-inkgreen">
               任务已完成（{st?.score} 分，尝试 {st?.attempts} 次）
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-soft">{task.explanation}</p>
+            <p className="mt-4 max-w-prose text-sm leading-8 text-ink-soft">{task.explanation}</p>
+            {!result?.ok ? (
+              <Link to={`/spot/${task.spotId}`} className="btn-secondary mt-6">
+                返回点位
+              </Link>
+            ) : null}
           </div>
         ) : (
           <>
             {(task.type === 'quiz' || task.type === 'combine') && task.options ? (
-              <div className="space-y-2" role="radiogroup" aria-label="选项">
+              <div className="space-y-3" role="radiogroup" aria-label="选项">
                 {task.options.map((o) => (
                   <label
                     key={o.key}
                     className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-md border p-3.5 transition-colors',
+                      'flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-cinnabar',
                       selected === o.key
-                        ? 'border-cinnabar ring-2 ring-cinnabar/20'
-                        : 'border-line hover:border-bronze',
+                        ? 'border-inkgreen bg-inkgreen/5'
+                        : 'border-line hover:border-inkgreen hover:bg-paper-deep',
                     )}
                   >
                     <input
                       type="radio"
                       name="answer"
-                      className="mt-0.5"
+                      className="mt-1 h-4 w-4 shrink-0 accent-inkgreen"
                       checked={selected === o.key}
                       onChange={() => setSelected(o.key)}
                     />
-                    <span className="text-sm text-ink">
+                    <span className="text-sm leading-7 text-ink">
                       <strong className="mr-1.5">{o.key}.</strong>
                       {o.text}
                     </span>
@@ -177,17 +199,17 @@ export default function TaskPage() {
 
             {task.type === 'password' ? (
               <div>
-                <label htmlFor="password-input" className="text-sm font-medium text-ink">
+                <label htmlFor="password-input" className="block text-sm font-semibold text-ink">
                   输入口令
                   {task.passwordHint ? (
-                    <span className="ml-2 text-xs font-normal text-bluegray">
+                    <span className="mt-2 block text-xs font-normal leading-6 text-bluegray">
                       （{task.passwordHint}）
                     </span>
                   ) : null}
                 </label>
                 <input
                   id="password-input"
-                  className="input mt-2"
+                  className="input mt-3 max-w-xl"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && canSubmit && submit()}
@@ -198,20 +220,19 @@ export default function TaskPage() {
             ) : null}
 
             {task.type === 'sorting' && task.sortingItems ? (
-              <ol className="space-y-2" aria-label="排序列表，使用上下按钮调整顺序">
+              <ol className="divide-y divide-line" aria-label="排序列表，使用上下按钮调整顺序">
                 {order.map((itemIdx, pos) => (
-                  <li
-                    key={itemIdx}
-                    className="flex items-center gap-2 rounded-md border border-line p-3"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-paper-deep font-serif text-sm font-bold text-cinnabar">
+                  <li key={itemIdx} className="flex items-center gap-3 py-4 first:pt-0 last:pb-0">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-paper-deep text-sm font-semibold tabular-nums text-ink-soft">
                       {pos + 1}
                     </span>
-                    <span className="flex-1 text-sm text-ink">{task.sortingItems?.[itemIdx]}</span>
+                    <span className="min-w-0 flex-1 text-sm leading-7 text-ink">
+                      {task.sortingItems?.[itemIdx]}
+                    </span>
                     <span className="flex shrink-0 gap-1">
                       <button
                         type="button"
-                        className="btn-ghost min-h-9 px-2"
+                        className="btn-ghost min-h-11 min-w-11 px-2 text-lg"
                         onClick={() => move(pos, -1)}
                         disabled={pos === 0}
                         aria-label={`上移第 ${pos + 1} 项`}
@@ -220,7 +241,7 @@ export default function TaskPage() {
                       </button>
                       <button
                         type="button"
-                        className="btn-ghost min-h-9 px-2"
+                        className="btn-ghost min-h-11 min-w-11 px-2 text-lg"
                         onClick={() => move(pos, 1)}
                         disabled={pos === order.length - 1}
                         aria-label={`下移第 ${pos + 1} 项`}
@@ -235,14 +256,14 @@ export default function TaskPage() {
 
             {result && !result.ok ? (
               <p
-                className="mt-4 rounded-md bg-warning/10 px-3 py-2 text-sm leading-relaxed text-ink"
+                className="mt-5 rounded-lg bg-warning/10 px-4 py-3 text-sm leading-7 text-ink"
                 role="alert"
               >
                 {result.feedback}
               </p>
             ) : null}
 
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-4 border-t border-line pt-6">
               <button type="button" className="btn-primary" disabled={!canSubmit} onClick={submit}>
                 提交答案
               </button>
@@ -252,14 +273,10 @@ export default function TaskPage() {
         )}
       </div>
 
-      {result?.ok && !done ? null : null}
       {result?.ok ? (
-        <div
-          className="card anim-unlock-pop mt-4 border-inkgreen/50 bg-inkgreen/5 p-5"
-          role="status"
-        >
-          <p className="font-medium text-inkgreen">{result.feedback}</p>
-          <div className="mt-3 flex flex-wrap gap-3">
+        <div className="anim-fade-rise mt-5 rounded-xl bg-inkgreen/5 p-5 sm:p-7" role="status">
+          <p className="font-medium leading-7 text-inkgreen">{result.feedback}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
             <Link to={`/spot/${task.spotId}`} className="btn-primary">
               返回点位
             </Link>

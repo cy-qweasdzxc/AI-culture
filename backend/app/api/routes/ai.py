@@ -67,7 +67,8 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
         npc = assert_npc_access(db, j, body.npc_id)
         records = approved_records(db, j.story_id)
         recent = list(reversed(db.scalars(select(DialogueLog).where(
-            DialogueLog.journey_id == j.id, DialogueLog.npc_id == npc.id
+            DialogueLog.journey_id == j.id, DialogueLog.npc_id == npc.id,
+            DialogueLog.response["scene_envelope"].as_boolean().is_not(True),
         ).order_by(DialogueLog.created_at.desc(), DialogueLog.id.desc()).limit(3)).all()))
         turns = [history_turn(log) for log in recent]
         other_locations = tuple(db.scalars(select(CulturalLocation.name).where(

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, ApiError } from '@/services/api'
+import { api, ApiError, streamSceneChat, type SceneChatRequest } from '@/services/api'
 import type {
   ChatReply,
   Clue,
@@ -12,6 +12,9 @@ import type {
   Npc,
   PublicTask,
   Role,
+  SceneChatReply,
+  SceneDirection,
+  SceneStreamEvent,
   Spot,
   Theme,
 } from '@/types'
@@ -35,6 +38,7 @@ const emptyJourney = {
   flags: {},
   events: [],
   messages: {},
+  sceneDirections: {},
   auditLog: [],
   endingId: null as string | null,
   startedAt: null as number | null,
@@ -57,6 +61,7 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   codexTotal: number
   ending: Ending | null
   report: JourneyReport | null
+  sceneDirections: Record<string, SceneDirection>
   restore: () => Promise<void>
   refresh: () => Promise<void>
   startJourney: (roleId: string, mode: JourneyMode) => Promise<void>
@@ -64,6 +69,13 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   arriveSpot: (spotId: string, location?: LocationReading) => Promise<boolean>
   verifyTask: (taskId: string, answer: unknown) => Promise<VerifyResult>
   sendChat: (npcId: string, text: string) => Promise<ChatReply>
+  sendSceneChat: (
+    npcId: string,
+    text: string,
+    participantIds: string[],
+    onEvent: (event: SceneStreamEvent) => void,
+    signal?: AbortSignal,
+  ) => Promise<SceneChatReply>
   reportIssue: (npcId: string, messageId: string, reason: string) => Promise<void>
   enterFinale: (choiceKey: 'hang' | 'keep') => Promise<string>
   resetJourney: () => Promise<void>
@@ -75,8 +87,11 @@ type ActionResponse = { snapshot: JourneySnapshot | null }
 
 /** Zustand 仅缓存服务器响应，本地存储不参与会话恢复和业务判定。 */
 export const useJourney = create<JourneyStore>((set, get) => {
+  let pendingScene: { fingerprint: string; body: SceneChatRequest } | null = null
+  let latestSnapshot: JourneySnapshot | null = null
   function applySnapshot(snapshot: JourneySnapshot | null) {
-    if (snapshot) set(snapshot)
+    latestSnapshot = snapshot
+    if (snapshot) set({ ...snapshot, sceneDirections: snapshot.sceneDirections ?? {} })
     else
       set({
         ...emptyJourney,
@@ -214,6 +229,80 @@ export const useJourney = create<JourneyStore>((set, get) => {
       }),
     sendChat: async (npcId, text) =>
       action<ChatReply>('/chat/message', { npc_id: npcId, message: text }),
+    sendSceneChat: async (npcId, text, participantIds, onEvent, signal) => {
+      if (get().busy) throw new ApiError('ACTION_PENDING', '上一项操作仍在处理中，请稍候。', 409)
+      const current = get()
+      if (!current.journeyId) throw new ApiError('JOURNEY_NOT_FOUND', '请先创建旅程。', 404)
+      const participants = [...new Set([npcId, ...participantIds])].sort()
+      const fingerprint = JSON.stringify([current.journeyId, npcId, text.trim(), participants])
+      if (pendingScene?.fingerprint !== fingerprint)
+        pendingScene = {
+          fingerprint,
+          body: {
+            journey_id: current.journeyId,
+            state_version: current.stateVersion,
+            request_id: crypto.randomUUID(),
+            npc_id: npcId,
+            message: text.trim(),
+            participant_ids: participants,
+          },
+        }
+      const request = pendingScene.body
+      set({ busy: true, error: null })
+      try {
+        const result = await streamSceneChat(request, onEvent, signal)
+        applySnapshot(result.snapshot)
+        pendingScene = null
+        try {
+          await catalogs()
+        } catch {
+          set({ error: '本轮对话已保存，但详情暂未同步。请刷新旅程。' })
+        }
+        return result
+      } catch (error) {
+        // The server may have committed just before the connection was lost.
+        await get()
+          .refresh()
+          .catch(() => undefined)
+        const restored = latestSnapshot
+        const director = restored?.sceneDirections?.[npcId]
+        if (restored && director?.turnId === request.request_id) {
+          const recovered: SceneChatReply = {
+            snapshot: restored,
+            director,
+            messages: (restored.messages[npcId] ?? []).filter(
+              (message) => message.turnId === request.request_id,
+            ),
+            replayed: true,
+          }
+          pendingScene = null
+          onEvent({ type: 'done', data: recovered })
+          return recovered
+        }
+        if (
+          error instanceof ApiError &&
+          ((error.status >= 400 && error.status < 500) ||
+            [
+              'STATE_CONFLICT',
+              'IDEMPOTENCY_CONFLICT',
+              'JOURNEY_COMPLETED',
+              'NPC_UNAVAILABLE',
+            ].includes(error.code))
+        )
+          pendingScene = null
+        set({
+          error:
+            error instanceof ApiError && error.code === 'REQUEST_ABORTED'
+              ? null
+              : error instanceof Error
+                ? error.message
+                : '同场对话失败，请重试。',
+        })
+        throw error
+      } finally {
+        set({ busy: false })
+      }
+    },
     reportIssue: async (npcId, messageId, reason) => {
       await api.post('/chat/feedback', {
         journey_id: get().journeyId,
@@ -239,7 +328,9 @@ export const useJourney = create<JourneyStore>((set, get) => {
         applySnapshot(null)
         set({ sessionId: null })
         await get().restore()
-      } finally { set({ busy: false }) }
+      } finally {
+        set({ busy: false })
+      }
     },
   }
 })

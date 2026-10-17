@@ -74,6 +74,8 @@ test('浏览器真实 AI：引用、拒答与故障处理', async ({ page }) => 
   await page.getByRole('button', { name: '到达此点（虚拟游览）' }).click()
   await expect(page).toHaveURL(/\/spot\/pingjiang$/)
   await page.getByRole('link', { name: '与周伯对话' }).click()
+  // This acceptance suite deliberately exercises the legacy single-NPC endpoint.
+  await page.getByRole('button', { name: '单人对话', exact: true }).click()
 
   const ask = async (label: string, prompt: string, expectAnswer: boolean) => {
     const before = seen.size

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
-import SealMark from '@/components/SealMark'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
 import { finalChoices } from '@/data/publicRoute'
+import { sceneVisual } from '@/data/sceneVisuals'
 import { canEnterFinale, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -30,11 +30,14 @@ export default function SpotPage() {
 
   if (!spot) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="font-serif text-2xl font-bold text-ink">点位不存在</h1>
-        <Link to="/map" className="mt-4 inline-block text-cinnabar underline">
-          返回路线地图
-        </Link>
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+        <div className="rounded-xl border border-line bg-surface px-6 py-12 text-center">
+          <h1 className="font-serif text-3xl font-bold text-ink">点位不存在</h1>
+          <p className="mt-3 text-sm text-ink-soft">回到路线地图，选择一个已发现的点位继续探索。</p>
+          <Link to="/map" className="btn-primary mt-6">
+            返回路线地图
+          </Link>
+        </div>
       </div>
     )
   }
@@ -43,6 +46,8 @@ export default function SpotPage() {
   const npc = npcs.find((item) => item.id === spot.npcId)
   const arrived = status === 'current' || status === 'completed'
   const isFinaleSpot = spot.id === 'subo'
+  const scene = sceneVisual(spot.id)
+  const completedTasks = spot.taskIds.filter((id) => taskStates[id]?.status === 'completed').length
 
   const confirmFinale = async () => {
     if (!choice) return
@@ -55,122 +60,181 @@ export default function SpotPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <nav className="text-xs text-bluegray" aria-label="面包屑">
-        <Link to="/map" className="hover:text-cinnabar">
-          路线地图
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+      <nav className="flex flex-wrap items-center gap-2 text-sm text-bluegray" aria-label="面包屑">
+        <Link to="/map" className="inline-flex min-h-11 items-center gap-2 hover:text-cinnabar">
+          <span aria-hidden>←</span>路线地图
         </Link>
-        <span className="mx-1">/</span>
-        <span>{spot.name}</span>
+        <span aria-hidden>/</span>
+        <span aria-current="page">{spot.name}</span>
       </nav>
 
-      <header className="mt-3 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-ink">{spot.name}</h1>
-          <p className="mt-1 text-sm font-medium text-bronze">{spot.intro}</p>
+      <header className="mt-5 grid items-center gap-7 md:grid-cols-[1fr_0.9fr] md:gap-10">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-bluegray">
+            <span>第 {spot.order} 站</span>
+            <span
+              className={cn(
+                'chip',
+                status === 'completed'
+                  ? 'border-inkgreen/25 bg-inkgreen/5 text-inkgreen'
+                  : 'text-ink-soft',
+              )}
+            >
+              {status === 'completed'
+                ? '✓ 已完成'
+                : arrived
+                  ? '● 当前点位'
+                  : status === 'discovered'
+                    ? '已发现 · 尚未到达'
+                    : '未发现'}
+            </span>
+          </div>
+          <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight text-ink">
+            {spot.name}
+          </h1>
+          <p className="mt-3 text-base font-medium leading-7 text-inkgreen">{spot.intro}</p>
+          <p
+            className="mt-5 max-w-prose text-sm leading-7 text-ink-soft"
+            style={{ textWrap: 'pretty' }}
+          >
+            {spot.story}
+          </p>
         </div>
-        <SealMark text={spot.shortName.slice(0, 2)} className="h-12 w-12 text-base" />
+        {scene ? (
+          <figure className="min-w-0">
+            <img
+              src={scene.src}
+              alt={scene.alt}
+              className="aspect-[4/3] w-full rounded-xl object-cover"
+              style={{ objectPosition: scene.position }}
+            />
+            <figcaption className="mt-2 text-right text-xs leading-5 text-bluegray">
+              场景插画 · 开发演示
+            </figcaption>
+          </figure>
+        ) : null}
       </header>
-      <div className="mt-4">
-        <DemoDataNotice />
-      </div>
-
-      <p
-        className="mt-5 max-w-prose text-sm leading-relaxed text-ink-soft"
-        style={{ textWrap: 'pretty' }}
-      >
-        {spot.story}
-      </p>
 
       {!arrived ? (
-        <div className="card mt-8 p-6 text-center">
-          <p className="text-sm text-bluegray">
+        <section className="mt-10 rounded-xl border border-line bg-surface p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-ink">到达后，开启这里的故事</h2>
+          <p className="mt-3 max-w-prose text-sm leading-6 text-ink-soft">
             {status === 'discovered'
               ? '你已发现这个点位，但还没有到达。到达后才能开启这里的剧情。'
               : '这个点位尚未解锁，先完成前一个点位的任务。'}
           </p>
-          <Link to="/map" className="btn-primary mt-4 inline-flex">
+          <Link to="/map" className="btn-primary mt-5">
             去地图到达
           </Link>
-        </div>
+        </section>
       ) : (
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          {/* NPC 入口 */}
-          {npc ? (
-            <section className="card flex flex-col p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+        <div className="mt-10">
+          <div className="grid items-start gap-8 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+            <section className="order-2 min-w-0 lg:order-1" aria-labelledby="spot-tasks-title">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="spot-tasks-title" className="text-xl font-semibold text-ink">
+                  这里的谜题
+                </h2>
+                <span className="text-sm text-bluegray">
+                  已完成 {completedTasks} / {spot.taskIds.length}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-ink-soft">
+                观察眼前的景物，也从对话里寻找答案。
+              </p>
+              <ul className="mt-5 divide-y divide-line border-y border-line">
+                {spot.taskIds.map((tid, index) => {
+                  const task = tasks.find((item) => item.id === tid)
+                  const taskState = taskStates[tid]
+                  const done = taskState?.status === 'completed'
+                  if (!task) return null
+                  return (
+                    <li key={tid}>
+                      <Link
+                        to={`/task/${tid}`}
+                        className="group flex min-h-24 items-center gap-4 rounded-md px-2 py-5 transition-colors hover:bg-surface sm:px-3"
+                      >
+                        <span
+                          className={cn(
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-medium',
+                            done
+                              ? 'border-inkgreen/25 bg-inkgreen/5 text-inkgreen'
+                              : 'border-line bg-surface text-bluegray',
+                          )}
+                          aria-hidden
+                        >
+                          {done ? '✓' : index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-semibold text-ink group-hover:text-cinnabar">
+                            {task.title}
+                          </span>
+                          <span
+                            className={cn(
+                              'mt-1 block text-xs leading-5',
+                              done ? 'text-inkgreen' : 'text-bluegray',
+                            )}
+                          >
+                            {done
+                              ? `已完成 · ${taskState?.score}分`
+                              : `未完成 · ${task.knowledgeScore}分`}
+                          </span>
+                        </span>
+                        <span className="text-ink-soft" aria-hidden>
+                          ↗
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+
+            {npc ? (
+              <section className="order-1 rounded-xl border border-line bg-surface p-6 lg:order-2">
+                <h2 className="text-base font-semibold text-ink">守在这里的人</h2>
+                <div className="mt-5 flex items-center gap-3">
                   <PersonaAvatar id={npc.id} name={npc.name} size="lg" />
-                  <div>
-                    <h2 className="font-serif text-lg font-bold text-inkgreen">守在这里的人</h2>
-                    <p className="mt-0.5 text-sm font-medium text-ink">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink">
                       {npc.name} · {npc.title}
                     </p>
+                    <span className="mt-1 inline-block text-xs text-bluegray">虚构角色</span>
                   </div>
                 </div>
-                <span className="chip text-bluegray">虚构角色</span>
-              </div>
-              <p className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
-                知识边界：{npc.knowledgeScope}。越界的问题他会明说不知道。
-              </p>
-              <Link to={`/chat/${npc.id}`} className="btn-primary mt-4 self-start">
-                与{npc.name}对话
+                <p className="mt-4 text-sm leading-6 text-ink-soft">
+                  知识边界：{npc.knowledgeScope}。越界的问题他会明说不知道。
+                </p>
+                <Link to={`/chat/${npc.id}`} className="btn-primary mt-5 w-full">
+                  与{npc.name}对话
+                </Link>
+              </section>
+            ) : null}
+          </div>
+
+          <section className="mt-10 border-t border-line pt-8" aria-labelledby="spot-codex-title">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="spot-codex-title" className="text-xl font-semibold text-ink">
+                本点位文化条目
+              </h2>
+              <Link
+                to="/codex"
+                className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-inkgreen hover:text-cinnabar"
+              >
+                查看文化图鉴<span aria-hidden>↗</span>
               </Link>
-            </section>
-          ) : null}
-
-          {/* 任务列表 */}
-          <section className="card p-6">
-            <h2 className="font-serif text-lg font-bold text-inkgreen">这里的谜题</h2>
-            <ul className="mt-3 space-y-2">
-              {spot.taskIds.map((tid) => {
-                const task = tasks.find((item) => item.id === tid)
-                const st = taskStates[tid]
-                const done = st?.status === 'completed'
-                if (!task) return null
-                return (
-                  <li key={tid}>
-                    <Link
-                      to={`/task/${tid}`}
-                      className={cn(
-                        'flex items-center justify-between rounded-md border p-3 text-sm transition-colors',
-                        done
-                          ? 'border-inkgreen/40 bg-inkgreen/5'
-                          : 'border-line hover:border-bronze',
-                      )}
-                    >
-                      <span className="font-medium text-ink">{task.title}</span>
-                      <span
-                        className={cn('chip', done ? 'bg-inkgreen text-white' : 'text-bluegray')}
-                      >
-                        {done ? `已完成 · ${st?.score}分` : `未完成 · ${task.knowledgeScore}分`}
-                      </span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-
-          {/* 本点位图鉴 */}
-          <section className="card p-6 md:col-span-2">
-            <h2 className="font-serif text-lg font-bold text-inkgreen">本点位文化条目</h2>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            </div>
+            <ul className="mt-3 grid gap-x-8 sm:grid-cols-2">
               {spot.codexIds.map((cid) => {
                 const entry = codexEntries.find((item) => item.id === cid)
                 const unlocked = unlockedCodex.includes(cid)
                 return (
-                  <li
-                    key={cid}
-                    className={cn(
-                      'rounded-md border p-3',
-                      unlocked ? 'border-line' : 'border-dashed border-line bg-paper-deep/50',
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2">
+                  <li key={cid} className="border-t border-line py-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span
                         className={cn(
-                          'text-sm font-medium',
+                          'text-sm font-semibold',
                           unlocked ? 'text-ink' : 'text-bluegray',
                         )}
                       >
@@ -182,7 +246,7 @@ export default function SpotPage() {
                         <span className="chip text-bluegray">未解锁</span>
                       )}
                     </div>
-                    <p className="mt-1 text-xs text-bluegray">
+                    <p className="mt-2 text-sm leading-6 text-ink-soft">
                       {unlocked ? entry?.summary : '完成任务或与 NPC 交谈后解锁'}
                     </p>
                   </li>
@@ -191,40 +255,63 @@ export default function SpotPage() {
             </ul>
           </section>
 
-          {/* 尾声（仅苏博） */}
           {isFinaleSpot && finaleOpen ? (
-            <section className="card border-cinnabar/50 p-6 md:col-span-2">
-              <h2 className="font-serif text-lg font-bold text-cinnabar">尾声 · 守园灯</h2>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-soft">
+            <section className="mt-10 rounded-xl border border-cinnabar/30 bg-surface p-6 sm:p-8">
+              <h2 className="text-xl font-semibold text-cinnabar">尾声 · 守园灯</h2>
+              <p className="mt-3 max-w-prose text-sm leading-7 text-ink-soft">
                 小沈把那盏灯递到你面前。灯是剧情里的意象，不是史实，但选择是真的：它会决定你的结局。
               </p>
               <div
-                className="mt-4 grid gap-3 sm:grid-cols-2"
+                className="mt-6 divide-y divide-line border-y border-line"
                 role="radiogroup"
                 aria-label="尾声选择"
               >
-                {finalChoices.map((c) => (
+                {finalChoices.map((item) => (
                   <button
-                    key={c.key}
+                    key={item.key}
                     type="button"
                     role="radio"
-                    aria-checked={choice === c.key}
-                    onClick={() => setChoice(c.key)}
+                    aria-checked={choice === item.key}
+                    onClick={() => setChoice(item.key)}
+                    onKeyDown={(event) => {
+                      if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                        event.preventDefault()
+                        setChoice(item.key === 'hang' ? 'keep' : 'hang')
+                        const sibling =
+                          item.key === 'hang'
+                            ? event.currentTarget.nextElementSibling
+                            : event.currentTarget.previousElementSibling
+                        if (sibling instanceof HTMLButtonElement) sibling.focus()
+                      }
+                    }}
                     className={cn(
-                      'rounded-md border p-4 text-left transition-colors',
-                      choice === c.key
-                        ? 'border-cinnabar ring-2 ring-cinnabar/25'
-                        : 'border-line hover:border-bronze',
+                      'flex w-full items-center gap-4 px-3 py-5 text-left transition-colors',
+                      choice === item.key ? 'bg-cinnabar/5' : 'hover:bg-paper-deep',
                     )}
                   >
-                    <span className="block font-medium text-ink">{c.label}</span>
-                    <span className="mt-1 block text-xs text-bluegray">{c.detail}</span>
+                    <span
+                      className={cn(
+                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                        choice === item.key ? 'border-cinnabar' : 'border-bluegray',
+                      )}
+                      aria-hidden
+                    >
+                      {choice === item.key ? (
+                        <span className="h-2.5 w-2.5 rounded-full bg-cinnabar" />
+                      ) : null}
+                    </span>
+                    <span>
+                      <span className="block font-medium text-ink">{item.label}</span>
+                      <span className="mt-1 block text-sm leading-6 text-ink-soft">
+                        {item.detail}
+                      </span>
+                    </span>
                   </button>
                 ))}
               </div>
               <button
                 type="button"
-                className="btn-primary mt-4"
+                className="btn-primary mt-6 w-full sm:w-auto"
                 disabled={!choice || busy}
                 onClick={confirmFinale}
               >
@@ -239,15 +326,19 @@ export default function SpotPage() {
           ) : null}
 
           {isFinaleSpot && endingId ? (
-            <section className="card p-6 text-center md:col-span-2">
+            <section className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
               <p className="text-sm text-ink-soft">你已经抵达过这条路线的结局。</p>
-              <Link to={`/ending/${endingId}`} className="btn-secondary mt-3 inline-flex">
+              <Link to={`/ending/${endingId}`} className="btn-secondary">
                 回顾结局
               </Link>
             </section>
           ) : null}
         </div>
       )}
+
+      <div className="mt-10">
+        <DemoDataNotice />
+      </div>
     </div>
   )
 }

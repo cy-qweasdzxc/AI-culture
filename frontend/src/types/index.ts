@@ -154,13 +154,13 @@ export interface Ending {
 
 export interface JourneyEvent {
   at: number
-  kind: 'journey' | 'spot' | 'task' | 'clue' | 'codex' | 'choice' | 'ending' | 'mode'
+  kind: 'journey' | 'spot' | 'task' | 'clue' | 'codex' | 'choice' | 'ending' | 'mode' | 'scene'
   text: string
 }
 
 export interface ChatMessage {
   id: string
-  from: 'user' | 'npc' | 'system'
+  from: 'user' | 'npc' | 'system' | 'narrator'
   text: string
   evidenceIds?: string[]
   evidence?: KnowledgeEvidence[]
@@ -169,8 +169,51 @@ export interface ChatMessage {
   safetyFlag?: string
   reason?: string | null
   mock?: boolean
+  npcId?: string
+  speakerName?: string
+  agentRole?: 'character' | 'narrator'
+  turnId?: string
+  feedbackNpcId?: string
+  feedbackMessageId?: string
   at: number
 }
+
+export interface SceneDirection {
+  turnId: string
+  beat: string
+  objective: string
+  reason: string
+  speakerOrder: string[]
+  pace: 'explore' | 'focus' | 'transition'
+  nextAction: {
+    type: 'chat' | 'task' | 'map' | 'finale'
+    targetId: string | null
+    label: string
+  }
+  mode: 'model' | 'rules'
+  provider?: string
+}
+
+export interface SceneChatReply {
+  snapshot: JourneySnapshot
+  director: SceneDirection
+  messages: ChatMessage[]
+  replayed?: boolean
+}
+
+export type SceneStreamEvent =
+  | {
+      type: 'status'
+      data: {
+        phase: 'directing' | 'narrating' | 'speaking' | 'committing'
+        speaker_id?: string
+        speaker_name?: string
+        message?: string
+      }
+    }
+  | { type: 'director'; data: SceneDirection }
+  | { type: 'message'; data: ChatMessage }
+  | { type: 'done'; data: SceneChatReply }
 
 /** 服务端公开任务，答案不会发送到浏览器；解释在完成后返回。 */
 export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' | 'explanation'> & {
@@ -192,6 +235,7 @@ export interface JourneySnapshot {
   flags: Record<string, string>
   events: JourneyEvent[]
   messages: Record<string, ChatMessage[]>
+  sceneDirections?: Record<string, SceneDirection>
   auditLog: { at: number; npcId: string; messageId: string; reason: string }[]
   endingId: string | null
   startedAt: number | null
