@@ -258,7 +258,9 @@ export default function ChatPage() {
                       {!isUser ? (
                         <p className="mt-2 text-xs text-bluegray">
                           {m.provider === 'none'
-                            ? '规则拒答 · 未调用模型'
+                            ? m.reason === 'CONTEXT_AMBIGUOUS' || m.reason === 'CONTEXT_REQUIRED'
+                              ? '确认话题 · 未调用模型'
+                              : '规则拒答 · 未调用模型'
                             : m.mock || m.provider === 'mock'
                               ? 'Mock 模型 · 开发演示'
                               : m.provider

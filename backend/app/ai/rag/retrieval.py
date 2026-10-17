@@ -86,6 +86,13 @@ class Hit:
     vector_score: float
 
 
+def is_eligible(evidence: Evidence, allowed_spots: set[str], chapter: int) -> bool:
+    """Shared eligibility gate for retrieval and conversational subject resolution."""
+    return (evidence.review_status == "reviewed" and evidence.spot_id in allowed_spots
+            and evidence.chapter <= chapter and not evidence.conflicted
+            and bool(evidence.source) and bool(evidence.license))
+
+
 def retrieve(query: str, records: list[Evidence], allowed_spots: set[str], chapter: int,
              query_vector: list[float] | None = None, embedding_model: str = "",
              limit: int = DEFAULT_LIMIT, mode: RetrievalMode = "hybrid") -> list[Hit]:
@@ -98,9 +105,7 @@ def retrieve(query: str, records: list[Evidence], allowed_spots: set[str], chapt
     query_tokens = tokens(query)
     matches = []
     for evidence in records:
-        if (evidence.review_status != "reviewed" or evidence.spot_id not in allowed_spots
-                or evidence.chapter > chapter or evidence.conflicted or not evidence.source
-                or not evidence.license):
+        if not is_eligible(evidence, allowed_spots, chapter):
             continue
         overlap = query_tokens & tokens(evidence.title + " " + evidence.content)
         lexical = len(overlap) / max(1, len(query_tokens))

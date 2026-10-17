@@ -555,3 +555,25 @@ pingjiang → ouyuan → shizilin → zhuozhengyuan → subo 依次到达均 200
 - **人工文化事实评分**：引用有效性不等于逐句事实一致性，`human_fact_accuracy` 仍为未知。
 - **pgvector 原生 ANN 检索**：原生表已写入且可查询（已验证维度与排序一致），但检索排序仍由
   应用执行精确余弦，未声明 HNSW 索引。
+
+## 2026-10-17 多轮追问改进验证
+
+本轮仅改进查询上下文、追问生成提示与前端澄清标记，没有修改既有业务数据库、审核文化资料、启动部署或调用真实模型。环境为 Linux、Python 3.14.4、Node 22.22.1；以下结果是本轮执行结果。
+
+| 检查 | 本轮结果 |
+|---|---|
+| 后端全量 `pytest -q -p no:cacheprovider` | **137 passed, 1 skipped**，21.00 秒；1 条既有 Starlette TestClient 弃用提示 |
+| 新增多轮对话回归 | 22 项，全部包含在全量结果内；临时 SQLite 与合成自有语料 |
+| `ruff check --no-cache app tests scripts` | 全通过 |
+| 前端 `npm run lint`、TypeScript 类型检查 | 全通过 |
+| 前端 `npm run test` | **9 passed**，2.22 秒 |
+| 前端 `npm run build` | 成功；86 模块，构建 13.63 秒 |
+| `git diff --check` | 全通过 |
+
+后端命令显式设置 `DATABASE_URL=sqlite:///:memory:`、`LLM_PROVIDER=mock`、`EMBEDDING_PROVIDER=none` 和空模型密钥；测试夹具另建临时数据库。新增回归覆盖单对象追问、话题切换、歧义澄清及序号选择、复数对象、跨会话/NPC/点位隔离、旧日志兼容、撤审和章节等检索过滤、注入、错误年代前提以及 Embedding 故障回退。
+
+另以仓库 22 条语料构造内存检索记录，先问“平江图碑是什么年代的，现在收藏在哪里？”，再问“它现在收藏在哪里？”和“能再详细讲讲吗？”，两次均补全《平江图》碑并命中 `kn-pingjiangtu`；改问“那《雨巷》与丁香巷有什么关系？”时使用独立新话题，命中 `kn-yuxiang/kn-dingxiang-ming`。这是离线检索检查，不是重新审核资料或真实模型作答质量实验。
+
+**前端环境限制及处理**：现有 `node_modules` 带有 Windows 原生依赖，默认运行缺少 Linux Rollup 和 esbuild 包。为保持项目依赖及锁文件不变，仅在 `/tmp/aic-frontend-native-check` 用 npm 安装与现有版本一致的 `@rollup/rollup-linux-x64-gnu@4.64.0`、`@esbuild/linux-x64@0.25.12`（禁用安装脚本），通过 `NODE_PATH=/tmp/aic-frontend-native-check/node_modules` 执行上述前端单测和构建。没有修改 `package.json/package-lock.json` 或项目原生依赖目录；临时依赖不属于项目交付，正常开发环境应按 README 在当前平台执行 `npm ci`。
+
+本轮未执行浏览器 E2E、真实 LLM/Embedding 自然度评测、生产 PostgreSQL 或容器部署。规则覆盖常见指代与省略追问，尚不能代表通用中文指代消解或所有复杂跨主题对话。

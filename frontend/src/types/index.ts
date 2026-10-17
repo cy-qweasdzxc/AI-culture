@@ -167,6 +167,7 @@ export interface ChatMessage {
   provider?: string
   dataScope?: string
   safetyFlag?: string
+  reason?: string | null
   mock?: boolean
   at: number
 }

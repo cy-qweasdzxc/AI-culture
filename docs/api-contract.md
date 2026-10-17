@@ -41,6 +41,8 @@ POST /chat/message：公共动作字段 + npc_id + message（1–1000字符，�
 
 返回dialogue、intent、emotion、evidence_ids、provider、model、mock、reason、approved_actions、evidence、data_scope=reviewed_only、message_id、retrieval_mode、retrieval_reason、snapshot。证据包含id、spotId、type、title、content、source、source_url、review_status。provider=none表示未调用模型的本地拒答；mock=true表示Mock生成。没有审核证据不会用pending资料伪装回答。
 
+多轮追问另返回 `context_spot_id` 与 `query_context={mode, knowledge_ids}`，mode 为 `standalone/history/clarification/unavailable`，不返回补全查询的原文副本。`intent=clarification`、`provider=none`、空引用表示本地请求确认对象，reason 为 `CONTEXT_AMBIGUOUS` 或 `CONTEXT_REQUIRED`；它不是文化事实回答，也不发放模型奖励。候选知识已失效时返回 `CONTEXT_UNAVAILABLE`，不使用历史回答替代当前审核证据。原有客户端可忽略新增字段。
+
 POST /chat/feedback：journey_id、npc_id、message_id、reason（4–1000字符），只接受所属旅程的真实对话，返回{recorded:true}。不修改剧情版本。
 
 ## 管理接口
