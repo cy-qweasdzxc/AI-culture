@@ -9,10 +9,10 @@
 | 项 | 当前状态 |
 |---|---|
 | 日期 / 剩余时间 | 2026-10-18，距截止约 12 天 |
-| Git | 四行推荐布局已提交为 `e0aff94`；本文档随后提交，具体以远程 `main` 最新 commit 为准 |
+| Git | `main` 为 `2502a68`（四行布局 + 本待办 + E2E 文案修复）；以远程最新 commit 为准 |
 | 后端测试 | `173 passed, 1 skipped`，ruff 通过（本机） |
 | 前端测试 | `22 passed`，lint 与 build 通过（本机） |
-| 远程 CI | 截至 `1d3e1e6`：backend 通过，frontend 在 `npm run test:e2e` 失败；`e0aff94` 的 CI 待复核 |
+| 远程 CI | run 20（`2502a68`）frontend 仍在 `npm run test:e2e` 失败；本地 CI-like 环境 10/10 通过，CI 差异待查 |
 | 当前 8000 验收库 | 24 条全部 `reviewed` / `trust_level=auto_published`；`source_url` 为空；`knowledge_chunks` 无向量 |
 | 仓库开发库 | 22 条 reviewed（有来源 URL，但 license 写明“未取得书面转载许可”）+ 2 条 pending；仍无向量 |
 | 当前 AI 配置 | `LLM_PROVIDER=deepseek`；`EMBEDDING_PROVIDER=none`，实际为关键词检索 |
@@ -96,7 +96,8 @@
 
 - [ ] **P0-13 修绿 CI**  
   完成：复现 frontend E2E 失败并修复；最新 commit 的 GitHub Actions 为绿色。  
-  证据：CI run 链接。  
+  现状：已修复“审核状态→发布状态”断言；本地 CI-like 环境 10/10 通过，但 run 20 仍失败，需下载 CI 失败 artifact 或开通日志权限定位浏览器/并发/环境差异。  
+  证据：CI run 链接 + 失败用例。  
   截止：10-22。
 
 - [ ] **P0-14 重跑桌面+375px E2E**  
