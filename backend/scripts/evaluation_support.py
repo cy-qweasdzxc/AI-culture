@@ -49,19 +49,9 @@ def dry_plan(dataset: Any, *, chat: bool) -> dict:
 
 
 def knowledge_hits(query, evidence, allowed_spots, chapter, vector, model, limit, mode="hybrid"):
-    from app.ai.rag.retrieval import retrieve
+    from app.ai.rag.retrieval import retrieve_knowledge
 
-    # Source labels are knowledge IDs: rank all candidate chunks, then select K distinct knowledge IDs.
-    chunks = retrieve(query, evidence, allowed_spots, chapter, vector, model, max(1, len(evidence)), mode)
-    selected = []
-    seen = set()
-    for hit in chunks:
-        if hit.evidence.knowledge_id not in seen:
-            seen.add(hit.evidence.knowledge_id)
-            selected.append(hit)
-        if len(selected) >= limit:
-            break
-    return selected
+    return retrieve_knowledge(query, evidence, allowed_spots, chapter, vector, model, limit, mode)
 
 
 class UsageTransport(httpx.BaseTransport):

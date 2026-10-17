@@ -24,6 +24,7 @@ RETRIEVAL_CONFIG = {
     "hybrid_lexical_weight": HYBRID_LEXICAL_WEIGHT,
     "hybrid_vector_weight": HYBRID_VECTOR_WEIGHT,
     "default_limit": DEFAULT_LIMIT,
+    "top_k_unit": "knowledge",
     "distance": "cosine",
     "index": "exact",
 }
@@ -139,3 +140,22 @@ def retrieve(query: str, records: list[Evidence], allowed_spots: set[str], chapt
             seen.add(key)
             unique.append(hit)
     return unique[:limit]
+
+
+def retrieve_knowledge(query: str, records: list[Evidence], allowed_spots: set[str], chapter: int,
+                       query_vector: list[float] | None = None, embedding_model: str = "",
+                       limit: int = DEFAULT_LIMIT, mode: RetrievalMode = "hybrid") -> list[Hit]:
+    """Shared production/evaluation contract: K distinct knowledge IDs, best chunk each."""
+    if limit <= 0:
+        return []
+    ranked = retrieve(query, records, allowed_spots, chapter, query_vector, embedding_model,
+                      max(1, len(records)), mode)
+    selected = []
+    seen = set()
+    for hit in ranked:
+        if hit.evidence.knowledge_id not in seen:
+            seen.add(hit.evidence.knowledge_id)
+            selected.append(hit)
+        if len(selected) >= limit:
+            break
+    return selected

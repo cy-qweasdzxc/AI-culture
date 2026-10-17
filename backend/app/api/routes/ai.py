@@ -10,7 +10,7 @@ from app.ai.agents.npc import PROMPT_VERSION, AgentReply, refuse, respond
 from app.ai.llm.providers import ChatProvider, EmbeddingProvider, ProviderError
 from app.ai.rag.conversation import ConversationTurn, resolve_query
 from app.ai.rag.index import approved_records
-from app.ai.rag.retrieval import is_eligible, retrieve
+from app.ai.rag.retrieval import is_eligible, retrieve_knowledge
 from app.ai.safety.policy import POLICY_VERSION, input_risk, redact_log_text
 from app.ai.settings import AISettings
 from app.core.database import get_db
@@ -99,7 +99,7 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
                 retrieval_reason = str(error)
         hits = []
         if can_retrieve:
-            hits = retrieve(query.query, retrieval_records, {context["spot"]}, context["chapter"], vector, settings.embedding_model)
+            hits = retrieve_knowledge(query.query, retrieval_records, {context["spot"]}, context["chapter"], vector, settings.embedding_model)
         if query.clarification:
             reply = AgentReply(query.clarification, "clarification", "calm", [], "none", "none", False,
                                "CONTEXT_AMBIGUOUS" if query.knowledge_ids else "CONTEXT_REQUIRED", [])

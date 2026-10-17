@@ -14,7 +14,7 @@ from sqlalchemy.orm.attributes import set_committed_value
 
 from app.ai.llm.providers import EmbeddingProvider, ProviderError
 from app.ai.rag.index import approved_records, rebuild_knowledge
-from app.ai.rag.retrieval import RETRIEVAL_CONFIG, clean_text, fingerprint, retrieve
+from app.ai.rag.retrieval import RETRIEVAL_CONFIG, clean_text, fingerprint, retrieve_knowledge
 from app.ai.safety.policy import redact_log_text
 from app.ai.settings import AISettings
 from app.core.config import get_settings
@@ -276,7 +276,7 @@ def retrieval_test(body: RetrievalBody, db: Session = Depends(get_db), actor: st
         raise DomainError("EMBEDDING_UNAVAILABLE",
                           "向量检索需要可用的 Embedding 提供方；本次未取得查询向量。", 503)
     started = time.perf_counter()
-    hits = retrieve(body.query, records, {body.location_id}, body.chapter, vector,
+    hits = retrieve_knowledge(body.query, records, {body.location_id}, body.chapter, vector,
                     settings.embedding_model, body.limit, body.mode)
     elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
     if body.mode == "keyword" or vector is None:
