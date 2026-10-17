@@ -1,0 +1,70 @@
+import { describe, expect, it } from 'vitest'
+import { suggestedChoices } from '@/data/chatChoices'
+
+const base = {
+  spotId: 'pingjiang',
+  roleId: 'apprentice',
+  turn: 0,
+  offset: 0,
+  asked: [] as string[],
+}
+
+describe('推荐问题', () => {
+  it('首轮保留当前任务问题，并凑足三条', () => {
+    const choices = suggestedChoices('zhou-bo', base)
+    expect(choices).toHaveLength(3)
+    expect(new Set(choices).size).toBe(3)
+    expect(choices).toContain('《平江图》是什么？')
+  })
+
+  it('问过之后不再重复推荐同一题', () => {
+    const choices = suggestedChoices('zhou-bo', {
+      ...base,
+      turn: 1,
+      asked: ['《平江图》是什么？'],
+    })
+    expect(choices).not.toContain('《平江图》是什么？')
+    expect(choices).toHaveLength(3)
+  })
+
+  it('按点位过滤，不在耦园推荐狮子林或拙政园', () => {
+    const choices = suggestedChoices('a-heng', {
+      ...base,
+      spotId: 'ouyuan',
+      roleId: 'wanderer',
+    })
+    expect(choices).toContain('耦园为什么改名？')
+    expect(choices.every((choice) => !/狮子林|拙政园/.test(choice))).toBe(true)
+  })
+
+  it('在狮子林推荐狮子林相关题目', () => {
+    const choices = suggestedChoices('a-heng', {
+      ...base,
+      spotId: 'shizilin',
+      roleId: 'wanderer',
+    })
+    expect(choices).toContain('狮子林始建于什么朝代？')
+    expect(choices.every((choice) => !/耦园|拙政园/.test(choice))).toBe(true)
+  })
+
+  it('追问轮次和换一批都会改变批次', () => {
+    const first = suggestedChoices('xiao-shen', { ...base, spotId: 'subo' })
+    const nextTurn = suggestedChoices('xiao-shen', {
+      ...base,
+      spotId: 'subo',
+      turn: 1,
+    })
+    const refreshed = suggestedChoices('xiao-shen', {
+      ...base,
+      spotId: 'subo',
+      offset: 1,
+    })
+    expect(
+      new Set([first.join('|'), nextTurn.join('|'), refreshed.join('|')]).size,
+    ).toBeGreaterThan(1)
+  })
+
+  it('未知 NPC 不硬凑推荐', () => {
+    expect(suggestedChoices('unknown', base)).toEqual([])
+  })
+})

@@ -285,22 +285,3 @@ export const chatRules: ChatRule[] = [
     },
   },
 ]
-
-/** 按 NPC 返回当前阶段的推荐选项（2-4 个） */
-export function suggestedChoices(npcId: string, hasClue: (id: string) => boolean): string[] {
-  switch (npcId) {
-    case 'zhou-bo':
-      return [
-        '平江路的格局有什么讲究？',
-        '《平江图》是什么？',
-        hasClue('clue-tea-ticket') ? '周伯，您认得这张茶票吗？' : '丁香巷和《雨巷》有关系吗？',
-        '下一站往哪儿走？',
-      ]
-    case 'a-heng':
-      return ['耦园为什么改名？', '狮子林的假山有名在哪里？', '拙政园的名字怎么来的？', '什么样的假山才算好？']
-    case 'xiao-shen':
-      return ['贝聿铭是怎么设计新馆的？', '片石假山妙在哪里？', '苏州园林和世界遗产的关系？', '守园灯是什么？']
-    default:
-      return []
-  }
-}

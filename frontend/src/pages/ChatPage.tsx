@@ -1,12 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import TypeTag from '@/components/TypeTag'
+import TypewriterText from '@/components/TypewriterText'
 import { suggestedChoices } from '@/data/chatChoices'
 import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
+
+const CLUE_NOTICE_MARK = '\n（已发放演示剧情线索'
+
+/** System notices are shown at once; only the NPC's spoken answer is typed. */
+function splitClueNotice(text: string): [string, string | null] {
+  const index = text.indexOf(CLUE_NOTICE_MARK)
+  return index < 0 ? [text, null] : [text.slice(0, index), text.slice(index + 1)]
+}
 
 export default function ChatPage() {
   const { npcId } = useParams<{ npcId: string }>()
@@ -31,6 +40,7 @@ export default function ChatPage() {
   const [reportingId, setReportingId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [choiceOffset, setChoiceOffset] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
 
   const currentSpotId = useJourney((s) => s.currentSpotId)
@@ -43,7 +53,27 @@ export default function ChatPage() {
   const evidence = messages
     .flatMap((message) => message.evidence ?? [])
     .find((item) => item.id === evidenceId)
-  const choices = npc ? suggestedChoices(npc.id, (id) => inventory.includes(id)) : []
+  const asked = messages.filter((message) => message.from === 'user').map((message) => message.text)
+  const choices = npc
+    ? suggestedChoices(npc.id, {
+        spotId: currentSpotId,
+        roleId,
+        turn: asked.length,
+        offset: choiceOffset,
+        asked,
+      })
+    : []
+  const latestNpc = [...messages].reverse().find((message) => message.from === 'npc')
+  // A freshly stored reply starts typing; restored history is shown in full.
+  const streamingId = latestNpc && Date.now() - latestNpc.at < 8000 ? latestNpc.id : null
+
+  const followTyping = useCallback(() => {
+    const list = listRef.current
+    if (!list) return
+    if (list.scrollHeight - list.scrollTop - list.clientHeight < 180) {
+      list.scrollTop = list.scrollHeight
+    }
+  }, [])
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
@@ -237,6 +267,7 @@ export default function ChatPage() {
                   )
                 }
                 const isUser = m.from === 'user'
+                const [body, notice] = splitClueNotice(m.text)
                 return (
                   <div
                     key={m.id}
@@ -254,7 +285,17 @@ export default function ChatPage() {
                           : 'rounded-tl-none border border-white/70 bg-surface/[0.92] text-ink backdrop-blur-sm',
                       )}
                     >
-                      <p className="whitespace-pre-wrap">{m.text}</p>
+                      <TypewriterText
+                        text={body}
+                        animate={m.id === streamingId}
+                        className="whitespace-pre-wrap"
+                        onProgress={m.id === streamingId ? followTyping : undefined}
+                      />
+                      {notice ? (
+                        <p className="mt-1.5 border-t border-line/60 pt-1.5 text-xs leading-relaxed text-bluegray">
+                          {notice}
+                        </p>
+                      ) : null}
                       {!isUser ? (
                         <p className="mt-2 text-xs text-bluegray">
                           {m.provider === 'none'
@@ -321,18 +362,30 @@ export default function ChatPage() {
 
           {/* 推荐选项 */}
           {choices.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto border-t border-line px-4 py-2.5">
-              {choices.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  disabled={thinking || busy}
-                  onClick={() => send(c)}
-                  className="chip shrink-0 border-bronze/40 bg-surface px-3 py-1.5 text-ink-soft hover:border-bronze hover:text-ink"
-                >
-                  {c}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 border-t border-line px-4 py-2.5">
+              <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+                {choices.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    disabled={thinking || busy}
+                    onClick={() => send(c)}
+                    className="chip shrink-0 border-bronze/40 bg-surface px-3 py-1.5 text-ink-soft hover:border-bronze hover:text-ink"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setChoiceOffset((value) => value + 1)}
+                disabled={thinking || busy}
+                aria-label="换一批推荐问题"
+                title="换一批推荐问题"
+                className="shrink-0 text-xs text-bluegray underline underline-offset-2 hover:text-ink disabled:opacity-50"
+              >
+                换一批
+              </button>
             </div>
           ) : null}
 
@@ -420,8 +473,7 @@ export default function ChatPage() {
       {/* 纠错反馈 */}
       <Drawer open={!!reportingId} onClose={() => setReportingId(null)} title="纠错反馈">
         <p className="text-sm leading-relaxed text-ink-soft">
-          指出 AI
-          回答中可能不准确的地方，会写入反馈记录，帮助后续更新资料与提示。
+          指出 AI 回答中可能不准确的地方，会写入反馈记录，帮助后续更新资料与提示。
         </p>
         <label htmlFor="report-reason" className="mt-4 block text-sm font-medium text-ink">
           问题描述

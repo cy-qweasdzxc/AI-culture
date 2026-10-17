@@ -8,12 +8,12 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.ai.agents.personas import with_persona
+from app.ai.agents.voice import TYPE_LABELS, compose_reply
 from app.ai.llm.providers import ChatProvider, ProviderError
 from app.ai.rag.grounding import verified_sentence_excerpt
 from app.ai.rag.retrieval import Hit
 from app.ai.safety.policy import REFUSAL, input_risk
 
-TYPE_LABELS = {"fact": "史实", "disputed": "争议观点", "legend": "民间传说", "fiction": "艺术化虚构"}
 PROMPT_VERSION = "npc-evidence-v5"
 
 
@@ -69,7 +69,8 @@ def respond(question: str, hits: list[Hit], npc: dict, role: dict, context: dict
     if years and not years.issubset(set(re.findall(r"(?<!\d)(?:1|2)\d{3}(?!\d)", evidence_text))):
         return refuse("PREMISE_UNCONFIRMED")
     evidence = [{"id": h.evidence.knowledge_id, "type": h.evidence.content_type,
-                 "text": h.evidence.content, "source": h.evidence.source} for h in hits]
+                 "title": h.evidence.title, "text": h.evidence.content,
+                 "source": h.evidence.source} for h in hits]
     npc = with_persona(npc, "npc")
     role = with_persona(role, "player")
     ids = list(dict.fromkeys(row["id"] for row in evidence))
@@ -112,7 +113,7 @@ def respond(question: str, hits: list[Hit], npc: dict, role: dict, context: dict
     if input_risk(parsed.dialogue):
         return refuse("OUTPUT_UNSAFE", generated.provider, generated.mock)
     cited = [row for row in evidence if row["id"] in parsed.evidence_ids]
-    excerpts = []
+    excerpts: list[dict[str, str]] = []
     rendered_ids = []
     if parsed.evidence_quotes:
         for quote in parsed.evidence_quotes:
@@ -120,22 +121,31 @@ def respond(question: str, hits: list[Hit], npc: dict, role: dict, context: dict
             source = next((row for row in sources if verified_sentence_excerpt(quote.quote, row["text"])), None)
             if source is None:
                 return refuse("EVIDENCE_TEXT_INVALID", generated.provider, generated.mock)
-            excerpts.append(f"【{TYPE_LABELS[source['type']]}】{quote.quote}")
+            excerpts.append({"evidence_id": source["id"], "type": source["type"],
+                             "title": source["title"], "quote": quote.quote})
             rendered_ids.append(quote.evidence_id)
         mode = "verified_excerpt"
     else:
         # Older providers may omit quotes. Their free-form dialogue is never displayed:
         # fall back to the actual cited source text rather than trust a valid ID alone.
-        excerpts = [f"【{TYPE_LABELS[row['type']]}】{row['text']}" for row in cited]
+        excerpts = [{"evidence_id": row["id"], "type": row["type"],
+                     "title": row["title"], "quote": row["text"]} for row in cited]
         rendered_ids = list(parsed.evidence_ids)
         mode = "source_fallback"
-    grounded = "\n".join(dict.fromkeys(excerpts))
+    seen = set()
+    unique_excerpts = []
+    for excerpt in excerpts:
+        key = (excerpt["type"], excerpt["quote"])
+        if key not in seen:
+            seen.add(key)
+            unique_excerpts.append(excerpt)
+    dialogue = compose_reply(npc, role, question, context, history, unique_excerpts, parsed.emotion)
     proposals = []
     if parsed.task_action and parsed.clue_id:
         proposals.append({"type": parsed.task_action, "id": parsed.clue_id})
     proposals.extend({"type": "unlock_codex", "id": key} for key in parsed.unlock_knowledge)
     return AgentReply(
-        f"{npc.get('name', 'NPC')}对{role.get('name', '你')}说：资料中这样记载：\n{grounded}",
+        dialogue,
         parsed.intent, parsed.emotion, list(dict.fromkeys(rendered_ids)), generated.provider,
         generated.model, generated.mock, generated.fallback_reason, proposals, mode,
     )
