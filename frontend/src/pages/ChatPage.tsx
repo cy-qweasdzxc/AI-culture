@@ -63,6 +63,7 @@ export default function ChatPage() {
         asked,
       })
     : []
+  const hasChoices = choices.length > 0
   const latestNpc = [...messages].reverse().find((message) => message.from === 'npc')
   // A freshly stored reply starts typing; restored history is shown in full.
   const streamingId = latestNpc && Date.now() - latestNpc.at < 8000 ? latestNpc.id : null
@@ -360,63 +361,61 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* 推荐选项 */}
-          {choices.length > 0 ? (
-            <div className="flex items-center gap-2 border-t border-line px-4 py-2.5">
-              <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
-                {choices.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    disabled={thinking || busy}
-                    onClick={() => send(c)}
-                    className="chip shrink-0 border-bronze/40 bg-surface px-3 py-1.5 text-ink-soft hover:border-bronze hover:text-ink"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setChoiceOffset((value) => value + 1)}
-                disabled={thinking || busy}
-                aria-label="换一批推荐问题"
-                title="换一批推荐问题"
-                className="shrink-0 text-xs text-bluegray underline underline-offset-2 hover:text-ink disabled:opacity-50"
+          {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
+          <div className="border-t border-line p-3">
+            <div className="flex flex-col gap-2">
+              {choices.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  disabled={thinking || busy}
+                  onClick={() => send(c)}
+                  className="w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-bronze hover:text-ink disabled:opacity-50"
+                >
+                  {c}
+                </button>
+              ))}
+              <form
+                className="flex min-w-0 items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  send(input)
+                }}
               >
-                换一批
-              </button>
+                <label htmlFor="chat-input" className="sr-only">
+                  向{npc.name}提问
+                </label>
+                <input
+                  id="chat-input"
+                  className="input min-w-0 flex-1"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={`问${npc.name}…`}
+                  maxLength={200}
+                  disabled={thinking || busy}
+                />
+                {hasChoices ? (
+                  <button
+                    type="button"
+                    onClick={() => setChoiceOffset((value) => value + 1)}
+                    disabled={thinking || busy}
+                    aria-label="换一批推荐问题"
+                    title="换一批推荐问题"
+                    className="shrink-0 text-xs text-bluegray underline underline-offset-2 hover:text-ink disabled:opacity-50"
+                  >
+                    换一批
+                  </button>
+                ) : null}
+                <button
+                  type="submit"
+                  className="btn-primary shrink-0"
+                  disabled={thinking || busy || !input.trim()}
+                >
+                  发送
+                </button>
+              </form>
             </div>
-          ) : null}
-
-          {/* 输入区 */}
-          <form
-            className="flex gap-2 border-t border-line p-3"
-            onSubmit={(e) => {
-              e.preventDefault()
-              send(input)
-            }}
-          >
-            <label htmlFor="chat-input" className="sr-only">
-              向{npc.name}提问
-            </label>
-            <input
-              id="chat-input"
-              className="input flex-1"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={`问${npc.name}一个与「${npc.knowledgeScope.slice(0, 12)}…」相关的问题`}
-              maxLength={200}
-              disabled={thinking || busy}
-            />
-            <button
-              type="submit"
-              className="btn-primary shrink-0"
-              disabled={thinking || busy || !input.trim()}
-            >
-              发送
-            </button>
-          </form>
+          </div>
           {error ? (
             <p className="border-t border-line px-4 py-2 text-sm text-danger" role="alert">
               {error}
