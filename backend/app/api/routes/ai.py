@@ -17,7 +17,13 @@ from app.core.database import get_db
 from app.core.errors import DomainError
 from app.core.rate_limit import check_rate
 from app.models import Character, CulturalLocation, DialogueLog, SafetyLog, User
-from app.services.journey import assert_npc_access, grant_item, mutate_journey, owned_journey
+from app.services.journey import (
+    assert_npc_access,
+    grant_item,
+    mutate_journey,
+    owned_journey,
+    validate_journey_action,
+)
 from app.services.session import get_current_user
 
 router = APIRouter(prefix="/api", tags=["AI NPC"])
@@ -52,7 +58,12 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
     check_rate("chat:" + user.id, 30)
     settings = AISettings.configured()
 
-    def operation(j):
+    replay = validate_journey_action(db, journey, body.state_version, body.request_id,
+                                     "chat:" + body.npc_id, body.model_dump())
+    if replay is not None:
+        return replay
+
+    def prepare(j):
         npc = assert_npc_access(db, j, body.npc_id)
         records = approved_records(db, j.story_id)
         recent = list(reversed(db.scalars(select(DialogueLog).where(
@@ -66,6 +77,17 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
         retrieval_records = records
         if query.mode == "history":
             retrieval_records = [record for record in records if record.knowledge_id in query.knowledge_ids]
+        role = db.get(Character, j.role_id)
+        eligible_ids = {record.knowledge_id for record in records if is_eligible(record, {j.current_location_id}, j.chapter)}
+        history = [{"user": log.user_input, "npc": log.response.get("dialogue", "")}
+                   for log, turn in zip(recent, turns, strict=True)
+                   if turn.spot_id == j.current_location_id and turn.knowledge_ids
+                   and set(turn.knowledge_ids).issubset(eligible_ids) and not input_risk(turn.question)]
+        npc_data, role_data = dict(npc.data) | {"name": npc.name}, dict(role.data)
+        context = {"state": j.state, "spot": j.current_location_id, "chapter": j.chapter,
+                   "resolved_question": query.query}
+        # End the read transaction and release the connection before any provider wait.
+        db.rollback()
         # Never embed injection text or send it to a model.
         vector = None
         retrieval_reason = None
@@ -77,22 +99,26 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
                 retrieval_reason = str(error)
         hits = []
         if can_retrieve:
-            hits = retrieve(query.query, retrieval_records, {j.current_location_id}, j.chapter, vector, settings.embedding_model)
-        role = db.get(Character, j.role_id)
-        eligible_ids = {record.knowledge_id for record in records if is_eligible(record, {j.current_location_id}, j.chapter)}
-        history = [{"user": log.user_input, "npc": log.response.get("dialogue", "")}
-                   for log, turn in zip(recent, turns, strict=True)
-                   if turn.spot_id == j.current_location_id and turn.knowledge_ids
-                   and set(turn.knowledge_ids).issubset(eligible_ids) and not input_risk(turn.question)]
+            hits = retrieve(query.query, retrieval_records, {context["spot"]}, context["chapter"], vector, settings.embedding_model)
         if query.clarification:
             reply = AgentReply(query.clarification, "clarification", "calm", [], "none", "none", False,
                                "CONTEXT_AMBIGUOUS" if query.knowledge_ids else "CONTEXT_REQUIRED", [])
         elif query.mode == "unavailable":
             reply = refuse("CONTEXT_UNAVAILABLE")
         else:
-            reply = respond(question, hits, npc.data | {"name": npc.name}, role.data,
-                            {"state": j.state, "spot": j.current_location_id, "chapter": j.chapter,
-                             "resolved_question": query.query}, history, ChatProvider(settings))
+            reply = respond(question, hits, npc_data, role_data, context, history, ChatProvider(settings))
+        return reply, hits, query, vector, retrieval_reason, records
+
+    reply, hits, query, vector, retrieval_reason, prepared_records = prepare(journey)
+
+    def operation(j):
+        npc = assert_npc_access(db, j, body.npc_id)
+        # Approval/content can change while the model is running. Never publish stale evidence.
+        current_records = {e.id: e for e in approved_records(db, j.story_id)}
+        used = set(reply.evidence_ids) | set(query.knowledge_ids)
+        for record in prepared_records:
+            if record.knowledge_id in used and current_records.get(record.id) != record:
+                raise DomainError("EVIDENCE_CHANGED", "资料已更新，请重试以使用最新证据。", 409)
         approved = []
         # These fictional puzzle cues are authored business rules, independent of LLM facts/actions.
         clue_id = None

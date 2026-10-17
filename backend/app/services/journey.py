@@ -101,16 +101,11 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     }
 
 
-def mutate_journey(
-    db: Session,
-    journey: UserStoryState,
-    expected_version: int,
-    request_id: str | None,
-    action_key: str,
-    payload: dict[str, Any],
-    operation: Callable[[UserStoryState], dict[str, Any]],
-    allow_completed: bool = False,
-) -> dict[str, Any]:
+def validate_journey_action(
+    db: Session, journey: UserStoryState, expected_version: int, request_id: str | None,
+    action_key: str, payload: dict[str, Any], allow_completed: bool = False,
+) -> dict[str, Any] | None:
+    """Read-only preflight; callers must still claim the version when committing."""
     fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
     if request_id:
         receipt = db.get(ActionReceipt, (journey.id, request_id))
@@ -124,6 +119,23 @@ def mutate_journey(
         raise DomainError("JOURNEY_COMPLETED", "旅程已经结束，请查看结局或重置旅程。", 409)
     if journey.state_version != expected_version:
         raise DomainError("STATE_CONFLICT", "旅程已更新，请刷新状态后重试。", 409, {"stateVersion": journey.state_version})
+    return None
+
+
+def mutate_journey(
+    db: Session,
+    journey: UserStoryState,
+    expected_version: int,
+    request_id: str | None,
+    action_key: str,
+    payload: dict[str, Any],
+    operation: Callable[[UserStoryState], dict[str, Any]],
+    allow_completed: bool = False,
+) -> dict[str, Any]:
+    replay = validate_journey_action(db, journey, expected_version, request_id, action_key, payload, allow_completed)
+    if replay is not None:
+        return replay
+    fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
     claimed = db.execute(update(UserStoryState).where(UserStoryState.id == journey.id, UserStoryState.state_version == expected_version).values(state_version=expected_version + 1).execution_options(synchronize_session=False))
     if claimed.rowcount != 1:
         db.rollback()
