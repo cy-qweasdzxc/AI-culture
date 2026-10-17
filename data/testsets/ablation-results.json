@@ -101,10 +101,10 @@
     }
   ],
   "arm_definitions": {
-    "plain": "只调用聊天模型，不检索任何资料，不施加任何约束",
-    "rag": "注入检索到的资料，不校验引用与安全标记",
-    "rag_evidence": "注入资料并按 ModelReply 校验引用、安全标记，但不走剧情动作守卫",
-    "full_pipeline": "线上实现：检索 + 引用校验 + 前置年份校验 + 动作白名单 + 安全日志"
+    "plain": "共享输入过滤与 JSON 格式提示；不注入资料，使用宽松解析，记录校验诊断",
+    "rag": "共享输入过滤；注入资料、宽松解析，记录引用诊断，不据此改写模型回答",
+    "rag_evidence": "共享输入过滤；注入资料，按 ModelReply 解析并记录引用/安全标记诊断，保留原回答",
+    "full_pipeline": "历史名称：仅调用该次运行版本 NPC respond()；含其提示词和回答约束，不执行旅程动作守卫或安全日志写入"
   },
   "usage": {
     "chat": {
@@ -3419,6 +3419,26 @@
     "plain 臂没有可检索资料，其“引用无效”是结构性的，不是模型缺陷。",
     "样本为 11 条已审核语料与有限题集，不能推广为总体质量。",
     "模型可能不产生越权动作，因此 proposed_state_actions 为 0 只说明本次未触发，不代表防护无必要。",
-    "未填写人工事实性评分；自动引用校验不等于逐句事实一致性。"
-  ]
+    "未填写人工事实性评分；自动引用校验不等于逐句事实一致性。",
+    "2026-10-17 解释修正：多项配置同时变化，不是单变量消融，不能归因于某个动作守卫。",
+    "所有组共享输入过滤；full_pipeline 仅调用当时 NPC respond()，没有旅程动作守卫或 SafetyLog 写入。",
+    "guard_accepted 为各组生成诊断；诊断未通过的原回答仍可能计为 answered，不代表已拦截用户输出。",
+    "保留 npc-evidence-v2 历史测量，未重跑，不代表当前 v5 的质量成绩。"
+  ],
+  "interpretation_correction": {
+    "corrected_at": "2026-10-17",
+    "provider_calls_rerun": false,
+    "single_variable_ablation": false,
+    "single_guard_causal_attribution_supported": false,
+    "runtime_action_guard_exercised": false,
+    "safety_log_write_exercised": false,
+    "shared_input_filter": true,
+    "changed_fields": [
+      "arm_definitions",
+      "limitations",
+      "interpretation_correction"
+    ],
+    "unchanged_measurements_sha256": "c2fecae74b15b6c35d94aa356f2d08420e8661aa568e0b95e6d9d9105d5a9991",
+    "hash_definition": "SHA-256 of all other top-level fields, JSON sort_keys=True, ensure_ascii=False, separators=(comma,colon), UTF-8"
+  }
 }

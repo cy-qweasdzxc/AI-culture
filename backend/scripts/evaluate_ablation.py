@@ -1,22 +1,10 @@
-"""Generation ablation: how much does each safety layer actually change?
+"""Compare four generation configurations; this is not a single-variable ablation.
 
-Four arms on the same reviewed corpus, same questions, same models:
-
-  plain            no retrieval at all — the bare chat model answers from memory
-  rag              retrieved evidence is injected, but nothing is enforced
-  rag_evidence     evidence injected and citations checked against what was retrieved
-  full_pipeline    evidence + citations + the shipped state/action guard (``respond()``)
-
-The point is to separate two different claims that are easy to conflate:
-  * "the model can be made to answer from the corpus";
-  * "the model can be prevented from fabricating citations, inventing cultural facts and proposing
-    state changes the story never authorised".
-
-For every arm the script records, per case: whether an answer was produced, which evidence was
-retrieved, which ids the model cited, whether those ids were actually retrieved, whether the model
-proposed any story action, and whether the shipped guard would accept the output. It also performs a
-deterministic state check: a proposed action must never mutate the journey, because the mutation
-path only lives in the service layer.
+All arms share input-risk filtering. Retrieval, prompts, schema validation and refusal rules differ
+between configurations, so observed differences cannot be attributed to one guard. ``full_pipeline``
+is a legacy arm name for the read-only NPC ``respond()`` call: this script never exercises the chat
+route, journey mutation, runtime action guard or SafetyLog writes. Action proposals are observations,
+not a test that the runtime accepts or rejects them. Human factuality is not scored.
 
 Run from backend:
     python scripts/evaluate_ablation.py --list
@@ -65,8 +53,38 @@ from scripts.evaluation_support import (  # noqa: E402
 
 ARMS = ("plain", "rag", "rag_evidence", "full_pipeline")
 
-# Every arm receives an equally complete schema description, so the only variable between arms is
-# which enforcement layer is active. That is the whole point of the ablation.
+ARM_DEFINITIONS = {
+    "plain": "共享输入过滤与 JSON 格式提示；不注入资料，使用宽松解析，记录校验诊断",
+    "rag": "共享输入过滤；注入资料、宽松解析，记录引用诊断，不据此改写模型回答",
+    "rag_evidence": "共享输入过滤；注入资料，按 ModelReply 解析并记录引用/安全标记诊断，保留原回答",
+    "full_pipeline": "历史名称：仅调用当前版本 NPC respond()；含其提示词和回答约束，不执行旅程动作守卫或安全日志写入",
+}
+
+
+def comparison_design() -> dict:
+    """Expose the same interpretation boundaries in dry plans and measured results."""
+    return {
+        "single_variable_ablation": False,
+        "single_guard_causal_attribution_supported": False,
+        "shared_controls": ["所有臂在检索和提供方调用前执行相同 input_risk 过滤"],
+        "varying_factors": ["是否注入检索资料", "系统提示词、人物和剧情上下文",
+                            "JSON 解析与引用诊断规则", "NPC 证据不足、年份前提及输出约束"],
+        "runtime_action_guard_exercised": False,
+        "journey_mutation_exercised": False,
+        "safety_log_write_exercised": False,
+        "arm_definitions": dict(ARM_DEFINITIONS),
+        "metric_definitions": {
+            "answered": "解析出回答或 NPC 未拒答，不代表事实正确；诊断未通过的原回答仍可能计入",
+            "citation_ids_valid": "各臂的引用 ID 诊断，rag_evidence 还要求非空；不是人工事实评分",
+            "guard_accepted": "历史字段：各臂生成诊断是否通过，含共享输入拦截；不是服务端动作守卫接受结果",
+            "proposed_actions": "仅观察模型或 NPC 的动作提议；不执行动作，也不验证运行时拒绝效果",
+            "returned_answer_cases": "历史字段：答案型题目中带引用的数量，不是所有已生成回答数",
+            "cases_with_invalid_citation": "仅统计答案型题目，且各组对空引用的判定不同，不能直接用作事实错误率",
+        },
+    }
+
+
+# The first three arms share this format hint. respond() supplies its own prompt/schema/context.
 _SCHEMA_SPEC = (
     "只输出一个JSON对象，不要输出解释、代码块或多余文字。字段与允许取值如下："
     "dialogue：字符串，中文回答；"
@@ -80,8 +98,6 @@ PLAIN_SYSTEM = (
     "你是一名文化剧本游中的NPC，请直接用中文回答玩家的问题。"
     "本次没有提供任何资料，请凭你自己的知识作答。" + _SCHEMA_SPEC
 )
-# Same evidence injection and same schema wording as the shipped pipeline; the only thing missing
-# relative to full_pipeline is the story/action guard and the pre-flight year check.
 RAG_SYSTEM = (
     "你是文化剧本游NPC。下面会给出若干条文化资料，请依据这些资料用中文回答玩家的问题。" + _SCHEMA_SPEC
 )
@@ -114,6 +130,7 @@ def run_case(case, npc: Character, role: Character, evidence: list[Evidence], ar
               "expected_evidence_ids": case.expected_evidence_ids, "input_risk": risk,
               "retrieved_evidence_ids": [], "cited_ids": [], "citation_ids_valid": None,
               "answered": False, "proposed_actions": [], "guard_accepted": None,
+              "runtime_action_guard_exercised": False, "safety_log_write_exercised": False,
               "refusal_reason": None, "provider": None, "model": None, "error": None,
               "elapsed_ms": None, "dialogue": None}
 
@@ -154,7 +171,7 @@ def run_case(case, npc: Character, role: Character, evidence: list[Evidence], ar
             record["citation_ids_valid"] = set(cited).issubset(allowed) if parsed else None
             record["guard_accepted"] = bool(parsed and set(cited).issubset(allowed) and cited)
         elif arm == "rag_evidence":
-            # Same evidence injection, but the citation rule is enforced on the model's own wording.
+            # Record schema/citation diagnostics; do not mistake these for a runtime output block.
             supplied = [{"id": h.evidence.knowledge_id, "type": h.evidence.content_type,
                          "text": h.evidence.content, "source": h.evidence.source} for h in hits]
             generated = chat.generate([{"role": "system", "content": RAG_SYSTEM},
@@ -274,9 +291,10 @@ def evaluate(dataset: Dataset, settings: AISettings, limit: int, *, allow_paid_c
         db.rollback()
 
     return {
-        "schema_version": "generation-ablation-v1",
+        "schema_version": "generation-comparison-v2",
         "executed_at_utc": datetime.now(UTC).isoformat(),
-        "experiment_kind": "generation_ablation_real_llm_and_embedding",
+        "experiment_kind": "generation_configuration_comparison",
+        "experiment_design": comparison_design(),
         "python_version": platform.python_version(),
         "dataset_version": dataset.dataset_version,
         "dataset_reviewer": dataset.reviewer,
@@ -287,19 +305,16 @@ def evaluate(dataset: Dataset, settings: AISettings, limit: int, *, allow_paid_c
         "prompt_version": PROMPT_VERSION, "safety_policy_version": POLICY_VERSION,
         "limit": limit, "arms": list(ARMS), "corpus_count": len(evidence),
         "corpus_manifest": corpus_manifest,
-        "arm_definitions": {
-            "plain": "只调用聊天模型，不检索任何资料，不施加任何约束",
-            "rag": "注入检索到的资料，不校验引用与安全标记",
-            "rag_evidence": "注入资料并按 ModelReply 校验引用、安全标记，但不走剧情动作守卫",
-            "full_pipeline": "线上实现：检索 + 引用校验 + 前置年份校验 + 动作白名单 + 安全日志",
-        },
+        "arm_definitions": dict(ARM_DEFINITIONS),
         "usage": {"chat": chat_usage.summary(), "embedding": embedding_usage.summary()},
         "summaries": {arm: summarise(records, arm) for arm in ARMS},
         "records": records,
         "limitations": [
             "只测管线行为与引用有效性，不构成文化事实准确性或幻觉率的人工评分。",
             "plain 臂没有可检索资料，其“引用无效”是结构性的，不是模型缺陷。",
-            "样本为 11 条已审核语料与有限题集，不能推广为总体质量。",
+            f"样本为 {len(corpus_manifest)} 条已审核知识与有限题集，不能推广为总体质量。",
+            "多项配置同时变化，不能将组间差异归因于单一动作守卫。所有臂共享输入过滤。",
+            "full_pipeline 仅为历史名称；未执行旅程动作守卫、状态变更或 SafetyLog 写入。",
             "模型可能不产生越权动作，因此 proposed_state_actions 为 0 只说明本次未触发，不代表防护无必要。",
             "未填写人工事实性评分；自动引用校验不等于逐句事实一致性。",
         ],
@@ -309,7 +324,7 @@ def evaluate(dataset: Dataset, settings: AISettings, limit: int, *, allow_paid_c
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=Path, default=DATA_DIR / "testsets/golden-evaluation-dataset.json")
-    parser.add_argument("--output", type=Path, default=DATA_DIR / "testsets/ablation-results.json")
+    parser.add_argument("--output", type=Path, default=DATA_DIR / "testsets/generation-comparison-results.json")
     parser.add_argument("--limit", type=int, default=4)
     parser.add_argument("--allow-paid-calls", action="store_true",
                         help="explicitly authorize this run's provider calls; default only prints a dry plan")
@@ -320,7 +335,12 @@ def main() -> int:
         dataset = Dataset.model_validate_json(args.dataset.read_text(encoding="utf-8"))
         validate_reviewed_dataset(dataset)
         plan = dry_plan(dataset, chat=True)
+        # Each retrieval arm embeds independently; a one-arm plan understates possible usage.
+        for key in ("embedding_request_count_upper_bound", "embedding_input_text_count_upper_bound",
+                    "embedding_input_character_count", "embedding_input_utf8_bytes"):
+            plan[key] *= len(ARMS) - 1
         plan["arms"] = list(ARMS)
+        plan["experiment_design"] = comparison_design()
         plan["cases_per_arm"] = len(dataset.cases)
         plan["chat_request_count_upper_bound"] = len(dataset.cases) * len(ARMS)
         if args.list or not args.allow_paid_calls:
