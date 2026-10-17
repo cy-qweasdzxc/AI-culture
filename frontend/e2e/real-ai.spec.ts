@@ -6,13 +6,14 @@
  * 这与直接调用 Python Agent 的离线实验不同：这里验证的是用户实际看到的界面路径。
  *
  * 运行（需验收栈已配置真实模型）：
- *   E2E_BASE_URL=http://127.0.0.1:8090 npx playwright test e2e/real-ai.spec.ts
+ *   E2E_ALLOW_PAID_CALLS=1 E2E_BASE_URL=http://127.0.0.1:8090 npm run test:e2e:real-ai
  */
 import { expect, test } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const OUT = resolve(process.cwd(), '../.cache/real-ai-acceptance')
+test.skip(process.env.E2E_ALLOW_PAID_CALLS !== '1', '真实 AI 验收必须显式启用。')
 
 type Probe = {
   label: string
@@ -86,6 +87,9 @@ test('浏览器真实 AI：引用、拒答与故障处理', async ({ page }) => 
     probes.push(probe)
 
     if (expectAnswer) {
+      expect(probe.provider, `${label} 必须由真实模型作答`).not.toBe('mock')
+      expect(probe.provider).not.toBe('none')
+      expect(probe.provider).toBeTruthy()
       expect(probe.evidenceIds.length, `${label} 应答时必须挂出引用证据`).toBeGreaterThan(0)
       const badge = page.getByRole('button', { name: /^证据 · / }).last()
       await expect(badge).toBeVisible({ timeout: 20000 })

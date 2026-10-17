@@ -31,6 +31,9 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: sqlite:///../.cache/ci-e2e.db
+          APP_ENV: development
+          LLM_PROVIDER: mock
+          EMBEDDING_PROVIDER: none
           ADMIN_PASSWORD: ci-only-admin-fixture-password
           ADMIN_JWT_SECRET: ci-only-fixture-signing-key-at-least-32-characters
         run: |

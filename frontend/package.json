@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "format": "prettier --write src",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:real-ai": "playwright test --config playwright.real-ai.config.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

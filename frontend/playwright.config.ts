@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/real-ai.spec.ts',
   fullyParallel: false,
   timeout: 90000,
   expect: { timeout: 10000 },
