@@ -146,7 +146,9 @@ def mutate_journey(
         db.flush()
         response = {**result, "snapshot": snapshot(db, journey)}
         if request_id:
-            db.add(ActionReceipt(journey_id=journey.id, request_id=request_id, action=action_key, payload_hash=fingerprint, response=response))
+            # The current snapshot is rebuilt on replay; storing it here copies all history
+            # once per action and makes receipts grow quadratically with journey length.
+            db.add(ActionReceipt(journey_id=journey.id, request_id=request_id, action=action_key, payload_hash=fingerprint, response=result))
         db.commit()
         return response
     except Exception:
