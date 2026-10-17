@@ -80,7 +80,7 @@ export default function SettingsPage() {
         <h2 className="font-serif text-lg font-bold text-inkgreen">AI 说明</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
           NPC
-          对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。文化资料未经人工审核时，不用于正式文化回答。
+          对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。当前知识按自动发布策略进入检索，资料仍可能未经人工核验。
           证据不足或超出知识边界时，NPC
           使用固定话术拒答。任务、道具、图鉴与结局的任何变化都必须经服务端状态机校验，AI
           无权直接修改。

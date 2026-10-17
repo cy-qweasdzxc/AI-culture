@@ -1,7 +1,7 @@
 {
   "seedVersion": "frontend-demo-v1",
   "isDemo": true,
-  "reviewStatus": "pending",
+  "reviewStatus": "reviewed",
   "theme": {
     "id": "suzhou-pingjiang",
     "name": "平江寻梦",

@@ -140,7 +140,7 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
                      "review_status": h.evidence.review_status} for h in hits if h.evidence.knowledge_id in reply.evidence_ids]
         dialogue = reply.dialogue
         if approved:
-            dialogue += "\n（已发放演示剧情线索；该道具不代表文化资料已通过审核。）"
+            dialogue += "\n（已发放演示剧情线索；该道具不代表文化资料完成了人工事实核验。）"
         result = asdict(reply)
         result.pop("proposed_actions")
         result.update(dialogue=dialogue, approved_actions=approved, evidence=evidence,

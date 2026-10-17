@@ -231,7 +231,7 @@ def publish_knowledge(knowledge_id: str, db: Session = Depends(get_db), actor: s
     if k is None:
         raise DomainError("KNOWLEDGE_NOT_FOUND", "资料不存在。", 404)
     if k.review_status != "reviewed" or k.is_demo:
-        raise DomainError("KNOWLEDGE_UNREVIEWED", "只有完成真实来源审核的资料可发布索引。", 409)
+        raise DomainError("KNOWLEDGE_UNREVIEWED", "只有状态为 reviewed 且非 demo 的资料可发布索引；自动发布不代表人工事实核验。", 409)
     # A conditional write acquires the writer lock on SQLite too. Concurrent edit/
     # revoke cannot race publication; the approval/version predicates must still hold.
     claimed = db.execute(update(CulturalKnowledge).where(

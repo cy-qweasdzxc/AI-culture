@@ -115,7 +115,7 @@ export default function ReportPage() {
             知识得分 <strong className="font-serif text-xl text-ink">{score}</strong> / {maxScore}{' '}
             分 · 用时约 {minutes} 分钟
           </p>
-          <h3 className="mt-5 text-xs font-medium text-ink">演示条目的内容分类分布（待审核）</h3>
+          <h3 className="mt-5 text-xs font-medium text-ink">知识条目的内容分类分布（自动发布，未经人工核验）</h3>
           {unlocked.length === 0 ? (
             <p className="mt-2 text-sm text-bluegray">尚未解锁条目。</p>
           ) : (

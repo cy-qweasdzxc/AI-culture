@@ -255,7 +255,7 @@ export default function HomePage() {
           <h2 className="font-serif text-lg font-bold text-ink">资料来源与 AI 边界</h2>
           <p className="mt-3 max-w-prose text-sm leading-relaxed text-ink-soft">
             平台内的文化内容分四级标注：可靠史实、争议观点、民间传说、艺术化虚构。NPC
-            只讲述审核过的内容，回答附证据来源；超出其知识边界或证据不足时，会明确告诉你"现有资料无法确认"。当前为演示数据，正式版本所有内容须经人工审核后入库。
+            只讲述已发布的内容，回答附证据来源；超出其知识边界或证据不足时，会明确告诉你"现有资料无法确认"。当前为演示数据，知识按自动发布策略入库，不能替代正式的人工事实核验。
           </p>
           <Link
             to="/intro"

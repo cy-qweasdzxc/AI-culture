@@ -1,12 +1,26 @@
-"""Idempotent development seed. Existing records and manual reviews are never overwritten."""
+"""Idempotent seed with automatic knowledge publication for this deployment."""
 import json
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai.rag.index import rebuild_knowledge
+from app.ai.settings import AISettings
 from app.core.config import PROJECT_ROOT
-from app.models import Character, CulturalKnowledge, CulturalLocation, Item, Story, StoryEdge, StoryNode, Task
+from app.models import (
+    Character,
+    CulturalKnowledge,
+    CulturalLocation,
+    Item,
+    KnowledgeChunk,
+    Story,
+    StoryEdge,
+    StoryNode,
+    Task,
+)
+from app.models.entities import utcnow
 
 
 def insert_missing(db: Session, model: Any, row_id: str, **values: Any) -> None:
@@ -14,7 +28,50 @@ def insert_missing(db: Session, model: Any, row_id: str, **values: Any) -> None:
         db.add(model(id=row_id, **values))
 
 
-def seed_database(db: Session, path: Path | None = None) -> dict[str, int]:
+def _auto_publish_knowledge(db: Session, story_id: str) -> int:
+    """Make every knowledge row usable immediately and repair missing current chunks.
+
+    This project intentionally runs without a human review stage.  The explicit
+    ``auto_published`` trust level keeps that policy visible instead of pretending
+    that a person verified the content.
+    """
+    settings = AISettings.configured()
+    chunks_created = 0
+    rows = list(db.scalars(select(CulturalKnowledge).where(CulturalKnowledge.story_id == story_id)))
+    for knowledge in rows:
+        knowledge.review_status = "reviewed"
+        knowledge.is_demo = False
+        knowledge.trust_level = "auto_published"
+        knowledge.reviewer = knowledge.reviewer or "system-auto-publish"
+        knowledge.reviewed_at = knowledge.reviewed_at or utcnow()
+        if not knowledge.source.strip():
+            knowledge.source = "演示资料（自动发布，未经人工核验）"
+        elif "待正式审核" in knowledge.source:
+            knowledge.source = knowledge.source.replace("待正式审核", "自动发布，未经人工核验")
+        if not knowledge.license.strip() or "待补充" in knowledge.license:
+            knowledge.license = "项目演示使用；自动发布，未经人工核验"
+        knowledge.metadata_json = {
+            **(knowledge.metadata_json or {}),
+            "publication_policy": "auto_publish",
+            "human_review_required": False,
+        }
+    db.flush()
+    expected_model = settings.embedding_model if settings.embedding_provider != "none" else ""
+    expected_dimension = settings.embedding_dimension if settings.embedding_provider != "none" else 0
+    for knowledge in rows:
+        stored = list(db.scalars(select(KnowledgeChunk).where(KnowledgeChunk.knowledge_id == knowledge.id)))
+        needs_index = (
+            not stored
+            or any(chunk.knowledge_version != knowledge.version for chunk in stored)
+            or any(chunk.embedding_model != expected_model or chunk.embedding_dimension != expected_dimension
+                   for chunk in stored)
+        )
+        if needs_index:
+            chunks_created += rebuild_knowledge(db, knowledge, settings)
+    return chunks_created
+
+
+def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool = True) -> dict[str, int]:
     raw = json.loads((path or PROJECT_ROOT / "data/demo/seed.json").read_text(encoding="utf-8"))
     theme = raw["theme"]
     story_id = theme["id"]
@@ -64,5 +121,6 @@ def seed_database(db: Session, path: Path | None = None) -> dict[str, int]:
         insert_missing(db, StoryEdge, f"{source}--{destination}", story_id=story_id, from_node_id=source, to_node_id=destination, conditions=conditions)
     for destination, choice, priority, complete in (("cheng-huai", "hang", 20, True), ("qu-jing", "keep", 20, True), ("wei-jin", "hang", 10, False), ("wei-jin", "keep", 10, False)):
         insert_missing(db, StoryEdge, f"finale--{destination}--{choice}", story_id=story_id, from_node_id="finale", to_node_id=destination, choice_key=choice, priority=priority, conditions={"all_tasks_complete": complete})
+    chunks = _auto_publish_knowledge(db, story_id) if auto_publish else 0
     db.commit()
-    return {"spots": len(raw["spots"]), "tasks": len(raw["tasks"]), "knowledge": len(raw["knowledge"])}
+    return {"spots": len(raw["spots"]), "tasks": len(raw["tasks"]), "knowledge": len(raw["knowledge"]), "chunks": chunks}

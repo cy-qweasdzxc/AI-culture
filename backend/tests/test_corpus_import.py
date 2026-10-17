@@ -78,7 +78,7 @@ def test_remember_reviewed_at_rejects_a_mixed_file() -> None:
 def test_row_signature_matches_a_published_corpus_file(db) -> None:
     """The published corpus must already match the database, or every import would look changed.
 
-    The test fixture seeds only the pending demo knowledge, so there is normally nothing to compare
+    The test fixture explicitly seeds pending demo knowledge, so there is normally nothing to compare
     here; the real equivalence check on a deployed database lives in the acceptance run
     (``--expect 0`` against the containerised PostgreSQL).
     """

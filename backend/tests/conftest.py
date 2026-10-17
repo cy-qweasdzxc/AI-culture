@@ -31,7 +31,7 @@ def database(tmp_path):
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
     with Session(engine) as session:
-        seed_database(session)
+        seed_database(session, auto_publish=False)
     yield engine
     engine.dispose()
 

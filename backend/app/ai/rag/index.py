@@ -14,7 +14,7 @@ from app.models import CulturalKnowledge, KnowledgeChunk
 
 def rebuild_knowledge(db: Session, knowledge: CulturalKnowledge, settings: AISettings) -> int:
     if knowledge.review_status != "reviewed" or knowledge.is_demo:
-        raise DomainError("KNOWLEDGE_UNREVIEWED", "只有完成真实来源审核的资料可发布索引。", 409)
+        raise DomainError("KNOWLEDGE_UNREVIEWED", "只有状态为 reviewed 且非 demo 的资料可发布索引；自动发布不代表人工事实核验。", 409)
     segments = split_text(knowledge.content)
     vectors = EmbeddingProvider(settings).embed(segments) if settings.embedding_provider != "none" else [[] for _ in segments]
     if db.bind.dialect.name == "postgresql":

@@ -54,6 +54,16 @@ def tokens(text: str) -> set[str]:
     }
 
 
+def title_match(query: str, title: str) -> bool:
+    """Recognise a named Chinese topic even when the query has extra wording."""
+    query_runs = re.findall(r"[\u4e00-\u9fff]{3,}", clean_text(query))
+    title_runs = re.findall(r"[\u4e00-\u9fff]{3,}", clean_text(title))
+    return any(title_run[i:i + 3] in query_run
+               for title_run in title_runs
+               for query_run in query_runs
+               for i in range(len(title_run) - 2))
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     if len(a) != len(b) or not a or any(not math.isfinite(v) for v in a + b):
         return 0.0
@@ -110,6 +120,10 @@ def retrieve(query: str, records: list[Evidence], allowed_spots: set[str], chapt
             continue
         overlap = query_tokens & tokens(evidence.title + " " + evidence.content)
         lexical = len(overlap) / max(1, len(query_tokens))
+        # Chinese questions contain many function-word bigrams. A three-character
+        # title match is a stronger signal than that noisy denominator suggests.
+        if title_match(query, evidence.title):
+            lexical = max(lexical, 0.35)
         vector = (max(0.0, cosine(query_vector, evidence.embedding))
                   if query_vector and evidence.embedding_model == embedding_model else 0.0)
         if mode == "keyword":

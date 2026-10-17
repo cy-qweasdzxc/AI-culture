@@ -7,6 +7,8 @@ import pytest
 from sqlalchemy import func, inspect, select
 from sqlalchemy.orm import Session
 
+from app.ai.rag.index import approved_records
+from app.ai.rag.retrieval import retrieve_knowledge
 from app.core.errors import DomainError
 from app.models import CulturalKnowledge, KnowledgeChunk, StoryEdge, User, UserInventory, UserStoryState
 from app.services.journey import add_event, mutate_journey, start_journey
@@ -60,12 +62,31 @@ def test_health_openapi_and_anonymous_cookie(client):
 def test_migrations_and_idempotent_seed(db, database):
     tables = inspect(database).get_table_names()
     assert len(tables) == 19  # 17 planned entities, action receipts and Alembic revision.
-    seed_database(db)
-    seed_database(db)
+    seed_database(db, auto_publish=False)
+    seed_database(db, auto_publish=False)
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
     assert not db.scalar(select(func.count()).select_from(CulturalKnowledge).where(CulturalKnowledge.review_status != "pending"))
     assert not db.scalar(select(func.count()).select_from(KnowledgeChunk))
     assert db.scalar(select(func.count()).select_from(StoryEdge)) > 20
+
+
+def test_seed_auto_publishes_every_knowledge_point_and_repairs_index(db):
+    result = seed_database(db)
+    assert result["knowledge"] == 24 and result["chunks"] > 0
+    assert db.scalar(select(func.count()).select_from(CulturalKnowledge).where(
+        CulturalKnowledge.review_status == "reviewed",
+        CulturalKnowledge.is_demo.is_(False),
+    )) == 24
+    assert db.scalar(select(func.count()).select_from(KnowledgeChunk)) == result["chunks"]
+    assert len(approved_records(db, "suzhou-pingjiang")) == 24
+    hits = retrieve_knowledge(
+        "请根据当前资料，用一句话说明平江图是什么，并给出证据。",
+        approved_records(db, "suzhou-pingjiang"), {"pingjiang"}, 1,
+    )
+    assert any(hit.evidence.knowledge_id == "kn-pingjiangtu" for hit in hits)
+
+    rerun = seed_database(db)
+    assert rerun["chunks"] == 0
 
 
 def test_missing_session_and_invalid_role(client):
