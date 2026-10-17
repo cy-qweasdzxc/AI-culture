@@ -155,9 +155,9 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await gotoApp(page, '/codex', () => page.getByRole('heading', { level: 1, name: '文化图鉴' }))
   if (ending.complete) await expect(page.getByText(/已解锁 24 \/ 24/)).toBeVisible()
   await page.locator('button.card').first().click()
-  // 图鉴抽屉必须显示该条目的审核状态，但状态取决于部署里导入到哪一批语料：
-  // 只有演示数据时为 pending，导入已审核语料后为 reviewed。
-  await expect(page.getByText(/审核状态：\s*(pending|reviewed)/)).toBeVisible()
+  // 图鉴抽屉必须显示该条目的资料状态；演示库为 pending，导入正式语料后为 reviewed，
+  // 自动发布语料也显示 reviewed，但页面文案是“发布状态”，不能再用旧的“审核状态”断言。
+  await expect(page.getByText(/发布状态：\s*(pending|reviewed|auto_published)/)).toBeVisible()
   await page.getByRole('button', { name: '关闭', exact: true }).click()
   await gotoApp(page, '/settings', () => page.getByRole('button', { name: '清除全部旅程数据' }))
   await page.getByRole('button', { name: '清除全部旅程数据' }).click()
