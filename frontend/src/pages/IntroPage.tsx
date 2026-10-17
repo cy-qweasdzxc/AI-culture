@@ -77,7 +77,7 @@ export default function IntroPage() {
         <h2 className="font-serif text-xl font-bold text-ink">AI 与隐私边界</h2>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-ink-soft">
           <li>
-            NPC 的回答来自检索增强生成（RAG）：先检索审核过的文化资料，再组织回答，并附证据编号。
+            NPC 的回答来自检索增强生成（RAG）：先检索已自动发布的文化资料，再组织回答，并附证据编号。
           </li>
           <li>证据不足、问题越界或来源冲突时，NPC 使用固定话术拒答，不会编造史实。</li>
           <li>

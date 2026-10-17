@@ -3,7 +3,7 @@ import type { KnowledgeEvidence } from '@/types'
 /**
  * 证据知识库（Mock 演示数据）。
  * 内容均为公开常识级文化事实或明确标注的传说/争议/虚构；
- * 正式版中须全部经过人工审核（review_status=reviewed）后由后端 RAG 提供。
+ * 运行时由后端自动发布为 reviewed 并由 RAG 提供；自动发布不代表人工事实核验。
  */
 
 export const knowledgeBase: KnowledgeEvidence[] = [

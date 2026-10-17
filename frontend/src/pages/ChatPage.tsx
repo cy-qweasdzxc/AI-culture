@@ -421,7 +421,7 @@ export default function ChatPage() {
       <Drawer open={!!reportingId} onClose={() => setReportingId(null)} title="纠错反馈">
         <p className="text-sm leading-relaxed text-ink-soft">
           指出 AI
-          回答中可能不准确的地方，会写入对话审核队列，由内容审核人员核对。这正是在帮助系统变得更可靠。
+          回答中可能不准确的地方，会写入反馈记录，帮助后续更新资料与提示。
         </p>
         <label htmlFor="report-reason" className="mt-4 block text-sm font-medium text-ink">
           问题描述

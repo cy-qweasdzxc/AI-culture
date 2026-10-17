@@ -164,7 +164,7 @@ export default function CodexPage() {
               <h3 className="text-xs font-medium text-ink">来源</h3>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{detail.source}</p>
               <p className="mt-2 text-xs text-bluegray">
-                {detail.isDemo ? '演示资料 · ' : ''}审核状态：{detail.reviewStatus ?? '待补充'}
+                {detail.isDemo ? '演示资料 · ' : ''}发布状态：{detail.reviewStatus ?? '待补充'}
               </p>
             </div>
             <p className="text-xs text-bluegray">
