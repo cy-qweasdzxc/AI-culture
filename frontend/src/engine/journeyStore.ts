@@ -97,6 +97,8 @@ export const useJourney = create<JourneyStore>((set, get) => {
   let pendingScene: { fingerprint: string; body: SceneChatRequest } | null = null
   let latestSnapshot: JourneySnapshot | null = null
   function applySnapshot(snapshot: JourneySnapshot | null) {
+    if (snapshot && snapshot.journeyId === get().journeyId && snapshot.stateVersion < get().stateVersion)
+      return
     latestSnapshot = snapshot
     if (snapshot) set({ ...snapshot, sceneDirections: snapshot.sceneDirections ?? {} })
     else
@@ -118,7 +120,9 @@ export const useJourney = create<JourneyStore>((set, get) => {
     ])
     set({ themes: themes.items, roles: roles.items })
     if (!get().journeyId) return
-    const query = `?journey_id=${encodeURIComponent(get().journeyId!)}`
+    const catalogJourney = get().journeyId!
+    const catalogVersion = get().stateVersion
+    const query = `?journey_id=${encodeURIComponent(catalogJourney)}`
     const [route, tasks, clues, codex, ending, report] = await Promise.all([
       api.get<{ spots: Spot[]; npcs: Npc[] }>(`/routes/suzhou-pingjiang${query}`),
       api.get<{ items: PublicTask[] }>(`/tasks${query}`),
@@ -127,6 +131,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
       api.get<{ ending: Ending | null }>(`/ending${query}`),
       api.get<JourneyReport>(`/report${query}`),
     ])
+    if (get().journeyId !== catalogJourney || get().stateVersion !== catalogVersion) return
     set({
       spots: route.spots,
       npcs: route.npcs,
@@ -215,7 +220,9 @@ export const useJourney = create<JourneyStore>((set, get) => {
       return restoring
     },
     refresh: async () => {
+      const requestedJourney = get().journeyId
       const response = await api.get<{ snapshot: JourneySnapshot | null }>('/journeys/current')
+      if (get().journeyId !== requestedJourney) return
       applySnapshot(response.snapshot)
       await catalogs()
       set({ error: null })

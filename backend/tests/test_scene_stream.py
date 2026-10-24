@@ -413,6 +413,45 @@ def test_provider_failure_keeps_scene_recoverable(client, scene_company, monkeyp
         assert all(not message.get("evidenceIds") for message in replies)
 
 
+def test_disconnect_before_commit_saves_nothing_and_same_turn_can_retry(client, scene_first, db, monkeypatch):
+    from starlette.requests import Request
+
+    state, *_ = scene_first
+    before = current(client)
+    count = db.scalar(select(func.count()).select_from(DialogueLog))
+    body = scene_body(state)
+    async def disconnected(_request):
+        return True
+    with monkeypatch.context() as patch:
+        patch.setattr(Request, "is_disconnected", disconnected)
+        partial = events(client.post("/api/chat/scene/stream", json=body))
+    assert any(kind == "message" for kind, _ in partial)
+    assert not any(kind == "done" for kind, _ in partial)
+    assert current(client) == before
+    assert db.scalar(select(func.count()).select_from(DialogueLog)) == count
+    retried = done(client.post("/api/chat/scene/stream", json=body))
+    assert retried["snapshot"]["stateVersion"] == before["stateVersion"] + 1
+    replayed = done(client.post("/api/chat/scene/stream", json=body))
+    assert replayed["replayed"] and replayed["snapshot"] == retried["snapshot"]
+
+
+def test_database_failure_at_scene_commit_is_recoverable_without_partial_turn(client, scene_first, db, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+
+    state, *_ = scene_first
+    before = current(client)
+    count = db.scalar(select(func.count()).select_from(DialogueLog))
+    body = scene_body(state)
+    def unavailable(*args, **kwargs):
+        raise OperationalError("synthetic database fault", {}, RuntimeError("synthetic fixture"))
+    with monkeypatch.context() as patch:
+        patch.setattr("app.api.routes.scene.mutate_journey", unavailable)
+        assert error_code(client.post("/api/chat/scene/stream", json=body)) == "SCENE_UNAVAILABLE"
+    assert current(client) == before
+    assert db.scalar(select(func.count()).select_from(DialogueLog)) == count
+    assert done(client.post("/api/chat/scene/stream", json=body))["snapshot"]["stateVersion"] == before["stateVersion"] + 1
+
+
 def test_remote_companion_never_discloses_unseen_local_evidence(client, scene_company):
     state, _, secret, _ = scene_company
     result = done(client.post("/api/chat/scene/stream", json=scene_body(state, "周伯，雾塔有什么故事？")))

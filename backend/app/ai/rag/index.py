@@ -12,6 +12,13 @@ from app.core.errors import DomainError
 from app.models import CulturalKnowledge, KnowledgeChunk
 
 
+def has_human_review(knowledge: CulturalKnowledge) -> bool:
+    reviewer = (knowledge.reviewer or "").strip()
+    return (knowledge.review_status == "reviewed" and not knowledge.is_demo
+            and knowledge.trust_level == "human_reviewed" and len(reviewer) >= 2
+            and reviewer != "system-auto-publish")
+
+
 def rebuild_knowledge(db: Session, knowledge: CulturalKnowledge, settings: AISettings) -> int:
     if knowledge.review_status != "reviewed" or knowledge.is_demo:
         raise DomainError("KNOWLEDGE_UNREVIEWED", "只有状态为 reviewed 且非 demo 的资料可发布索引；自动发布不代表人工事实核验。", 409)
@@ -27,7 +34,8 @@ def rebuild_knowledge(db: Session, knowledge: CulturalKnowledge, settings: AISet
             embedding=vector, embedding_model=settings.embedding_model if vector else "",
             embedding_dimension=len(vector), knowledge_version=knowledge.version,
             vector_ref=chunk_id if vector else None,
-            metadata_json={"sha256": fingerprint(segment), "distance": "cosine", "index": "exact"},
+            metadata_json={"sha256": fingerprint(segment), "distance": "cosine", "index": "exact",
+                           "embedding_provider": settings.embedding_provider if vector else "none"},
         ))
         db.flush()
         if vector and db.bind.dialect.name == "postgresql":

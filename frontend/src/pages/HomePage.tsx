@@ -81,7 +81,7 @@ export default function HomePage() {
           <img
             src="/assets/scenes/pingjiang.webp"
             alt="平江水巷的石桥、柳影与临河茶馆艺术化示意，非实景摄影"
-            fetchPriority="high"
+            {...{ fetchpriority: 'high' }}
             width="1920"
             height="1080"
           />

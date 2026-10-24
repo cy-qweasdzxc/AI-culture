@@ -42,15 +42,22 @@ def walking_route(points: list[dict], key: str, timeout: float = 3) -> dict:
             }, timeout=min(max(timeout, 0.1), 5), follow_redirects=False, trust_env=False)
             response.raise_for_status()
             payload = response.json()
-            if payload.get("status") != 0:
+            if not isinstance(payload, dict) or type(payload.get("status")) is not int or payload["status"] != 0:
                 raise ValueError("Walking provider rejected request")
             route = payload["result"]["routes"][0]
+            if not isinstance(route, dict) or any(type(route.get(field)) not in {int, float}
+                                                  for field in ("distance", "duration")):
+                raise ValueError("Invalid walking metrics")
             leg_distance, leg_duration = float(route["distance"]), float(route["duration"])
             if not (math.isfinite(leg_distance) and math.isfinite(leg_duration) and 0 <= leg_distance <= 300000 and 0 <= leg_duration <= 1440):
                 raise ValueError("Invalid walking metrics")
             leg = decode_polyline(route["polyline"])
             geometry.extend(leg[1:] if geometry and geometry[-1] == leg[0] else leg)
-            steps.extend(str(step.get("instruction", ""))[:500] for step in route.get("steps", [])[:100])
+            instructions = route.get("steps", [])
+            if not isinstance(instructions, list) or any(not isinstance(step, dict)
+                    or not isinstance(step.get("instruction", ""), str) for step in instructions):
+                raise ValueError("Invalid walking instructions")
+            steps.extend(step.get("instruction", "")[:500] for step in instructions[:100])
             distance += leg_distance
             duration += leg_duration
     except (httpx.HTTPError, ValueError, TypeError, KeyError, IndexError):

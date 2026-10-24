@@ -1,9 +1,9 @@
-"""Turn the verified source research into a reviewed, publishable corpus.
+"""Prepare and import source candidates without granting human review.
 
 Input : ``data/raw/culture-source-candidates.json`` — the per-item source verification produced by
         the previous maintenance round, including its verdict for every knowledge item.
 Output: a review file (default ``data/raw/culture-reviewed-corpus.json``) that the admin publish
-        path can consume, plus an optional direct apply into the database.
+        path can consume, plus an optional pending-only database import.
 
 Guard rails kept deliberately explicit:
   * only verdicts the research actually supports are eligible (``supporting``);
@@ -19,6 +19,7 @@ Run from backend:
 """
 import argparse
 import json
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -110,7 +111,8 @@ def build(research: dict, reviewer: str, *, reviewed_at: str | None = None,
     # 审核时间是一次性的人工事实，不是本脚本的运行时刻。优先用显式传入值，其次沿用已发布
     # 语料中记录的时间；否则每次复跑都会"看起来有变化"，从而无条件增长版本并重建索引
     # （其中包含付费 Embedding 调用）。
-    recorded_at = reviewed_at or _remember_reviewed_at(previous) or datetime.now(UTC).isoformat()
+    recorded_at = (reviewed_at or (previous or {}).get("generated_at_utc")
+                   or _remember_reviewed_at(previous) or datetime.now(UTC).isoformat())
     included, excluded = [], []
     for record in research["records"]:
         verdict = record.get("verification_status")
@@ -145,15 +147,18 @@ def build(research: dict, reviewer: str, *, reviewed_at: str | None = None,
             "source": primary["institution"],
             "source_url": primary["url"],
             "license": LICENSE_NOTE,
-            "review_status": "reviewed",
-            "reviewer": reviewer,
-            "reviewed_at": recorded_at,
+            "review_status": "pending",
+            "trust_level": "unverified",
+            "reviewer": None,
+            "reviewed_at": None,
             "is_demo": False,
             "metadata_json": {
                 "min_chapter": 1,
                 "verification_status": verdict,
                 "content_origin": "research_proposed_content" if verdict in REWORD_VERDICTS else "original_content",
                 "review_note": DEFAULT_REVIEW_NOTE,
+                "prepared_by": reviewer,
+                "prepared_at": recorded_at,
                 "cited_sources": [
                     {"id": s["id"], "institution": s["institution"], "url": s["url"],
                      "published_on": s.get("published_on"), "accessed_on": s.get("accessed_on"),
@@ -184,7 +189,7 @@ def build(research: dict, reviewer: str, *, reviewed_at: str | None = None,
 
 
 CONTENT_FIELDS = ("location_id", "title", "content", "content_type", "source", "source_url",
-                  "license", "review_status", "reviewer", "is_demo")
+                  "license", "metadata_json")
 
 
 def _canonical_json(value) -> str:
@@ -222,16 +227,16 @@ def _canonical_time(value) -> str | None:
 def content_signature(item: dict) -> tuple:
     """Everything that, when changed, invalidates the published index for this entry."""
     return tuple(_canonical_json(item.get(field)) if field == "metadata_json" else item.get(field)
-                 for field in CONTENT_FIELDS) + (_canonical_time(item.get("reviewed_at")),)
+                 for field in CONTENT_FIELDS)
 
 
 def row_signature(row) -> tuple:
     return tuple(_canonical_json(row.metadata_json) if field == "metadata_json" else getattr(row, field)
-                 for field in CONTENT_FIELDS) + (_canonical_time(row.reviewed_at),)
+                 for field in CONTENT_FIELDS)
 
 
 def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
-    """Write the reviewed rows and publish their index. Never runs without an explicit --apply.
+    """Import technical content; only independently approved, unchanged rows may reindex.
 
     Three properties this function must keep:
 
@@ -244,76 +249,108 @@ def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
     * **Atomic per entry.** The row change and the index rebuild share one transaction: a rebuild
       failure must not leave an entry marked reviewed with a missing or partial index.
     """
-    from sqlalchemy import select
+    items = corpus.get("included") if isinstance(corpus, dict) else None
+    if not isinstance(items, list):
+        raise ValueError("CORPUS_STRUCTURE_INVALID")
+    identifiers = set()
+    for item in items:
+        identifier = item.get("id") if isinstance(item, dict) else None
+        if (not isinstance(identifier, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{2,89}", identifier)
+                or identifier in identifiers):
+            raise ValueError("CORPUS_STRUCTURE_INVALID")
+        identifiers.add(identifier)
 
-    from app.ai.rag.index import rebuild_knowledge
+    from sqlalchemy import delete, select, update
+    from sqlalchemy.orm.attributes import set_committed_value
+
+    from app.ai.rag.index import has_human_review, rebuild_knowledge
     from app.ai.settings import AISettings
     from app.core.database import SessionLocal
-    from app.models import CulturalKnowledge, KnowledgeChunk
+    from app.models import CulturalKnowledge, CulturalLocation, KnowledgeChunk
 
     settings = AISettings.configured()
     created = updated = skipped = chunks = 0
     index_reasons: dict[str, int] = {}
     failures: list[dict] = []
     with SessionLocal() as db:
-        for item in corpus["included"]:
-            row = db.get(CulturalKnowledge, item["id"])
-            incoming = content_signature(item)
-            reason = None
-            if row is None:
-                reason = "new_entry"
-            elif row_signature(row) != incoming:
-                reason = "content_changed"
-            elif force_reindex:
-                reason = "forced"
-            else:
-                stored = db.scalars(select(KnowledgeChunk).where(
-                    KnowledgeChunk.knowledge_id == item["id"])).all()
-                expected_model = settings.embedding_model if settings.embedding_provider != "none" else ""
-                expected_dim = settings.embedding_dimension if settings.embedding_provider != "none" else 0
-                if not stored:
-                    reason = "index_missing"
-                elif any(chunk.knowledge_version != (row.version or 0) for chunk in stored):
-                    reason = "index_stale_version"
-                elif any(chunk.embedding_model != expected_model or chunk.embedding_dimension != expected_dim
-                         for chunk in stored):
-                    reason = "embedding_config_changed"
-            if reason is None:
-                skipped += 1
-                continue
-            index_reasons[reason] = index_reasons.get(reason, 0) + 1
-            identity = (row.id, row.version) if row is not None else (item["id"], 0)
+        for item in items:
+            identity = (item.get("id"), 0)
             try:
-                if row is None:
+                row = db.scalar(select(CulturalKnowledge).where(
+                    CulturalKnowledge.id == item["id"]).with_for_update())
+                identity = (row.id, row.version) if row is not None else (item["id"], 0)
+                location = db.get(CulturalLocation, item["location_id"])
+                if (location is None or location.story_id != "suzhou-pingjiang"
+                        or (row is not None and row.story_id != location.story_id)):
+                    raise ValueError("IMPORT_LOCATION_INVALID")
+                if any(not isinstance(item.get(field), str) or not item[field].strip()
+                       for field in CONTENT_FIELDS if field != "metadata_json"):
+                    raise ValueError("IMPORT_CONTENT_INVALID")
+                if not isinstance(item.get("metadata_json"), dict):
+                    raise ValueError("IMPORT_METADATA_INVALID")
+                chapter = item["metadata_json"].get("min_chapter", 1)
+                if isinstance(chapter, bool) or not isinstance(chapter, int) or not 1 <= chapter <= 100:
+                    raise ValueError("IMPORT_CHAPTER_INVALID")
+                is_new = row is None
+                changed = is_new or row_signature(row) != content_signature(item)
+                stored = list(db.scalars(select(KnowledgeChunk).where(KnowledgeChunk.knowledge_id == item["id"])))
+                approved = not changed and has_human_review(row)
+                reason = "new_entry" if is_new else "content_changed" if changed else None
+                if not changed and row.review_status == "reviewed" and not approved:
+                    reason = "unverified_review_reset"
+                elif not changed and approved:
+                    expected_model = settings.embedding_model if settings.embedding_provider != "none" else ""
+                    expected_dim = settings.embedding_dimension if settings.embedding_provider != "none" else 0
+                    if force_reindex:
+                        reason = "forced"
+                    elif not stored:
+                        reason = "index_missing"
+                    elif any(chunk.knowledge_version != row.version for chunk in stored):
+                        reason = "index_stale_version"
+                    elif any(chunk.embedding_model != expected_model or chunk.embedding_dimension != expected_dim
+                             or chunk.metadata_json.get("embedding_provider", "none") != settings.embedding_provider
+                             for chunk in stored):
+                        reason = "embedding_config_changed"
+                elif not changed and stored:
+                    reason = "unreviewed_index_removed"
+                if reason is None:
+                    skipped += 1
+                    db.rollback()
+                    continue
+                if is_new:
                     row = CulturalKnowledge(id=item["id"], story_id="suzhou-pingjiang")
                     db.add(row)
-                    created += 1
                 else:
-                    updated += 1
-                row.location_id = item["location_id"] or row.location_id
-                row.title = item["title"]
-                row.content = item["content"]
-                row.content_type = item["content_type"]
-                row.source = item["source"]
-                row.source_url = item["source_url"]
-                row.license = item["license"]
-                row.review_status = item["review_status"]
-                row.reviewer = item["reviewer"]
-                row.reviewed_at = datetime.fromisoformat(item["reviewed_at"])
-                row.is_demo = item["is_demo"]
-                row.metadata_json = item["metadata_json"]
-                # 只有内容真的变化才提高版本；纯索引重建不影响内容版本。
-                if reason != "forced" and reason != "embedding_config_changed" and reason != "index_missing":
-                    row.version = (row.version or 0) + 1
-                elif row.version is None:
+                    claimed = db.execute(update(CulturalKnowledge).where(
+                        CulturalKnowledge.id == row.id, CulturalKnowledge.version == row.version,
+                    ).values(version=row.version + int(changed or reason == "unverified_review_reset"))
+                      .execution_options(synchronize_session=False))
+                    if claimed.rowcount != 1:
+                        raise ValueError("IMPORT_VERSION_CONFLICT")
+                    set_committed_value(row, "version", identity[1] + int(changed or reason == "unverified_review_reset"))
+                if changed:
+                    for field in CONTENT_FIELDS:
+                        setattr(row, field, item[field])
+                    row.is_demo = False
+                if changed or reason == "unverified_review_reset":
+                    row.review_status, row.trust_level = "pending", "unverified"
+                    row.reviewer = row.reviewed_at = None
+                if is_new:
                     row.version = 1
-                # 行变更与索引重建同一事务：失败则整体回滚，不留下"已审核但索引不完整"。
-                chunks += rebuild_knowledge(db, row, settings)
+                # Never pay for or publish pending/rejected candidates. Unchanged human
+                # approval survives a technical reimport; content edits require a new review.
+                written_chunks = rebuild_knowledge(db, row, settings) if approved else 0
+                if not approved:
+                    db.execute(delete(KnowledgeChunk).where(KnowledgeChunk.knowledge_id == row.id))
                 db.commit()
+                created += int(is_new)
+                updated += int(not is_new)
+                chunks += written_chunks
+                index_reasons[reason] = index_reasons.get(reason, 0) + 1
             except Exception as error:  # noqa: BLE001 - report every failing entry, keep going
                 db.rollback()
                 failures.append({"id": identity[0], "previous_version": identity[1],
-                                 "error": f"{type(error).__name__}: {error}"})
+                                 "error": type(error).__name__})
         return {"created": created, "updated": updated, "skipped": skipped,
                 "chunks": chunks, "failures": failures, "reindex_reasons": index_reasons,
                 "embedding_provider": settings.embedding_provider,
@@ -327,20 +364,21 @@ def main() -> int:
                         default=DATA_DIR / "raw/culture-source-candidates.json")
     parser.add_argument("--output", type=Path,
                         default=DATA_DIR / "raw/culture-reviewed-corpus.json")
-    parser.add_argument("--reviewer", default="【待确认】参赛团队指定审核人")
-    parser.add_argument("--apply", action="store_true", help="write the corpus into the database and publish its index")
+    parser.add_argument("--prepared-by", "--reviewer", dest="reviewer", default="【待确认】资料整理人",
+                        help="技术整理人的署名；不授予文化审核或发布权限")
+    parser.add_argument("--apply", action="store_true", help="import pending candidates; unchanged human approvals are preserved")
     parser.add_argument("--list", action="store_true", help="print the plan and exit without writing anything")
     parser.add_argument("--expect", type=int, default=None,
                         help="断言本次变更条数；用于证明重复导入不会再次改动（--expect 0）")
-    parser.add_argument("--reviewed-at", default=None,
-                        help="显式指定审核时间；缺省时沿用已发布语料中的记录，保证复跑幂等")
+    parser.add_argument("--prepared-at", "--reviewed-at", dest="reviewed_at", default=None,
+                        help="技术整理时间，不作为人工审核时间；缺省沿用已有记录以保证幂等")
     parser.add_argument("--force-reindex", action="store_true",
                         help="内容未变也强制重建索引；用于嵌入模型/维度变更或修复索引")
     args = parser.parse_args()
     try:
         if args.apply or not args.list:
             if not args.reviewer.strip() or "待确认" in args.reviewer:
-                raise ValueError("REVIEWER_REQUIRED: 正式语料必须填真实审核人署名，不能使用占位符")
+                raise ValueError("PREPARER_REQUIRED: 请填资料整理人的署名；导入后仍需独立人工审核")
         previous = None
         if args.output.exists():
             try:
@@ -362,7 +400,7 @@ def main() -> int:
     print(json.dumps({"written": str(args.output.resolve())}, ensure_ascii=False))
     if not args.apply:
         print(json.dumps({"applied": False,
-                          "hint": "复跑时加 --apply 才会写入数据库并发布索引"}, ensure_ascii=False))
+                          "hint": "--apply 仅导入待审核资料；人工审核和正式发布需通过管理端另行完成"}, ensure_ascii=False))
         return 0
     result = apply_to_database(corpus, force_reindex=args.force_reindex)
     print(json.dumps({"applied": True, **result}, ensure_ascii=False))

@@ -181,6 +181,40 @@ def test_pending_cannot_publish_and_review_requires_sources(client, admin_config
     review = client.post("/api/admin/knowledge/fixture-authored/review", json={"version": 1, "status": "reviewed", "reviewer": "合成审核员", "confirm_sources": True})
     assert review.status_code == 409 and review.json()["error"]["code"] == "SOURCE_REVIEW_REQUIRED"
     assert db.get(CulturalKnowledge, "fixture-authored").review_status == "pending"
+
+
+@pytest.mark.parametrize("reviewer", ["  ", "system-auto-publish", "【待确认】审核人"])
+def test_review_requires_a_real_non_placeholder_identity(client, admin_config, reviewer):
+    login(client)
+    assert client.post("/api/admin/knowledge", json=knowledge_body()).status_code == 201
+    response = client.post("/api/admin/knowledge/fixture-authored/review", json={
+        "version": 1, "status": "reviewed", "reviewer": reviewer, "confirm_sources": True,
+    })
+    assert response.status_code == 422
+    assert client.get("/api/admin/knowledge").json()["items"][0]  # authenticated request remains usable
+    assert client.post("/api/admin/knowledge/fixture-authored/publish").status_code == 409
+
+
+@pytest.mark.parametrize("url", ["https://[invalid", "https://user:fixture@example.invalid/", "https://example.invalid:99999/"])
+def test_malformed_source_url_cannot_crash_or_authorize_review(client, admin_config, url):
+    login(client)
+    assert client.post("/api/admin/knowledge", json=knowledge_body() | {"source_url": url}).status_code == 201
+    response = client.post("/api/admin/knowledge/fixture-authored/review", json={
+        "version": 1, "status": "reviewed", "reviewer": "合成测试审核员", "confirm_sources": True,
+    })
+    assert response.status_code == 409, response.text
+    assert client.post("/api/admin/knowledge/fixture-authored/publish").status_code == 409
+
+
+def test_legacy_unverified_review_cannot_report_successful_publication(client, db, admin_config):
+    login(client)
+    assert client.post("/api/admin/knowledge", json=knowledge_body()).status_code == 201
+    row = db.get(CulturalKnowledge, "fixture-authored")
+    row.review_status, row.reviewer = "reviewed", "合成测试署名"
+    db.commit()
+    response = client.post("/api/admin/knowledge/fixture-authored/publish")
+    assert response.status_code == 409
+    assert approved_records(db, "suzhou-pingjiang") == []
     assert approved_records(db, "suzhou-pingjiang") == []
 
 

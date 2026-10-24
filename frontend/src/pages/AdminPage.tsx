@@ -21,6 +21,7 @@ interface KnowledgeForm {
 }
 interface Knowledge extends Omit<KnowledgeForm, 'min_chapter'> {
   review_status: string
+  trust_level: string
   version: number
   is_demo: boolean
   metadata: { min_chapter?: number }
@@ -583,6 +584,7 @@ export default function AdminPage() {
                       {k.review_status} · v{k.version}
                       {k.is_demo ? ' · 演示资料' : ''}
                     </span>
+                    <span className="chip">{k.trust_level === 'human_reviewed' ? '人工审核' : k.trust_level === 'auto_published' ? '自动发布，待人工审核' : '未经核验'}</span>
                   </div>
                   <p className="mt-4 max-w-prose whitespace-pre-wrap break-words text-sm leading-7 text-ink-soft">
                     {k.content}
@@ -596,7 +598,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       className="btn-secondary"
-                      disabled={busy || reviewer.length < 2 || !confirmed}
+                      disabled={busy || reviewer.trim().length < 2 || !confirmed}
                       onClick={() => {
                         void run(async () => {
                           await api.post(`/admin/knowledge/${k.id}/review`, {
@@ -613,7 +615,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       className="btn-secondary"
-                      disabled={busy || reviewer.length < 2}
+                      disabled={busy || reviewer.trim().length < 2}
                       onClick={() => {
                         void run(
                           () =>
@@ -631,7 +633,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       className="btn-secondary"
-                      disabled={busy || k.review_status !== 'reviewed'}
+                      disabled={busy || k.review_status !== 'reviewed' || k.trust_level !== 'human_reviewed' || k.is_demo}
                       onClick={() => {
                         void run(
                           () => api.post(`/admin/knowledge/${k.id}/publish`),

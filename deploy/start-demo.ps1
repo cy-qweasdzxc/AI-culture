@@ -48,10 +48,20 @@ $created = @()
 try {
     Push-Location $backendDir
     try {
-        & $Python -m alembic upgrade head
-        if ($LASTEXITCODE -ne 0) { throw 'Isolated demo migration failed.' }
-        & $Python scripts/seed.py
-        if ($LASTEXITCODE -ne 0) { throw 'Isolated demo seed failed.' }
+        # PowerShell 5 treats normal native stderr (including Alembic INFO logs)
+        # as a terminating error when a caller redirects this script's output.
+        $previousPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            & $Python -m alembic upgrade head
+            $migrationExit = $LASTEXITCODE
+            if ($migrationExit -eq 0) {
+                & $Python scripts/seed.py
+                $seedExit = $LASTEXITCODE
+            }
+        } finally { $ErrorActionPreference = $previousPreference }
+        if ($migrationExit -ne 0) { throw 'Isolated demo migration failed.' }
+        if ($seedExit -ne 0) { throw 'Isolated demo seed failed.' }
     } finally { Pop-Location }
     $apiProcess = Start-Process -FilePath $Python -ArgumentList @('-m','uvicorn','app.main:app','--host','127.0.0.1','--port',"$BackendPort") -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeDir 'api.stdout.log') -RedirectStandardError (Join-Path $runtimeDir 'api.stderr.log')
     $created += $apiProcess

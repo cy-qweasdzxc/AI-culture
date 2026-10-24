@@ -7,13 +7,13 @@ from uuid import uuid4
 
 import jwt
 from fastapi import APIRouter, Depends, Request, Response
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import set_committed_value
 
 from app.ai.llm.providers import EmbeddingProvider, ProviderError
-from app.ai.rag.index import approved_records, rebuild_knowledge
+from app.ai.rag.index import approved_records, has_human_review, rebuild_knowledge
 from app.ai.rag.retrieval import RETRIEVAL_CONFIG, clean_text, fingerprint, retrieve_knowledge
 from app.ai.safety.policy import redact_log_text
 from app.ai.settings import AISettings
@@ -108,7 +108,8 @@ def knowledge_dto(k: CulturalKnowledge) -> dict:
             "content": k.content, "content_type": k.content_type, "source": k.source,
             "source_url": k.source_url, "license": k.license, "review_status": k.review_status,
             "reviewer": k.reviewer, "reviewed_at": k.reviewed_at.isoformat() if k.reviewed_at else None,
-            "version": k.version, "is_demo": k.is_demo, "tags": k.tags, "metadata": k.metadata_json}
+            "version": k.version, "is_demo": k.is_demo, "trust_level": k.trust_level,
+            "tags": k.tags, "metadata": k.metadata_json}
 
 
 class KnowledgeBody(StrictBody):
@@ -197,6 +198,14 @@ class ReviewBody(StrictBody):
     reviewer: str = Field(min_length=2, max_length=120)
     confirm_sources: bool = False
 
+    @field_validator("reviewer")
+    @classmethod
+    def named_reviewer(cls, value: str) -> str:
+        value = value.strip()
+        if len(value) < 2 or value == "system-auto-publish" or any(marker in value for marker in ("待确认", "待补充")):
+            raise ValueError("REVIEWER_REQUIRED")
+        return value
+
 
 @router.post("/knowledge/{knowledge_id}/review")
 def review_knowledge(knowledge_id: str, body: ReviewBody, db: Session = Depends(get_db), actor: str = Depends(authenticated)):
@@ -206,8 +215,14 @@ def review_knowledge(knowledge_id: str, body: ReviewBody, db: Session = Depends(
     if k.version != body.version:
         raise DomainError("CONTENT_CONFLICT", "资料版本已更新。", 409)
     if body.status == "reviewed":
-        source = urlparse(k.source_url)
-        if not body.confirm_sources or source.scheme not in {"http", "https"} or not source.netloc or any(
+        try:
+            source = urlparse(k.source_url)
+            source_valid = bool(source.scheme in {"http", "https"} and source.hostname
+                                and source.port != 0 and source.username is None and source.password is None
+                                and not any(character.isspace() for character in k.source_url))
+        except ValueError:
+            source_valid = False
+        if not body.confirm_sources or not source_valid or any(
             marker in k.source + k.license for marker in ["待补充", "待正式审核", "不明", "未授权"]
         ) or len(k.source.strip()) < 2 or len(k.license.strip()) < 2:
             raise DomainError("SOURCE_REVIEW_REQUIRED", "审核人员须核对来源URL和授权说明，并明确确认。", 409)
@@ -230,13 +245,14 @@ def publish_knowledge(knowledge_id: str, db: Session = Depends(get_db), actor: s
     k = db.scalar(select(CulturalKnowledge).where(CulturalKnowledge.id == knowledge_id).with_for_update())
     if k is None:
         raise DomainError("KNOWLEDGE_NOT_FOUND", "资料不存在。", 404)
-    if k.review_status != "reviewed" or k.is_demo:
-        raise DomainError("KNOWLEDGE_UNREVIEWED", "只有状态为 reviewed 且非 demo 的资料可发布索引；自动发布不代表人工事实核验。", 409)
+    if not has_human_review(k):
+        raise DomainError("KNOWLEDGE_UNREVIEWED", "资料须经人工审核并记录有效审核人后才能发布正式检索索引。", 409)
     # A conditional write acquires the writer lock on SQLite too. Concurrent edit/
     # revoke cannot race publication; the approval/version predicates must still hold.
     claimed = db.execute(update(CulturalKnowledge).where(
         CulturalKnowledge.id == k.id, CulturalKnowledge.version == k.version,
         CulturalKnowledge.review_status == "reviewed", CulturalKnowledge.is_demo.is_(False),
+        CulturalKnowledge.trust_level == "human_reviewed",
     ).values(version=CulturalKnowledge.version).execution_options(synchronize_session=False))
     if claimed.rowcount != 1:
         db.rollback()

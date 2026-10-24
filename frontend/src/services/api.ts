@@ -18,15 +18,32 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 45000)
-  let res: Response
   try {
-    res = await fetch(`/api${path}`, {
+    const res = await fetch(`/api${path}`, {
       credentials: 'include',
       ...init,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
       signal: init?.signal ?? controller.signal,
     })
+    if (!res.ok) {
+      const body = (await res.json().catch((error: unknown) => {
+        if (controller.signal.aborted) throw error
+        return {}
+      })) as {
+        error?: { code?: string; message?: string }
+        code?: string
+        message?: string
+      }
+      throw new ApiError(
+        body.error?.code ?? body.code ?? 'UNKNOWN',
+        body.error?.message ?? body.message ?? '请求失败，请重试。',
+        res.status,
+      )
+    }
+    if (res.status === 204) return undefined as T
+    return (await res.json()) as T
   } catch (error) {
+    if (error instanceof ApiError) throw error
     throw new ApiError(
       error instanceof DOMException && error.name === 'AbortError'
         ? 'REQUEST_TIMEOUT'
@@ -37,20 +54,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } finally {
     window.clearTimeout(timeout)
   }
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as {
-      error?: { code?: string; message?: string }
-      code?: string
-      message?: string
-    }
-    throw new ApiError(
-      body.error?.code ?? body.code ?? 'UNKNOWN',
-      body.error?.message ?? body.message ?? '请求失败，请重试。',
-      res.status,
-    )
-  }
-  if (res.status === 204) return undefined as T
-  return (await res.json()) as T
 }
 
 export const api = {

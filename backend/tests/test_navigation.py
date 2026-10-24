@@ -44,6 +44,24 @@ def test_provider_failure_does_not_leak_key_or_partial_metrics(monkeypatch):
     assert "synthetic-private-key" not in json.dumps(result)
 
 
+@pytest.mark.parametrize("payload", [
+    [], None, {"status": 0, "result": None},
+    {"status": 0, "result": {"routes": ["malformed"]}},
+    {"status": 0, "result": {"routes": [{"distance": True, "duration": 4,
+        "polyline": [31.0, 120.0, 1000, 2000]}]}},
+    {"status": 0, "result": {"routes": [{"distance": 250, "duration": 4,
+        "polyline": [31.0, 120.0, 1000, 2000], "steps": [None]}]}},
+])
+def test_malformed_provider_payload_always_degrades_without_corrupt_metrics(payload, monkeypatch):
+    monkeypatch.setattr("app.services.navigation.httpx.get", lambda url, **kw:
+        httpx.Response(200, request=httpx.Request("GET", url), json=payload))
+    result = walking_route(POINTS, "synthetic-private-key")
+    assert result["status"] == "schematic"
+    assert result["reason"] == "MAP_PROVIDER_UNAVAILABLE"
+    assert result["distance_m"] is None and result["duration_minutes"] is None
+    assert "synthetic-private-key" not in json.dumps(result)
+
+
 @pytest.mark.parametrize("values", [[31, 120, 1], [31, 120, True, 0], [31, 120, float("inf"), 0], [91, 120, 1, 2]])
 def test_invalid_provider_geometry_is_rejected(values):
     with pytest.raises(ValueError):

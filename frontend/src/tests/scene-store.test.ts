@@ -148,6 +148,31 @@ beforeEach(async () => {
 })
 
 describe('多人场景的客户端权威状态', () => {
+  it('保存新回合后到达的旧刷新响应不能回退消息、版本和奖励', async () => {
+    const slow = deferred<{ snapshot: JourneySnapshot }>()
+    get.mockImplementationOnce(() => slow.promise)
+    const refresh = useJourney.getState().refresh()
+    stream.mockImplementationOnce(async (request) => committedReply(request))
+    const committed = await send()
+    expect(useJourney.getState().stateVersion).toBe(8)
+    slow.resolve({ snapshot: original })
+    await refresh
+    expect(useJourney.getState().stateVersion).toBe(8)
+    expect(useJourney.getState().messages).toEqual(committed.snapshot.messages)
+    expect(useJourney.getState().inventory).toEqual(['server-confirmed-clue'])
+  })
+
+  it('重置旅程后到达的旧刷新响应不能重新显示已删除的旅程', async () => {
+    const slow = deferred<{ snapshot: JourneySnapshot }>()
+    get.mockImplementationOnce(() => slow.promise)
+    const refresh = useJourney.getState().refresh()
+    await useJourney.getState().resetJourney()
+    slow.resolve({ snapshot: original })
+    await refresh
+    expect(useJourney.getState().journeyId).toBeNull()
+    expect(useJourney.getState().messages).toEqual({})
+  })
+
   it('导演与完整发言仍是临时事件，done后只采用服务端快照', async () => {
     const completion = deferred<SceneChatReply>()
     let request!: SceneChatRequest
