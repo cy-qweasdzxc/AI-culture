@@ -1,7 +1,10 @@
 import { create } from 'zustand'
+import { createRequestId } from '@/utils/requestId'
 import { api, ApiError, streamSceneChat, type SceneChatRequest } from '@/services/api'
 import type {
   ChatReply,
+  AudienceMode,
+  DifficultyLevel,
   Clue,
   CodexEntry,
   Ending,
@@ -29,6 +32,9 @@ const emptyJourney = {
   stateVersion: 0,
   roleId: null as string | null,
   mode: 'virtual' as JourneyMode,
+  audienceMode: 'adult' as AudienceMode,
+  difficulty: 'normal' as DifficultyLevel,
+  routeId: null as string | null,
   state: 'CREATED' as JourneySnapshot['state'],
   currentSpotId: null as string | null,
   spotStatus: {},
@@ -64,7 +70,8 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   sceneDirections: Record<string, SceneDirection>
   restore: () => Promise<void>
   refresh: () => Promise<void>
-  startJourney: (roleId: string, mode: JourneyMode) => Promise<void>
+  startJourney: (roleId: string, mode: JourneyMode, profile?: { audience_mode: AudienceMode; difficulty: DifficultyLevel; route_id?: string }) => Promise<void>
+  setProfile: (audience_mode: AudienceMode, difficulty?: DifficultyLevel) => Promise<void>
   setMode: (mode: JourneyMode) => Promise<void>
   arriveSpot: (spotId: string, location?: LocationReading) => Promise<boolean>
   verifyTask: (taskId: string, answer: unknown) => Promise<VerifyResult>
@@ -145,7 +152,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
           : {
               journey_id: s.journeyId,
               state_version: s.stateVersion,
-              request_id: crypto.randomUUID(),
+              request_id: createRequestId(),
               ...data,
             }
       const result = await api.post<T>(path, body)
@@ -213,8 +220,11 @@ export const useJourney = create<JourneyStore>((set, get) => {
       await catalogs()
       set({ error: null })
     },
-    startJourney: async (roleId, mode) => {
-      await action('/journeys/start', { story_id: 'suzhou-pingjiang', role_id: roleId, mode })
+    startJourney: async (roleId, mode, profile) => {
+      await action('/journeys/start', { story_id: 'suzhou-pingjiang', role_id: roleId, mode, ...profile })
+    },
+    setProfile: async (audience_mode, difficulty) => {
+      await action('/journeys/profile', { audience_mode, difficulty })
     },
     setMode: async (mode) => {
       await action('/journeys/mode', { mode })
@@ -241,7 +251,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
           body: {
             journey_id: current.journeyId,
             state_version: current.stateVersion,
-            request_id: crypto.randomUUID(),
+            request_id: createRequestId(),
             npc_id: npcId,
             message: text.trim(),
             participant_ids: participants,

@@ -87,6 +87,7 @@ class Evidence:
     embedding: list[float] = field(default_factory=list)
     embedding_model: str = ""
     conflicted: bool = False
+    trust_level: str = "unverified"
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
-import type { JourneyMode } from '@/types'
+import type { AudienceMode, DifficultyLevel, JourneyMode } from '@/types'
 import { cn } from '@/utils/cn'
 
 export default function RolePage() {
@@ -16,6 +16,8 @@ export default function RolePage() {
 
   const [roleId, setRoleId] = useState<string | null>(null)
   const [mode, setMode] = useState<JourneyMode>('virtual')
+  const [audience, setAudience] = useState<AudienceMode>('adult')
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('normal')
   const [confirming, setConfirming] = useState(false)
   const [starting, setStarting] = useState(false)
   const restartDialogRef = useRef<HTMLDialogElement>(null)
@@ -40,7 +42,7 @@ export default function RolePage() {
     try {
       setError(null)
       if (hasJourney) await resetJourney()
-      await startJourney(roleId, mode)
+      await startJourney(roleId, mode, { audience_mode: audience, difficulty, route_id: 'suzhou-classic' })
       navigate('/map')
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建旅程失败。')
@@ -74,6 +76,25 @@ export default function RolePage() {
         </Link>
       </header>
 
+      <fieldset className="mt-6 grid gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-2">
+        <legend className="px-2 font-semibold">适合人群与难度</legend>
+        <label className="text-sm">表达模式
+          <select aria-label="适合人群" className="input mt-2" value={audience} onChange={(event) => {
+            const value = event.target.value as AudienceMode
+            setAudience(value); setDifficulty(value === 'child' ? 'easy' : 'normal')
+          }}>
+            <option value="child">儿童 · 短句与安全提示</option>
+            <option value="student">学生 · 证据与推理</option>
+            <option value="adult">成人 · 完整背景</option>
+          </select>
+        </label>
+        <label className="text-sm">任务难度
+          <select aria-label="任务难度" className="input mt-2" value={difficulty} onChange={(event) => setDifficulty(event.target.value as DifficultyLevel)}>
+            <option value="easy">简单 · 更多提示</option><option value="normal">标准</option><option value="advanced">深入 · 减少提示</option>
+          </select>
+        </label>
+        <p className="text-xs leading-6 text-bluegray sm:col-span-2">不收集真实年龄或姓名。开始答题后难度固定；儿童实地体验请由监护人陪同。</p>
+      </fieldset>
       <div className="mt-8 grid gap-5 md:grid-cols-3" role="radiogroup" aria-label="玩家角色">
         {roles.map((r, index) => {
           const selected = roleId === r.id

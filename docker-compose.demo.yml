@@ -1,0 +1,18 @@
+# Opt-in, no-fee demo. Use deploy/start-demo-docker.ps1 to generate private secrets.
+services:
+  backend:
+    env_file: !reset []
+    environment:
+      LLM_PROVIDER: mock
+      LLM_API_KEY: ""
+      EMBEDDING_PROVIDER: none
+      EMBEDDING_API_KEY: ""
+      TMAP_WEB_SERVICE_KEY: ""
+      SESSION_COOKIE: citystory_round2_docker
+      SESSION_COOKIE_SECURE: "false"
+  frontend:
+    build:
+      args:
+        VITE_TMAP_KEY: ""
+    ports: !override
+      - "${DEMO_BIND_ADDRESS:-127.0.0.1}:${DEMO_PORT:-18080}:80"

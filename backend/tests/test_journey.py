@@ -61,7 +61,8 @@ def test_health_openapi_and_anonymous_cookie(client):
 
 def test_migrations_and_idempotent_seed(db, database):
     tables = inspect(database).get_table_names()
-    assert len(tables) == 19  # 17 planned entities, action receipts and Alembic revision.
+    assert len(tables) == 23  # Existing 19 plus city, route, stop and media tables.
+    assert {"cities", "routes", "route_stops", "media_assets"} <= set(tables)
     seed_database(db, auto_publish=False)
     seed_database(db, auto_publish=False)
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
@@ -70,22 +71,21 @@ def test_migrations_and_idempotent_seed(db, database):
     assert db.scalar(select(func.count()).select_from(StoryEdge)) > 20
 
 
-def test_seed_auto_publishes_every_knowledge_point_and_repairs_index(db):
+def test_seed_preserves_pending_knowledge_and_does_not_forge_review(db):
     result = seed_database(db)
-    assert result["knowledge"] == 24 and result["chunks"] > 0
+    assert result["knowledge"] == 24 and result["chunks"] == 0
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge).where(
-        CulturalKnowledge.review_status == "reviewed",
-        CulturalKnowledge.is_demo.is_(False),
+        CulturalKnowledge.review_status == "pending",
     )) == 24
     assert db.scalar(select(func.count()).select_from(KnowledgeChunk)) == result["chunks"]
-    assert len(approved_records(db, "suzhou-pingjiang")) == 24
+    assert approved_records(db, "suzhou-pingjiang") == []
     hits = retrieve_knowledge(
         "请根据当前资料，用一句话说明平江图是什么，并给出证据。",
         approved_records(db, "suzhou-pingjiang"), {"pingjiang"}, 1,
     )
-    assert any(hit.evidence.knowledge_id == "kn-pingjiangtu" for hit in hits)
+    assert hits == []
 
-    rerun = seed_database(db)
+    rerun = seed_database(db, auto_publish=True)
     assert rerun["chunks"] == 0
 
 

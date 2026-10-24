@@ -30,6 +30,7 @@ from app.models import (
     utcnow,
 )
 from app.repositories import catalog
+from app.services.experience import profile, task_definition, text_answer, validate_profile
 
 
 def timestamp_ms(value: datetime | None) -> int | None:
@@ -89,6 +90,11 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
         "journeyId": journey.id,
         "stateVersion": journey.state_version,
         "roleId": journey.role_id,
+        "storyRoleId": journey.role_id,
+        "visitMode": journey.mode,
+        "audienceMode": profile(journey)["audience_mode"],
+        "difficulty": profile(journey)["difficulty"],
+        "routeId": profile(journey)["route_id"],
         "mode": journey.mode,
         "state": journey.state,
         "currentSpotId": journey.current_location_id,
@@ -207,13 +213,19 @@ def require_edge(db: Session, journey: UserStoryState, source: str, destination:
     return edge
 
 
-def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: str) -> UserStoryState:
+def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: str, audience_mode: str = "adult", difficulty: str | None = None, route_id: str | None = None) -> UserStoryState:
+    from app.models import City, Route
+    selected = validate_profile(audience_mode, difficulty)
     story = db.get(Story, story_id)
     role = db.get(Character, role_id)
     if story is None or story.status != "published":
         raise DomainError("STORY_INVALID", "主题不存在或尚未发布。", 404)
     if role is None or role.kind != "player" or role.story_id != story_id:
         raise DomainError("ROLE_INVALID", "该角色不能进入当前主题。")
+    route = db.get(Route, route_id) if route_id else db.scalar(select(Route).where(Route.story_id == story_id, Route.status == "open").order_by(Route.id))
+    city = db.get(City, route.city_id) if route else None
+    if route is None or route.story_id != story_id or route.status != "open" or not route.data.get("completes_story") or city is None or city.status != "open":
+        raise DomainError("ROUTE_UNAVAILABLE", "请选择已开放且包含完整任务的路线。", 409)
     if current_journey(db, user):
         raise DomainError("JOURNEY_EXISTS", "已有保存的旅程，请恢复或先重置。", 409)
     spots = catalog.locations(db, story_id)
@@ -221,6 +233,7 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
         raise DomainError("ROUTE_UNAVAILABLE", "主题没有可用路线。", 409)
     journey = UserStoryState(id=str(uuid4()), user_id=user.id, story_id=story_id, role_id=role_id, mode=mode, state="EXPLORING", current_node_id="journey-start", state_version=1, state_data={"spotStatus": {spot.id: "discovered" if i == 0 else "undiscovered" for i, spot in enumerate(spots)}, "flags": {}, "events": []})
     db.add(journey)
+    journey.state_data = {**journey.state_data, "profile": selected, "route_id": route.id}
     try:
         db.flush()
     except IntegrityError as error:
@@ -281,16 +294,17 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
     if journey.state not in {"AT_SPOT", "DIALOGUE", "TASK_ACTIVE"}:
         raise DomainError("TRANSITION_INVALID", "当前状态不能提交任务。", 409)
     require_edge(db, journey, f"spot-{task.location_id}", task.node_id)
-    rule = task.validation
+    definition, rule = task_definition(task, journey)
+    task_type = definition.get("type", task.type)
     inventory = set(db.scalars(select(UserInventory.item_id).where(UserInventory.journey_id == journey.id)))
     missing = [clue for clue in rule.get("requiredClues", []) if clue not in inventory]
     if missing:
         return {"ok": False, "feedback": "线索不足，请先与当前点位的 NPC 对话。", "missingClues": missing}
-    if task.type in {"quiz", "combine", "observation"}:
+    if task_type in {"quiz", "combine", "observation"}:
         correct = isinstance(answer, str) and answer == rule.get("answerKey")
-    elif task.type == "password":
-        correct = isinstance(answer, (str, int)) and str(answer).strip() == rule.get("password")
-    elif task.type == "sorting":
+    elif task_type == "password":
+        correct = isinstance(answer, (str, int)) and (text_answer(str(answer)) == text_answer(rule.get("password", "")) if definition.get("answerMode") == "text" else str(answer).strip() == rule.get("password"))
+    elif task_type == "sorting":
         correct = isinstance(answer, list) and all(type(index) is int for index in answer) and answer == rule.get("sortingAnswer")
     else:
         raise DomainError("TASK_TYPE_UNSUPPORTED", "当前任务类型尚不支持验证。", 409)
@@ -301,8 +315,8 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
         add_event(journey, "task", f"任务尝试：{task.title}（答案待修正）")
         return {"ok": False, "feedback": "答案还不对。请查看演示点位介绍或已有线索，再试一次。"}
     progress.status = "completed"
-    progress.score = task.knowledge_score
-    add_event(journey, "task", f"完成任务：{task.title}（知识分 +{task.knowledge_score}）")
+    progress.score = definition["knowledgeScore"]
+    add_event(journey, "task", f"完成任务：{task.title}（知识分 +{progress.score}）")
     if reward := task.rewards.get("rewardClueId"):
         grant_item(db, journey, reward, f"task:{task.id}")
     for item_id in task.rewards.get("rewardCodexIds", []):
@@ -368,4 +382,4 @@ def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
     by_spot = [{"spotId": spot.id, "completed": sum(progress[t.id]["status"] == "completed" for t in tasks if t.location_id == spot.id), "total": sum(t.location_id == spot.id for t in tasks), "score": sum(progress[t.id]["score"] for t in tasks if t.location_id == spot.id)} for spot in spots]
     codex_total = len(list(db.scalars(select(Item).where(Item.story_id == journey.story_id, Item.kind == "codex"))))
     end = state["finishedAt"] or timestamp_ms(utcnow())
-    return {"knowledgeScore": sum(t["score"] for t in progress.values()), "maxScore": sum(t.knowledge_score for t in tasks), "completedTaskCount": sum(t["status"] == "completed" for t in progress.values()), "totalTaskCount": len(tasks), "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()), "totalSpotCount": len(spots), "unlockedCodexCount": len(state["unlockedCodex"]), "totalCodexCount": codex_total, "startedAt": state["startedAt"], "finishedAt": state["finishedAt"], "durationMinutes": round((end - state["startedAt"]) / 60000, 1), "roleId": journey.role_id, "endingId": journey.ending_id, "events": state["events"], "bySpot": by_spot, "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]} for t in tasks if progress[t.id]["attempts"] > 1], "isDemo": True, "metricSource": "persisted_journey"}
+    return {"knowledgeScore": sum(t["score"] for t in progress.values()), "audienceMode": state["audienceMode"], "difficulty": state["difficulty"], "routeId": state["routeId"], "storyRoleId": journey.role_id, "visitMode": journey.mode, "maxScore": sum(task_definition(t, journey)[0]["knowledgeScore"] for t in tasks), "completedTaskCount": sum(t["status"] == "completed" for t in progress.values()), "totalTaskCount": len(tasks), "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()), "totalSpotCount": len(spots), "unlockedCodexCount": len(state["unlockedCodex"]), "totalCodexCount": codex_total, "startedAt": state["startedAt"], "finishedAt": state["finishedAt"], "durationMinutes": round((end - state["startedAt"]) / 60000, 1), "roleId": journey.role_id, "endingId": journey.ending_id, "events": state["events"], "bySpot": by_spot, "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]} for t in tasks if progress[t.id]["attempts"] > 1], "isDemo": True, "metricSource": "persisted_journey"}

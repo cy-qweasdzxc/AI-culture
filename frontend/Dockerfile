@@ -6,6 +6,8 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+ARG VITE_TMAP_KEY=""
+ENV VITE_TMAP_KEY=$VITE_TMAP_KEY
 RUN npm run build
 
 FROM nginx:alpine

@@ -183,7 +183,8 @@ def prepare_scene(db: Session, journey, anchor_id: str, question: str, participa
                    if turn.spot_id == spot and turn.knowledge_ids and set(turn.knowledge_ids).issubset(eligible)
                    and not input_risk(log.user_input)]
         npc_data = copy.deepcopy(npc.data) | {"id": npc.id, "name": npc.name}
-        context = {"state": journey.state, "spot": spot, "chapter": journey.chapter,
+        from app.services.experience import agent_context
+        context = {**agent_context(journey), "state": journey.state, "spot": spot, "chapter": journey.chapter,
                    "resolved_question": query.query}
         actors[identifier] = PreparedActor(identifier, npc.name, npc_data, role_data, actor_records,
                                            query, context, history, allowed_spots, historical, str(uuid4()))
@@ -269,7 +270,8 @@ def actor_message(scene: PreparedScene, output: ActorOutput) -> dict:
     evidence = [{"id": hit.evidence.knowledge_id, "spotId": hit.evidence.spot_id,
                  "type": hit.evidence.content_type, "title": hit.evidence.title, "content": hit.evidence.content,
                  "source": hit.evidence.source, "source_url": hit.evidence.source_url,
-                 "review_status": hit.evidence.review_status}
+                 "review_status": hit.evidence.review_status, "trust_level": hit.evidence.trust_level,
+                 "license": hit.evidence.license}
                 for hit in output.hits if hit.evidence.knowledge_id in reply.evidence_ids]
     data_scope = "authored_story" if reply.intent == "narrative_guidance" else "reviewed_only"
     return {"id": actor.log_id + "-npc", "from": "npc", "text": reply.dialogue, "at": scene.at,

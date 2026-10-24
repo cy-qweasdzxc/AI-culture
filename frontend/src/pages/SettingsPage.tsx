@@ -4,6 +4,7 @@ import DemoDataNotice from '@/components/DemoDataNotice'
 import Icon from '@/components/Icon'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
+import type { AudienceMode, DifficultyLevel } from '@/types'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -12,6 +13,10 @@ export default function SettingsPage() {
   const state = useJourney((s) => s.state)
   const clearSession = useJourney((s) => s.clearSession)
   const busy = useJourney((s) => s.busy)
+  const audience = useJourney((s) => s.audienceMode ?? 'adult')
+  const difficulty = useJourney((s) => s.difficulty ?? 'normal')
+  const difficultyLocked = useJourney((s) => Object.values(s.taskStates).some((task) => task.attempts > 0))
+  const setProfile = useJourney((s) => s.setProfile)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -34,6 +39,20 @@ export default function SettingsPage() {
         </p>
       </header>
 
+      <section className="grid gap-4 border-b border-line py-6 sm:grid-cols-2" aria-label="调整人群与难度" aria-busy={busy}>
+        <label className="text-sm">表达模式
+          <select className="input mt-2" aria-label="表达模式" value={audience} disabled={!hasJourney || busy} onChange={(event) => void setProfile(event.target.value as AudienceMode).catch((err: Error) => setError(err.message))}>
+            <option value="child">儿童</option><option value="student">学生</option><option value="adult">成人</option>
+          </select>
+        </label>
+        <label className="text-sm">任务难度
+          <select className="input mt-2" aria-label="任务难度" value={difficulty} disabled={!hasJourney || busy || difficultyLocked} onChange={(event) => void setProfile(audience, event.target.value as DifficultyLevel).catch((err: Error) => setError(err.message))}>
+            <option value="easy">简单</option><option value="normal">标准</option><option value="advanced">深入</option>
+          </select>
+        </label>
+        <p className="text-xs leading-6 text-bluegray sm:col-span-2">设置保存在服务端。开始答题后难度固定，表达模式仍可调整；不采集真实年龄或姓名。</p>
+        {hasJourney && <p role="status" className="text-xs text-bluegray sm:col-span-2">{busy ? '正在保存设置，请等待完成后刷新…' : '设置已与服务端同步。'}</p>}
+      </section>
       <section className="grid gap-5 border-b border-line py-7 sm:py-9 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
         <div>
           <h2 className="text-xl font-semibold text-ink">体验模式</h2>
@@ -140,7 +159,7 @@ export default function SettingsPage() {
         <div>
           <p className="text-sm leading-8 text-ink-soft">
             NPC
-            对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。当前知识按自动发布策略进入检索，资料仍可能未经人工核验。
+            对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。只有明确记录人工审核且版本有效的资料进入文化问答；自动发布与待审资料不视为已核验。
             证据不足或超出知识边界时，NPC
             使用固定话术拒答。任务、道具、图鉴与结局的任何变化都必须经服务端状态机校验，AI
             无权直接修改。

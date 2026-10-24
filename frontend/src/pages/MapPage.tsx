@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MapView from '@/components/MapView'
 import SchematicMap from '@/components/SchematicMap'
@@ -6,6 +6,15 @@ import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import type { SpotStatus } from '@/types'
 import { cn } from '@/utils/cn'
+import { api } from '@/services/api'
+
+interface WalkingRoute {
+  status: 'walking' | 'schematic'
+  polyline: { lat: number; lng: number }[]
+  distance_m: number | null
+  duration_minutes: number | null
+  message: string
+}
 
 const statusMeta: Record<SpotStatus, { icon: string; label: string; cls: string }> = {
   undiscovered: { icon: '？', label: '未发现', cls: 'border-line bg-paper-deep text-bluegray' },
@@ -23,6 +32,17 @@ export default function MapPage() {
   const spots = useJourney((s) => s.spots)
   const busy = useJourney((s) => s.busy)
   const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
+  const journeyId = useJourney((s) => s.journeyId)
+  const [walking, setWalking] = useState<WalkingRoute | null>(null)
+  const visibleIds = spots.map((spot) => spot.id).join(',')
+  useEffect(() => {
+    let active = true
+    setWalking(null)
+    if (journeyId) api.post<WalkingRoute>('/navigation/walking', {
+      journey_id: journeyId, stop_ids: visibleIds ? visibleIds.split(',') : [],
+    }).then((route) => { if (active) setWalking(route) }).catch(() => { if (active) setWalking(null) })
+    return () => { active = false }
+  }, [journeyId, visibleIds])
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -127,6 +147,11 @@ export default function MapPage() {
           ))}
         </div>
       </header>
+      <p className="mt-4 text-xs leading-6 text-bluegray" role="status">
+        {walking?.status === 'walking'
+          ? `道路步行约 ${Math.round(walking.distance_m!)} 米 · ${Math.round(walking.duration_minutes!)} 分钟。${walking.message}`
+          : '当前连线为示意路线，不是实际道路导航；步行距离和时间未知。'}
+      </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
         <p className="font-medium text-ink">苏州 · 平江历史街区</p>
@@ -157,6 +182,7 @@ export default function MapPage() {
                 <MapView
                   spots={spots}
                   spotStatus={spotStatus}
+                  routeGeometry={walking?.status === 'walking' ? walking.polyline : undefined}
                   onSpotClick={selectSpot}
                   onUnavailable={setMapError}
                 />
@@ -170,7 +196,7 @@ export default function MapPage() {
                     {selectedScene ? (
                       <img
                         src={selectedScene.src}
-                        alt=""
+                        alt={`${selected.name}艺术化示意`}
                         className="h-20 w-20 shrink-0 rounded-md object-cover sm:h-24 sm:w-28"
                       />
                     ) : null}
@@ -182,6 +208,7 @@ export default function MapPage() {
                         </span>
                       </div>
                       <p className="mt-2 text-sm leading-6 text-ink-soft">{selected.intro}</p>
+                      <p className="mt-1 text-xs text-bluegray">配图为艺术化示意；实景照片与来源见点位详情。</p>
                     </div>
                   </div>
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

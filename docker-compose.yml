@@ -44,6 +44,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_TMAP_KEY: ${VITE_TMAP_KEY:-}
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:80"

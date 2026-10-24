@@ -310,6 +310,32 @@ main:focus {
 .chat-canvas {
   background-color: var(--paper-deep);
 }
+.chat-panel {
+  height: calc(var(--visual-viewport-height, 100dvh) - 15rem);
+  min-height: 260px;
+}
+.chat-panel p {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 768px) {
+  .chat-panel {
+    height: calc(100dvh - 10rem);
+    min-height: 600px;
+  }
+}
+@media (max-width: 767px) {
+  .chat-panel:focus-within {
+    min-height: min(260px, calc(var(--visual-viewport-height, 100dvh) - 15rem));
+  }
+  html[data-compact-viewport='true'] .chat-quick-question,
+  html[data-compact-viewport='true'] .chat-mode-controls,
+  html[data-compact-viewport='true'] .chat-beat {
+    display: none;
+  }
+  .chat-panel input {
+    font-size: 16px;
+  }
+}
 .chat-scene-image {
   background-repeat: no-repeat;
   background-size: cover;

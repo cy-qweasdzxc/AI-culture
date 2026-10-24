@@ -15,8 +15,10 @@ from app.schemas.journey import (
     LocationCheck,
     LocationTrigger,
     ModeAction,
+    ProfileAction,
     TaskAnswer,
 )
+from app.services.experience import task_definition, update_profile
 from app.services.journey import (
     add_event,
     arrive_location,
@@ -82,7 +84,7 @@ def get_current_journey(db: Session = Depends(get_db), user: User = Depends(get_
 
 @router.post("/journeys/start")
 def start(body: JourneyStart, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict[str, Any]:
-    journey = start_journey(db, user, body.story_id, body.role_id, body.mode)
+    journey = start_journey(db, user, body.story_id, body.role_id, body.mode, body.audience_mode, body.difficulty, body.route_id)
     return {"snapshot": snapshot(db, journey)}
 
 
@@ -103,6 +105,18 @@ def mode(body: ModeAction, db: Session = Depends(get_db), user: User = Depends(g
         return {}
 
     return mutate_journey(db, journey, body.state_version, body.request_id, "mode", body.model_dump(), operation)
+
+
+@router.post("/journeys/profile")
+def set_profile(body: ProfileAction, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> dict[str, Any]:
+    journey = owned_journey(db, user, body.journey_id)
+
+    def operation(current):
+        result = update_profile(db, current, body.audience_mode, body.difficulty)
+        add_event(current, "mode", "更新表达模式与任务难度")
+        return result
+
+    return mutate_journey(db, journey, body.state_version, body.request_id, "profile", body.model_dump(), operation)
 
 
 @router.get("/routes/{story_id}")
@@ -154,7 +168,8 @@ def tasks(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
         progress = state["taskStates"][task.id]
         if task.location_id != journey.current_location_id and progress["status"] != "completed":
             continue
-        public = {key: value for key, value in task.data.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation"}}
+        definition, _ = task_definition(task, journey)
+        public = {key: value for key, value in definition.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation"}}
         if progress["status"] == "completed":
             public["explanation"] = task.data.get("explanation", "")
         public["isDemo"] = True

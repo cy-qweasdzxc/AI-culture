@@ -16,6 +16,8 @@ export type SpotStatus = 'undiscovered' | 'discovered' | 'current' | 'completed'
 
 /** 体验模式 */
 export type JourneyMode = 'virtual' | 'onsite'
+export type AudienceMode = 'child' | 'student' | 'adult'
+export type DifficultyLevel = 'easy' | 'normal' | 'advanced'
 
 /** 文化内容四级（输出时必须明确标注） */
 export type KnowledgeType = 'fact' | 'disputed' | 'legend' | 'fiction'
@@ -82,6 +84,8 @@ export interface Npc {
 
 /** 证据条目（RAG 检索单元的 Mock；阶段三起由后端审核库提供） */
 export interface KnowledgeEvidence {
+  trust_level?: string
+  license?: string
   id: string
   spotId: string
   type: KnowledgeType
@@ -95,6 +99,8 @@ export interface KnowledgeEvidence {
 }
 
 export interface CodexEntry {
+  trustLevel?: string
+  license?: string
   id: string
   spotId: string
   type: KnowledgeType
@@ -113,6 +119,7 @@ export interface QuizOption {
 }
 
 export interface Task {
+  answerMode?: 'text'
   id: string
   spotId: string
   type: TaskType
@@ -221,6 +228,11 @@ export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' |
 }
 
 export interface JourneySnapshot {
+  audienceMode?: AudienceMode
+  difficulty?: DifficultyLevel
+  routeId?: string | null
+  storyRoleId?: string | null
+  visitMode?: JourneyMode
   sessionId: string
   journeyId: string
   stateVersion: number

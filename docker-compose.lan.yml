@@ -1,0 +1,11 @@
+# Opt-in HTTP LAN demo. Keep the default loopback production entry unchanged.
+# docker compose -f docker-compose.yml -f docker-compose.lan.yml up --build
+services:
+  frontend:
+    ports: !override
+      - "${DEMO_BIND_ADDRESS:-0.0.0.0}:${DEMO_PORT:-8080}:80"
+  backend:
+    environment:
+      SESSION_COOKIE_SECURE: "false"
+      LLM_PROVIDER: mock
+      EMBEDDING_PROVIDER: none

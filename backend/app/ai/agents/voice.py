@@ -334,6 +334,9 @@ def compose_reply(npc: dict, role: dict, question: str, context: dict,
     voice = voice_for(npc)
     address = player_address(role)
     groups = _quote_groups(excerpts)
+    if context.get("audience_mode") == "child":
+        quotes = [f'“{quote}”（{TYPE_LABELS.get(group["type"], "资料")}）' for group in groups for quote in group["quotes"]]
+        return "\n".join(["一起看看资料：", *quotes, "实地游览请跟随监护人，留意脚下与水边安全。"])
     topic = _topic_label(next((row.get("title") or "" for row in excerpts), ""))
     seed = "|".join((
         str(npc.get("id", "")), str(role.get("id", "")), question,

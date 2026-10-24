@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import PersonaAvatar from '@/components/PersonaAvatar'
+import CityExplorer from '@/components/CityExplorer'
 import { publicRouteStops } from '@/data/publicRoute'
 import { useJourney } from '@/engine/journeyStore'
 
@@ -79,14 +80,14 @@ export default function HomePage() {
         <Link to="/theme" className="home-hero-scene group" aria-label="了解平江寻梦文化路线">
           <img
             src="/assets/scenes/pingjiang.webp"
-            alt="平江水巷的石桥、柳影与临河茶馆，路线从这里开始"
+            alt="平江水巷的石桥、柳影与临河茶馆艺术化示意，非实景摄影"
             fetchPriority="high"
             width="1920"
             height="1080"
           />
           <span className="home-scene-label">
             <span className="h-1.5 w-1.5 rounded-full bg-cinnabar" />
-            本期故事 · {demoTheme.name}
+            艺术化示意 · 本期故事 · {demoTheme.name}
           </span>
           <div className="home-scene-caption">
             <div>
@@ -114,11 +115,11 @@ export default function HomePage() {
               {publicRouteStops.length} 处文化点位
             </span>
             <span className="flex items-center gap-2">
-              <Icon name="clock" className="h-4 w-4" />约 {demoTheme.durationMinutes} 分钟
+              <Icon name="clock" className="h-4 w-4" />游览时间待核验
             </span>
             <span className="flex items-center gap-2">
               <Icon name="route" className="h-4 w-4" />
-              步行约 {demoTheme.distanceKm} 公里
+              步行距离待道路规划
             </span>
           </div>
         </div>
@@ -136,6 +137,7 @@ export default function HomePage() {
             <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
+        <p className="mb-4 text-xs text-bluegray">以下插画为艺术化示意；景点详情展示实景照片与许可。</p>
         <ol className="destination-grid">
           {destinations.map((place, index) => (
             <li key={place.id}>
@@ -143,7 +145,7 @@ export default function HomePage() {
                 <div className="destination-image">
                   <img
                     src={`/assets/scenes/${place.id}.webp`}
-                    alt={publicRouteStops[index]}
+                    alt={`${publicRouteStops[index]}艺术化示意`}
                     loading="lazy"
                     width="1920"
                     height="1080"
@@ -213,7 +215,7 @@ export default function HomePage() {
               旅途中，史实、争议、传说与虚构会清楚标注。角色讲述文化知识时附上证据来源，资料无法确认的地方，也会如实告诉你。解锁的见闻会进入文化图鉴，结束时生成你的体验报告。
             </p>
             <p className="mt-4 text-xs leading-6 text-bluegray">
-              当前为演示数据，按自动发布策略入库，尚不能替代人工事实核验。
+              当前含演示资料，内容类别不代表人工事实核验；来源与审核状态在详情中标注。
             </p>
             <Link to="/intro" className="inline-link mt-4">
               了解内容来源与体验说明
@@ -222,6 +224,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <div className="page-width"><CityExplorer /></div>
     </div>
   )
 }

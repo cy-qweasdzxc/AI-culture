@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     embedding_model: str = ""
     embedding_dimension: int = 1024
     rag_min_score: float = 0.15
+    tmap_web_service_key: str = ""
+    tmap_timeout_seconds: float = 3
 
     @model_validator(mode="after")
     def production_secrets(self) -> "Settings":

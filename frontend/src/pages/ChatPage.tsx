@@ -5,6 +5,7 @@ import PersonaAvatar from '@/components/PersonaAvatar'
 import SceneDirectorPanel from '@/components/SceneDirectorPanel'
 import SceneParticipants from '@/components/SceneParticipants'
 import TypeTag from '@/components/TypeTag'
+import SourceStatus from '@/components/SourceStatus'
 import { suggestedChoices } from '@/data/chatChoices'
 import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
@@ -330,7 +331,7 @@ export default function ChatPage() {
         <aside className="hidden self-start py-5 xl:block">{profilePanel}</aside>
 
         {/* 中：对话区 */}
-        <section className="flex h-[calc(100dvh-11rem)] min-h-[660px] min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface md:h-[calc(100dvh-8rem)] md:min-h-[600px] xl:h-[calc(100dvh-10rem)]">
+        <section className="chat-panel flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface">
           <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-4 py-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <PersonaAvatar id={npc.id} name={npc.name} />
@@ -360,7 +361,7 @@ export default function ChatPage() {
             </div>
           </header>
 
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 sm:px-5">
+          <div className="chat-mode-controls flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 sm:px-5">
             <div
               className="flex gap-1 rounded-md bg-paper-deep p-1"
               role="group"
@@ -399,7 +400,7 @@ export default function ChatPage() {
             ) : null}
           </div>
           {multiAgent ? (
-            <div className="flex shrink-0 items-start gap-2 border-b border-line bg-paper-deep px-4 py-2.5 text-xs leading-5 sm:px-6">
+            <div className="chat-beat flex shrink-0 items-start gap-2 border-b border-line bg-paper-deep px-4 py-2.5 text-xs leading-5 sm:px-6">
               <span className="shrink-0 font-medium text-inkgreen">当前节拍</span>
               <span className="line-clamp-2 min-w-0 break-words text-ink-soft">
                 {direction?.beat ?? '从你的问题开始，由导演安排角色回应。'}
@@ -428,7 +429,7 @@ export default function ChatPage() {
               {spot ? (
                 <div className="flex justify-center" aria-hidden>
                   <span className="rounded-full bg-surface px-3 py-1 text-xs text-bluegray">
-                    {spot.name} · 场景画面
+                    {spot.name} · 艺术化示意
                   </span>
                 </div>
               ) : null}
@@ -590,7 +591,7 @@ export default function ChatPage() {
                   type="button"
                   disabled={thinking || busy}
                   onClick={() => send(c)}
-                  className="min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-inkgreen hover:bg-paper-deep hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar disabled:cursor-not-allowed disabled:opacity-50"
+                  className="chat-quick-question min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-inkgreen hover:bg-paper-deep hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {c}
                 </button>
@@ -680,16 +681,7 @@ export default function ChatPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
-              {evidence.source_url || evidence.sourceUrl ? (
-                <a
-                  className="mt-2 flex min-h-11 items-center text-sm text-cinnabar underline underline-offset-4"
-                  href={evidence.source_url ?? evidence.sourceUrl ?? undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  查看来源页面
-                </a>
-              ) : null}
+              <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} />
               <p className="mt-2 text-xs text-bluegray">
                 审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
               </p>

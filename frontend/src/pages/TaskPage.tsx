@@ -20,11 +20,13 @@ export default function TaskPage() {
   const [password, setPassword] = useState('')
   const [order, setOrder] = useState<number[]>(task?.sortingItems?.map((_, i) => i) ?? [])
   const [result, setResult] = useState<{ ok: boolean; feedback: string } | null>(null)
+  const [reward, setReward] = useState(0)
   const sortingItemsSignature = JSON.stringify(task?.sortingItems ?? [])
   useEffect(() => {
     setSelected(null)
     setPassword('')
     setResult(null)
+    setReward(0)
     const items: string[] = JSON.parse(sortingItemsSignature)
     setOrder(items.map((_, i) => i))
   }, [taskId, sortingItemsSignature])
@@ -49,7 +51,11 @@ export default function TaskPage() {
     if (task.type === 'password') answer = password
     if (task.type === 'sorting') answer = order
     try {
-      setResult(await verifyTask(task.id, answer))
+      const before = useJourney.getState().taskStates[task.id]?.score ?? 0
+      const response = await verifyTask(task.id, answer)
+      const after = useJourney.getState().taskStates[task.id]?.score ?? 0
+      setReward(Math.max(0, after - before))
+      setResult(response)
     } catch (error) {
       setResult({
         ok: false,
@@ -122,6 +128,7 @@ export default function TaskPage() {
       </header>
 
       {/* 前置线索状态（密码 / 线索组合类） */}
+      {reward > 0 && <p role="status" className="mt-5 rounded-lg border border-inkgreen bg-inkgreen/5 p-4 text-inkgreen">本次获得 +{reward} 游戏积分，已保存到服务端。</p>}
       <div className="mt-5">
         <DemoDataNotice />
       </div>
@@ -200,7 +207,7 @@ export default function TaskPage() {
             {task.type === 'password' ? (
               <div>
                 <label htmlFor="password-input" className="block text-sm font-semibold text-ink">
-                  输入口令
+                  {task.answerMode === 'text' ? '输入完整答案' : '输入口令'}
                   {task.passwordHint ? (
                     <span className="mt-2 block text-xs font-normal leading-6 text-bluegray">
                       （{task.passwordHint}）
@@ -215,6 +222,7 @@ export default function TaskPage() {
                   onKeyDown={(e) => e.key === 'Enter' && canSubmit && submit()}
                   placeholder="在这里输入"
                   autoComplete="off"
+                  maxLength={300}
                 />
               </div>
             ) : null}

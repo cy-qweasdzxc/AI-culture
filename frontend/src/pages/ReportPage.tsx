@@ -137,7 +137,7 @@ export default function ReportPage() {
             {maxScore} 分 · 用时约 {minutes} 分钟
           </p>
           <h3 className="mt-5 border-t border-line pt-5 text-sm font-medium leading-6 text-ink">
-            知识条目的内容分类分布（自动发布，未经人工核验）
+            知识条目的内容分类分布（分类不代表人工核验）
           </h3>
           {unlocked.length === 0 ? (
             <p className="mt-3 text-sm leading-7 text-bluegray">

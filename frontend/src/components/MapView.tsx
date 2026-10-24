@@ -86,13 +86,14 @@ function loadTMap(): Promise<void> {
 }
 
 interface MapViewProps {
+  routeGeometry?: { lat: number; lng: number }[]
   spots: Spot[]
   spotStatus: Record<string, SpotStatus>
   onSpotClick?: (spotId: string) => void
   onUnavailable: (reason: string) => void
 }
 
-export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable }: MapViewProps) {
+export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable, routeGeometry }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<TMapMap | null>(null)
   const markersRef = useRef<{ setGeometries(g: unknown[]): void } | null>(null)
@@ -116,7 +117,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
 
         const locatedSpots = spots.filter(hasCoordinates)
         // 服务端只披露已发现点位。单站尚不能构成地图 SDK 要求的折线。
-        if (locatedSpots.length > 1)
+        if ((routeGeometry?.length ?? locatedSpots.length) > 1)
           new TMap.MultiPolyline({
             map,
             styles: {
@@ -131,7 +132,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
               {
                 id: 'route',
                 styleId: 'route',
-                paths: locatedSpots.map((s) => new TMap.LatLng(s.lat, s.lng)),
+                paths: (routeGeometry ?? locatedSpots).map((s) => new TMap.LatLng(s.lat, s.lng)),
               },
             ],
           })
@@ -169,7 +170,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable 
       mapRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spots.map((spot) => spot.id).join(',')])
+  }, [spots.map((spot) => spot.id).join(','), routeGeometry])
 
   // 点位状态变化 → 更新标记样式
   useEffect(() => {

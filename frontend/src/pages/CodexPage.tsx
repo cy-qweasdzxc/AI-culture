@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
 import TypeTag from '@/components/TypeTag'
+import SourceStatus from '@/components/SourceStatus'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import { knowledgeTypeLabel } from '@/data/knowledgeLabels'
 import { useJourney } from '@/engine/journeyStore'
@@ -10,7 +11,7 @@ import { cn } from '@/utils/cn'
 
 const typeFilters: { key: KnowledgeType | 'all'; label: string }[] = [
   { key: 'all', label: '全部' },
-  { key: 'fact', label: '可靠史实' },
+  { key: 'fact', label: '史实条目' },
   { key: 'disputed', label: '争议观点' },
   { key: 'legend', label: '民间传说' },
   { key: 'fiction', label: '艺术化虚构' },
@@ -228,12 +229,13 @@ export default function CodexPage() {
             <section className="mt-7 border-t border-line pt-5">
               <h3 className="text-sm font-semibold text-ink">来源</h3>
               <p className="mt-2 break-words text-xs leading-6 text-ink-soft">{detail.source}</p>
+              <SourceStatus trustLevel={detail.trustLevel} reviewStatus={detail.reviewStatus} sourceUrl={detail.sourceUrl} license={detail.license} />
               <p className="mt-3 text-xs leading-6 text-bluegray">
                 {detail.isDemo ? '演示资料 · ' : ''}发布状态：{detail.reviewStatus ?? '待补充'}
               </p>
             </section>
             <p className="mt-6 border-t border-line pt-4 text-xs leading-6 text-bluegray">
-              所属点位：{spots.find((spot) => spot.id === detail.spotId)?.name} · 可信等级：
+              所属点位：{spots.find((spot) => spot.id === detail.spotId)?.name} · 内容类型：
               {knowledgeTypeLabel[detail.type]}
             </p>
           </article>

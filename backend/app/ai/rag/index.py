@@ -2,7 +2,7 @@
 
 import json
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
 
 from app.ai.llm.providers import EmbeddingProvider
@@ -40,12 +40,15 @@ def approved_records(db: Session, story_id: str) -> list[Evidence]:
     rows = db.execute(select(KnowledgeChunk, CulturalKnowledge).join(CulturalKnowledge).where(
         CulturalKnowledge.story_id == story_id,
         CulturalKnowledge.review_status == "reviewed", CulturalKnowledge.is_demo.is_(False),
+        CulturalKnowledge.trust_level == "human_reviewed",
+        CulturalKnowledge.reviewer.is_not(None), CulturalKnowledge.reviewer != "system-auto-publish",
+        func.length(func.trim(CulturalKnowledge.reviewer)) >= 2,
         KnowledgeChunk.knowledge_version == CulturalKnowledge.version,
     )).all()
     return [Evidence(
         id=chunk.id, knowledge_id=k.id, spot_id=k.location_id or "", title=k.title,
         content=chunk.content, content_type=k.content_type, source=k.source,
-        source_url=k.source_url, license=k.license, review_status=k.review_status,
+        source_url=k.source_url, license=k.license, review_status=k.review_status, trust_level=k.trust_level,
         chapter=int(k.metadata_json.get("min_chapter", 1)), embedding=chunk.embedding,
         embedding_model=chunk.embedding_model, conflicted=bool(k.metadata_json.get("conflicted", False)),
     ) for chunk, k in rows]

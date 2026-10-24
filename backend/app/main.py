@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes.admin import router as admin_router
 from app.api.routes.ai import router as ai_router
+from app.api.routes.catalog import router as catalog_router
 from app.api.routes.public import router as public_router
 from app.api.routes.scene import router as scene_router
 from app.core.config import get_settings
@@ -65,3 +66,4 @@ app.include_router(public_router)
 app.include_router(ai_router)
 app.include_router(scene_router)
 app.include_router(admin_router)
+app.include_router(catalog_router)

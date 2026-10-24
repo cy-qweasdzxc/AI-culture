@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import DemoDataNotice from '@/components/DemoDataNotice'
+import CityExplorer from '@/components/CityExplorer'
 import { publicRouteStops } from '@/data/publicRoute'
 import { useJourney } from '@/engine/journeyStore'
 
@@ -48,11 +49,11 @@ export default function ThemePage() {
             </div>
             <div className="flex items-baseline gap-2">
               <dt className="text-bluegray">预计</dt>
-              <dd className="font-semibold text-ink">{demoTheme.durationMinutes} 分钟</dd>
+              <dd className="font-semibold text-ink">待现场核验</dd>
             </div>
             <div className="flex items-baseline gap-2">
               <dt className="text-bluegray">步行</dt>
-              <dd className="font-semibold text-ink">约 {demoTheme.distanceKm} 公里</dd>
+              <dd className="font-semibold text-ink">待道路规划</dd>
             </div>
           </dl>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -76,7 +77,7 @@ export default function ThemePage() {
           </div>
           <figcaption className="flex items-center justify-between gap-3 border-t border-line bg-surface px-5 py-3 text-xs text-bluegray">
             <span>故事从平江路开始</span>
-            <span>场景示意</span>
+            <span>艺术化示意</span>
           </figcaption>
         </figure>
       </div>
@@ -109,7 +110,7 @@ export default function ThemePage() {
                 </span>
                 <img
                   src={`/assets/scenes/${routeScenes[i]?.image ?? 'pingjiang'}.webp`}
-                  alt=""
+                  alt={`${name}艺术化示意`}
                   loading="lazy"
                   className="h-16 w-20 shrink-0 rounded-md object-cover sm:h-20 sm:w-28"
                 />
@@ -126,6 +127,7 @@ export default function ThemePage() {
         </div>
       </section>
       <div className="mt-8">
+        <CityExplorer />
         <DemoDataNotice />
       </div>
     </div>

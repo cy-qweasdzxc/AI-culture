@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import ProgressBar from '@/components/ProgressBar'
+import JourneyTimeline from '@/components/JourneyTimeline'
 import { selectCompletedTaskCount, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -25,6 +26,22 @@ export default function JourneyLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname])
+  useEffect(() => {
+    const viewport = window.visualViewport
+    const update = () => {
+      document.documentElement.style.setProperty('--visual-viewport-height', `${viewport?.height ?? window.innerHeight}px`)
+      document.documentElement.dataset.compactViewport = String((viewport?.height ?? window.innerHeight) < 650)
+    }
+    update()
+    viewport?.addEventListener('resize', update)
+    window.addEventListener('resize', update)
+    return () => {
+      viewport?.removeEventListener('resize', update)
+      window.removeEventListener('resize', update)
+      document.documentElement.style.removeProperty('--visual-viewport-height')
+      delete document.documentElement.dataset.compactViewport
+    }
+  }, [])
 
   return (
     <div className="journey-shell flex min-h-screen flex-col">
@@ -72,6 +89,7 @@ export default function JourneyLayout() {
           </div>
         </div>
       </header>
+      <JourneyTimeline />
       <main id="main-content" className="flex-1" tabIndex={-1}>
         <Outlet />
       </main>

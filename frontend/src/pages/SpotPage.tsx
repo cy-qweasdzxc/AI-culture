@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
+import SpotMedia from '@/components/SpotMedia'
+import AudioGuide from '@/components/AudioGuide'
 import { finalChoices } from '@/data/publicRoute'
-import { sceneVisual } from '@/data/sceneVisuals'
 import { canEnterFinale, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -16,6 +17,7 @@ export default function SpotPage() {
   const tasks = useJourney((s) => s.tasks)
   const codexEntries = useJourney((s) => s.codexEntries)
   const busy = useJourney((s) => s.busy)
+  const audience = useJourney((s) => s.audienceMode)
   const [error, setError] = useState<string | null>(null)
   const spot = spots.find((item) => item.id === spotId)
 
@@ -46,7 +48,6 @@ export default function SpotPage() {
   const npc = npcs.find((item) => item.id === spot.npcId)
   const arrived = status === 'current' || status === 'completed'
   const isFinaleSpot = spot.id === 'subo'
-  const scene = sceneVisual(spot.id)
   const completedTasks = spot.taskIds.filter((id) => taskStates[id]?.status === 'completed').length
 
   const confirmFinale = async () => {
@@ -101,19 +102,7 @@ export default function SpotPage() {
             {spot.story}
           </p>
         </div>
-        {scene ? (
-          <figure className="min-w-0">
-            <img
-              src={scene.src}
-              alt={scene.alt}
-              className="aspect-[4/3] w-full rounded-xl object-cover"
-              style={{ objectPosition: scene.position }}
-            />
-            <figcaption className="mt-2 text-right text-xs leading-5 text-bluegray">
-              场景插画 · 开发演示
-            </figcaption>
-          </figure>
-        ) : null}
+        <div><SpotMedia locationId={spot.id} name={spot.name} /><AudioGuide locationId={spot.id} text={audience === 'child' ? spot.intro : `${spot.intro}\n剧情设定（虚构）：${spot.story}`} audience={audience} /></div>
       </header>
 
       {!arrived ? (

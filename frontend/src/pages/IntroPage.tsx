@@ -126,7 +126,7 @@ export default function IntroPage() {
           <ul className="list-disc space-y-4 pl-5 text-sm leading-7 text-ink-soft marker:text-inkgreen">
             <li>
               NPC
-              的回答来自检索增强生成（RAG）：先检索已自动发布的文化资料，再组织回答，并附证据编号。
+              的回答来自检索增强生成（RAG）：先检索已记录人工审核且版本有效的资料，再组织回答，并附证据编号。
             </li>
             <li>证据不足、问题越界或来源冲突时，NPC 使用固定话术拒答，不会编造史实。</li>
             <li>

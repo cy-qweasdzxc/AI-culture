@@ -89,11 +89,12 @@ afterEach(() => {
 })
 
 describe('首页', () => {
-  it('保留品牌与体验入口', () => {
+  it('保留品牌与体验入口', async () => {
     const router = createMemoryRouter([{ path: '/', element: <HomePage /> }])
     render(<RouterProvider router={router} />)
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('把一座城')
     expect(screen.getAllByRole('link', { name: /开始体验/ }).length).toBeGreaterThan(0)
+    await screen.findByRole('heading', { name:'选择城市与路线' })
   })
 })
 describe('服务端旅程缓存', () => {

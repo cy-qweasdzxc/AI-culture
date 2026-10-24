@@ -85,7 +85,8 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
                    if turn.spot_id == j.current_location_id and turn.knowledge_ids
                    and set(turn.knowledge_ids).issubset(eligible_ids) and not input_risk(turn.question)]
         npc_data, role_data = dict(npc.data) | {"name": npc.name}, dict(role.data)
-        context = {"state": j.state, "spot": j.current_location_id, "chapter": j.chapter,
+        from app.services.experience import agent_context
+        context = {**agent_context(j), "state": j.state, "spot": j.current_location_id, "chapter": j.chapter,
                    "resolved_question": query.query}
         # End the read transaction and release the connection before any provider wait.
         db.rollback()
@@ -138,7 +139,8 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
         evidence = [{"id": h.evidence.knowledge_id, "spotId": h.evidence.spot_id,
                      "type": h.evidence.content_type, "title": h.evidence.title, "content": h.evidence.content,
                      "source": h.evidence.source, "source_url": h.evidence.source_url,
-                     "review_status": h.evidence.review_status} for h in hits if h.evidence.knowledge_id in reply.evidence_ids]
+                     "review_status": h.evidence.review_status, "trust_level": h.evidence.trust_level,
+                     "license": h.evidence.license} for h in hits if h.evidence.knowledge_id in reply.evidence_ids]
         dialogue = reply.dialogue
         if approved:
             dialogue += "\n（已发放演示剧情线索；该道具不代表文化资料完成了人工事实核验。）"
