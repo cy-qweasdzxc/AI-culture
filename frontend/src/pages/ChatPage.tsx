@@ -7,6 +7,8 @@ import SceneParticipants from '@/components/SceneParticipants'
 import TypeTag from '@/components/TypeTag'
 import SourceStatus from '@/components/SourceStatus'
 import { suggestedChoices } from '@/data/chatChoices'
+import { topicsForSpot } from '@/data/suzhouQuestionBank'
+import type { ChoiceTopic } from '@/data/chatChoices'
 import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import type { ChatMessage, SceneDirection, SceneStreamEvent } from '@/types'
@@ -57,6 +59,7 @@ export default function ChatPage() {
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choiceOffset, setChoiceOffset] = useState(0)
+  const [questionTopic, setQuestionTopic] = useState<ChoiceTopic>('全部主题')
   const listRef = useRef<HTMLDivElement>(null)
   const reportRequestRef = useRef(0)
   const turnRequestRef = useRef(0)
@@ -103,6 +106,7 @@ export default function ChatPage() {
         turn: asked.length,
         offset: choiceOffset,
         asked,
+        topic: questionTopic,
       })
     : []
   const hasChoices = choices.length > 0
@@ -119,6 +123,11 @@ export default function ChatPage() {
       abortRef.current?.abort()
     }
   }, [npcId])
+
+  useEffect(() => {
+    setQuestionTopic('全部主题')
+    setChoiceOffset(0)
+  }, [currentSpotId])
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -585,6 +594,32 @@ export default function ChatPage() {
           {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
           <div className="shrink-0 border-t border-line bg-surface p-3 sm:p-4">
             <div className="flex flex-col gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <label
+                  htmlFor="question-topic"
+                  className="shrink-0 text-xs font-medium text-ink-soft"
+                >
+                  推荐主题
+                </label>
+                <select
+                  id="question-topic"
+                  aria-label="按主题筛选推荐问题"
+                  value={questionTopic}
+                  onChange={(event) => {
+                    setQuestionTopic(event.target.value as ChoiceTopic)
+                    setChoiceOffset(0)
+                  }}
+                  disabled={thinking || busy}
+                  className="input min-h-11 min-w-0 flex-1 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar"
+                >
+                  <option value="全部主题">全部主题</option>
+                  {topicsForSpot(currentSpotId).map((topic) => (
+                    <option key={topic} value={topic}>
+                      {topic}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {choices.map((c) => (
                 <button
                   key={c}
@@ -681,7 +716,12 @@ export default function ChatPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
-              <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} />
+              <SourceStatus
+                trustLevel={evidence.trust_level}
+                reviewStatus={evidence.review_status ?? evidence.reviewStatus}
+                sourceUrl={evidence.source_url ?? evidence.sourceUrl}
+                license={evidence.license}
+              />
               <p className="mt-2 text-xs text-bluegray">
                 审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
               </p>

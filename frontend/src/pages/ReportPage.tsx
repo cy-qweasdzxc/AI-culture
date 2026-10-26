@@ -60,9 +60,21 @@ export default function ReportPage() {
   const minutes = report.durationMinutes
 
   const suggestions: string[] = []
-  const undoneCount = report.totalTaskCount - doneTasks
-  if (undoneCount > 0) {
-    suggestions.push(`还有 ${undoneCount} 个任务未完成，继续沿路线探索。`)
+  const requiredTaskCount = report.requiredTaskCount ?? s.tasks.filter((task) => !task.optional).length
+  const optionalTaskCount = report.optionalTaskCount ?? s.tasks.filter((task) => task.optional).length
+  const completedRequiredTaskCount =
+    report.completedRequiredTaskCount ??
+    s.tasks.filter((task) => !task.optional && s.taskStates[task.id]?.status === 'completed').length
+  const completedOptionalTaskCount =
+    report.completedOptionalTaskCount ??
+    s.tasks.filter((task) => task.optional && s.taskStates[task.id]?.status === 'completed').length
+  const remainingRequired = Math.max(0, requiredTaskCount - completedRequiredTaskCount)
+  const remainingOptional = Math.max(0, optionalTaskCount - completedOptionalTaskCount)
+  if (!s.endingId && remainingRequired > 0) {
+    suggestions.push(`还有 ${remainingRequired} 道主线任务未完成，继续沿路线探索。`)
+  }
+  if (!s.endingId && remainingOptional > 0) {
+    suggestions.push(`还有 ${remainingOptional} 道自选挑战可尝试，完成后可累积更多知识分。`)
   }
   if (report.totalCodexCount > report.unlockedCodexCount) {
     suggestions.push(
@@ -70,10 +82,14 @@ export default function ReportPage() {
     )
   }
   if (s.endingId === 'wei-jin') {
-    suggestions.push('你抵达的是「未尽之约」结局。可重置旅程再次出发，尝试完成全部任务。')
+    suggestions.push('你抵达的是「未尽之约」结局。可重置旅程再次出发，体验尚未完成的主线与挑战。')
   }
-  if (undoneCount === 0 && !s.endingId) {
-    suggestions.push('任务已全部完成，前往苏州博物馆进入尾声，做出你的最终选择。')
+  if (remainingRequired === 0 && !s.endingId) {
+    suggestions.push(
+      remainingOptional > 0
+        ? '主线任务已完成，可前往苏州博物馆进入尾声，也可以先继续自选挑战。'
+        : '主线任务已完成，前往苏州博物馆进入尾声，做出你的最终选择。',
+    )
   }
   if (suggestions.length === 0) {
     suggestions.push('这条路线你已经走完了。可以换一位角色重新出发：不同的身份会听到不同的话。')
@@ -117,7 +133,17 @@ export default function ReportPage() {
           <ProgressBar
             value={doneTasks}
             max={report.totalTaskCount}
-            label={`任务 ${doneTasks}/${report.totalTaskCount}`}
+            label={`全部任务 ${doneTasks}/${report.totalTaskCount}`}
+          />
+          <ProgressBar
+            value={completedRequiredTaskCount}
+            max={requiredTaskCount}
+            label={`主线任务 ${completedRequiredTaskCount}/${requiredTaskCount}`}
+          />
+          <ProgressBar
+            value={completedOptionalTaskCount}
+            max={optionalTaskCount}
+            label={`自选挑战 ${completedOptionalTaskCount}/${optionalTaskCount}`}
           />
           <ProgressBar value={score} max={maxScore} label={`知识分 ${score}/${maxScore}`} />
           <ProgressBar

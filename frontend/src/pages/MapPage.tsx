@@ -29,6 +29,8 @@ export default function MapPage() {
   const mode = useJourney((s) => s.mode)
   const setMode = useJourney((s) => s.setMode)
   const arriveSpot = useJourney((s) => s.arriveSpot)
+  const currentSpotId = useJourney((s) => s.currentSpotId)
+  const journeyState = useJourney((s) => s.state)
   const spots = useJourney((s) => s.spots)
   const busy = useJourney((s) => s.busy)
   const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
@@ -73,6 +75,16 @@ export default function MapPage() {
       navigate(`/spot/${spotId}`)
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : '点位触发失败。')
+    }
+  }
+
+  const doReenterSpot = async (spotId: string) => {
+    try {
+      await arriveSpot(spotId)
+      setFeedback(null)
+      navigate(`/spot/${spotId}`)
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : '返回点位失败。')
     }
   }
 
@@ -239,13 +251,24 @@ export default function MapPage() {
                     ) : null}
                     {selectedStatus === 'current' || selectedStatus === 'completed' ? (
                       <>
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          onClick={() => navigate(`/spot/${selected.id}`)}
-                        >
-                          进入点位剧情
-                        </button>
+                        {selectedStatus === 'completed' && currentSpotId !== selected.id && journeyState !== 'COMPLETED' ? (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={busy}
+                            onClick={() => doReenterSpot(selected.id)}
+                          >
+                            {busy ? '正在返回点位…' : '回到此点继续探索'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => navigate(`/spot/${selected.id}`)}
+                          >
+                            进入点位剧情
+                          </button>
+                        )}
                         {selected.npcId ? (
                           <button
                             type="button"

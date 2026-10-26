@@ -135,7 +135,10 @@ def route(story_id: str, journey_id: str | None = None, db: Session = Depends(ge
     ordered = journey_locations(db, journey)
     visible = [(index, spot) for index, spot in enumerate(ordered) if journey.state_data.get("spotStatus", {}).get(spot.id) != "undiscovered"]
     route_data = {**(route_record.data if route_record else {}), "id": route_record.id if route_record else journey.state_data.get("route_id"), "story_id": story_id, "finale_location_id": (route_record.data.get("finale_location_id") if route_record else None) or db.get(Story, story_id).data.get("finale_location_id", "subo"), "finale_choices": (route_record.data.get("finale_choices") if route_record else None) or db.get(Story, story_id).data.get("finale_choices", [{"key":"hang","label":"把灯挂上长廊","detail":"让故事继续被更多人讲述。"},{"key":"keep","label":"把灯收进行囊","detail":"把一路的故事留作自己的回忆。"}])}
-    return {"id": story_id, "route": route_data, "spots": [{**spot.data, "shortName": spot.data.get("shortName") or spot.data.get("short") or spot.name, "triggerRadiusM": spot.trigger_radius_m, "order": index + 1, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for index, spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for _, spot in visible)], "snapshot": snapshot(db, journey)}
+    task_ids_by_spot: dict[str, list[str]] = {}
+    for task in journey_tasks(db, journey):
+        task_ids_by_spot.setdefault(task.location_id, []).append(task.id)
+    return {"id": story_id, "route": route_data, "spots": [{**spot.data, "taskIds": task_ids_by_spot.get(spot.id, []), "shortName": spot.data.get("shortName") or spot.data.get("short") or spot.name, "triggerRadiusM": spot.trigger_radius_m, "order": index + 1, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for index, spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for _, spot in visible)], "snapshot": snapshot(db, journey)}
 
 
 def requested_location(db: Session, journey, spot_id: str) -> CulturalLocation:
@@ -174,12 +177,14 @@ def tasks(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
     journey = owned_journey(db, user, journey_id)
     state = snapshot(db, journey)
     result = []
+    spot_status = state["spotStatus"]
     for task in journey_tasks(db, journey):
         progress = state["taskStates"][task.id]
-        if task.location_id != journey.current_location_id and progress["status"] != "completed":
+        unlocked = task.location_id == journey.current_location_id or spot_status.get(task.location_id) in {"current", "completed"} or progress["status"] != "locked"
+        if not unlocked:
             continue
         definition, _ = task_definition(task, journey)
-        public = {key: value for key, value in definition.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation"}}
+        public = {key: value for key, value in definition.items() if key not in {"answerKey", "answerKeys", "matchingAnswer", "matchingPairs", "password", "sortingAnswer", "explanation"}}
         if progress["status"] == "completed":
             public["explanation"] = task.data.get("explanation", "")
         public["isDemo"] = True

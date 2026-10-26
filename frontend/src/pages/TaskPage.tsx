@@ -10,6 +10,7 @@ export default function TaskPage() {
   const clues = useJourney((s) => s.clues)
   const spots = useJourney((s) => s.spots)
   const busy = useJourney((s) => s.busy)
+  const journeyComplete = useJourney((s) => s.state === 'COMPLETED')
   const task = tasks.find((item) => item.id === taskId)
 
   const taskStates = useJourney((s) => s.taskStates)
@@ -17,6 +18,8 @@ export default function TaskPage() {
   const verifyTask = useJourney((s) => s.verifyTask)
 
   const [selected, setSelected] = useState<string | null>(null)
+  const [multiSelected, setMultiSelected] = useState<string[]>([])
+  const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({})
   const [password, setPassword] = useState('')
   const [order, setOrder] = useState<number[]>(task?.sortingItems?.map((_, i) => i) ?? [])
   const [result, setResult] = useState<{ ok: boolean; feedback: string } | null>(null)
@@ -24,6 +27,8 @@ export default function TaskPage() {
   const sortingItemsSignature = JSON.stringify(task?.sortingItems ?? [])
   useEffect(() => {
     setSelected(null)
+    setMultiSelected([])
+    setMatchingAnswers({})
     setPassword('')
     setResult(null)
     setReward(0)
@@ -47,9 +52,12 @@ export default function TaskPage() {
   const done = st?.status === 'completed'
 
   const submit = async () => {
+    if (journeyComplete || done) return
     let answer: unknown = selected
     if (task.type === 'password') answer = password
     if (task.type === 'sorting') answer = order
+    if (task.type === 'multi_select') answer = multiSelected
+    if (task.type === 'matching') answer = matchingAnswers
     try {
       const before = useJourney.getState().taskStates[task.id]?.score ?? 0
       const response = await verifyTask(task.id, answer)
@@ -74,10 +82,16 @@ export default function TaskPage() {
 
   const canSubmit =
     !done &&
+    !journeyComplete &&
     !busy &&
     ((task.type === 'password' && password.trim().length > 0) ||
       (task.type === 'sorting' && order.length > 0) ||
-      ((task.type === 'quiz' || task.type === 'combine') && selected !== null))
+      ((task.type === 'quiz' || task.type === 'combine' || task.type === 'observation') && selected !== null) ||
+      (task.type === 'multi_select' && multiSelected.length > 0) ||
+      (task.type === 'matching' &&
+        Boolean(task.matchingLeft?.length) &&
+        task.matchingLeft?.every((item) => Boolean(matchingAnswers[item.id])) &&
+        new Set(Object.values(matchingAnswers)).size === task.matchingLeft?.length))
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-10">
@@ -109,6 +123,8 @@ export default function TaskPage() {
                 sorting: '排序',
                 combine: '线索组合',
                 observation: '观察',
+                multi_select: '多项选择',
+                matching: '配对',
               }[task.type]
             }
           </span>
@@ -176,7 +192,13 @@ export default function TaskPage() {
           </div>
         ) : (
           <>
-            {(task.type === 'quiz' || task.type === 'combine') && task.options ? (
+            {journeyComplete ? (
+              <div className="mb-5 rounded-lg border border-line bg-paper-deep/50 p-4 text-sm leading-6 text-bluegray" role="status">
+                本段旅程已结束，未完成的任务无法继续提交。你可以查看题目；如需尝试，请返回角色页开启新旅程。
+                <Link to="/role" className="ml-1 font-medium text-inkgreen underline">开启新旅程</Link>
+              </div>
+            ) : null}
+            {(task.type === 'quiz' || task.type === 'combine' || task.type === 'observation') && task.options ? (
               <div className="space-y-3" role="radiogroup" aria-label="选项">
                 {task.options.map((o) => (
                   <label
@@ -193,6 +215,7 @@ export default function TaskPage() {
                       name="answer"
                       className="mt-1 h-4 w-4 shrink-0 accent-inkgreen"
                       checked={selected === o.key}
+                      disabled={journeyComplete}
                       onChange={() => setSelected(o.key)}
                     />
                     <span className="text-sm leading-7 text-ink">
@@ -202,6 +225,84 @@ export default function TaskPage() {
                   </label>
                 ))}
               </div>
+            ) : null}
+
+            {task.type === 'multi_select' && task.options ? (
+              <fieldset className="space-y-3">
+                <legend className="mb-3 text-sm font-semibold text-ink">请选择所有符合的选项</legend>
+                {task.options.map((o) => {
+                  const checked = multiSelected.includes(o.key)
+                  return (
+                    <label
+                      key={o.key}
+                      className={cn(
+                        'flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-cinnabar',
+                        checked
+                          ? 'border-inkgreen bg-inkgreen/5'
+                          : 'border-line hover:border-inkgreen hover:bg-paper-deep',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-5 w-5 shrink-0 accent-inkgreen"
+                        checked={checked}
+                        disabled={journeyComplete}
+                        onChange={() =>
+                          setMultiSelected((current) =>
+                            checked ? current.filter((key) => key !== o.key) : [...current, o.key],
+                          )
+                        }
+                      />
+                      <span className="text-sm leading-7 text-ink">
+                        <strong className="mr-1.5">{o.key}.</strong>
+                        {o.text}
+                      </span>
+                    </label>
+                  )
+                })}
+              </fieldset>
+            ) : null}
+
+            {task.type === 'matching' && task.matchingLeft?.length && task.matchingRight?.length ? (
+              <fieldset className="space-y-3">
+                <legend className="mb-3 text-sm font-semibold text-ink">为每项线索选择对应内容</legend>
+                {task.matchingLeft.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid gap-2 rounded-lg border border-line p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-5"
+                  >
+                    <span className="text-sm font-medium leading-6 text-ink">{item.text}</span>
+                    <label className="block">
+                      <span className="sr-only">为「{item.text}」选择配对项</span>
+                      <select
+                        className="input min-h-11 w-full"
+                        value={matchingAnswers[item.id] ?? ''}
+                        disabled={journeyComplete}
+                        onChange={(event) =>
+                          setMatchingAnswers((current) => ({
+                            ...current,
+                            [item.id]: event.target.value,
+                          }))
+                        }
+                        aria-label={`为${item.text}选择配对项`}
+                      >
+                        <option value="">请选择配对项</option>
+                        {task.matchingRight?.map((option) => (
+                          <option
+                            key={option.id}
+                            value={option.id}
+                            disabled={Object.entries(matchingAnswers).some(
+                              ([leftId, rightId]) => leftId !== item.id && rightId === option.id,
+                            )}
+                          >
+                            {option.text}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                ))}
+              </fieldset>
             ) : null}
 
             {task.type === 'password' ? (
@@ -219,6 +320,7 @@ export default function TaskPage() {
                   className="input mt-3 max-w-xl"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={journeyComplete}
                   onKeyDown={(e) => e.key === 'Enter' && canSubmit && submit()}
                   placeholder="在这里输入"
                   autoComplete="off"
@@ -242,7 +344,7 @@ export default function TaskPage() {
                         type="button"
                         className="btn-ghost min-h-11 min-w-11 px-2 text-lg"
                         onClick={() => move(pos, -1)}
-                        disabled={pos === 0}
+                        disabled={journeyComplete || pos === 0}
                         aria-label={`上移第 ${pos + 1} 项`}
                       >
                         ↑
@@ -251,7 +353,7 @@ export default function TaskPage() {
                         type="button"
                         className="btn-ghost min-h-11 min-w-11 px-2 text-lg"
                         onClick={() => move(pos, 1)}
-                        disabled={pos === order.length - 1}
+                        disabled={journeyComplete || pos === order.length - 1}
                         aria-label={`下移第 ${pos + 1} 项`}
                       >
                         ↓

@@ -17,6 +17,9 @@ export default function SpotPage() {
   const codexEntries = useJourney((s) => s.codexEntries)
   const busy = useJourney((s) => s.busy)
   const audience = useJourney((s) => s.audienceMode)
+  const journeyState = useJourney((s) => s.state)
+  const currentSpotId = useJourney((s) => s.currentSpotId)
+  const arriveSpot = useJourney((s) => s.arriveSpot)
   const [error, setError] = useState<string | null>(null)
   const spot = spots.find((item) => item.id === spotId)
 
@@ -52,7 +55,29 @@ export default function SpotPage() {
     { key: 'hang' as const, label: '把灯挂上长廊', detail: '把这一路的故事，讲给更多人听' },
     { key: 'keep' as const, label: '把灯收进行囊', detail: '把故事留给自己，慢慢消化' },
   ]
-  const completedTasks = spot.taskIds.filter((id) => taskStates[id]?.status === 'completed').length
+  const spotTaskIds = [...spot.taskIds, ...tasks.filter((task) => task.spotId === spot.id).map((task) => task.id)]
+  const spotTasks = [...new Set(spotTaskIds)].flatMap((id) => {
+    const task = tasks.find((item) => item.id === id && item.spotId === spot.id)
+    return task ? [task] : []
+  })
+  const requiredTasks = spotTasks.filter((task) => !task.optional)
+  const optionalTasks = spotTasks.filter((task) => task.optional)
+  const completedRequiredTasks = requiredTasks.filter(
+    (task) => taskStates[task.id]?.status === 'completed',
+  ).length
+  const completedOptionalTasks = optionalTasks.filter(
+    (task) => taskStates[task.id]?.status === 'completed',
+  ).length
+  const needsReturn = arrived && currentSpotId !== spot.id && journeyState !== 'COMPLETED'
+
+  const returnToSpot = async () => {
+    setError(null)
+    try {
+      await arriveSpot(spot.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '返回点位失败，请重试。')
+    }
+  }
 
   const confirmFinale = async () => {
     if (!choice) return
@@ -121,6 +146,17 @@ export default function SpotPage() {
             去地图到达
           </Link>
         </section>
+      ) : needsReturn ? (
+        <section className="mt-10 rounded-xl border border-line bg-surface p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-ink">回到此点继续探索</h2>
+          <p className="mt-3 max-w-prose text-sm leading-6 text-ink-soft">
+            你已到达过这里。先把旅程当前位置切回「{spot.name}」，再继续这里的任务与对话。
+          </p>
+          <button type="button" className="btn-primary mt-5" disabled={busy} onClick={returnToSpot}>
+            {busy ? '正在返回点位…' : '回到此点继续探索'}
+          </button>
+          {error ? <p role="alert" className="mt-3 text-sm text-danger">{error}</p> : null}
+        </section>
       ) : (
         <div className="mt-10">
           <div className="grid items-start gap-8 border-t border-line pt-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
@@ -130,59 +166,92 @@ export default function SpotPage() {
                   这里的谜题
                 </h2>
                 <span className="text-sm text-bluegray">
-                  已完成 {completedTasks} / {spot.taskIds.length}
+                  {spotTasks.length > 0 ? (
+                    <>主线 {completedRequiredTasks}/{requiredTasks.length}{optionalTasks.length > 0 ? ` · 自选挑战 ${completedOptionalTasks}/${optionalTasks.length}` : ''}</>
+                  ) : '任务内容暂未同步'}
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-ink-soft">
                 观察眼前的景物，也从对话里寻找答案。
               </p>
-              <ul className="mt-5 divide-y divide-line border-y border-line">
-                {spot.taskIds.map((tid, index) => {
-                  const task = tasks.find((item) => item.id === tid)
-                  const taskState = taskStates[tid]
-                  const done = taskState?.status === 'completed'
-                  if (!task) return null
-                  return (
-                    <li key={tid}>
-                      <Link
-                        to={`/task/${tid}`}
-                        className="group flex min-h-24 items-center gap-4 rounded-md px-2 py-5 transition-colors hover:bg-surface sm:px-3"
-                      >
-                        <span
-                          className={cn(
-                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-medium',
-                            done
-                              ? 'border-inkgreen/25 bg-inkgreen/5 text-inkgreen'
-                              : 'border-line bg-surface text-bluegray',
-                          )}
-                          aria-hidden
-                        >
-                          {done ? '✓' : index + 1}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-semibold text-ink group-hover:text-cinnabar">
-                            {task.title}
-                          </span>
-                          <span
-                            className={cn(
-                              'mt-1 block text-xs leading-5',
-                              done ? 'text-inkgreen' : 'text-bluegray',
-                            )}
-                          >
-                            {done
-                              ? `已完成 · ${taskState?.score}分`
-                              : `未完成 · ${task.knowledgeScore}分`}
-                          </span>
-                        </span>
-                        <span className="text-ink-soft" aria-hidden>
-                          ↗
-                        </span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
+              <div className="mt-5 border-y border-line">
+                {[
+                  { label: '主线任务', items: requiredTasks, offset: 0 },
+                  { label: '自选挑战', items: optionalTasks, offset: requiredTasks.length },
+                ].map((group) =>
+                  group.items.length ? (
+                    <section key={group.label} aria-label={group.label}>
+                      <h3 className="border-b border-line bg-paper-deep/50 px-3 py-3 text-xs font-semibold tracking-wide text-bluegray">
+                        {group.label} · {group.items.filter((task) => taskStates[task.id]?.status === 'completed').length}/{group.items.length}
+                      </h3>
+                      <ul className="divide-y divide-line">
+                        {group.items.map((task, index) => {
+                          const taskState = taskStates[task.id]
+                          const done = taskState?.status === 'completed'
+                          const content = (
+                              <span className="flex min-h-24 items-center gap-4 rounded-md px-2 py-5 sm:px-3">
+                                <span
+                                  className={cn(
+                                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-medium',
+                                    done
+                                      ? 'border-inkgreen/25 bg-inkgreen/5 text-inkgreen'
+                                      : 'border-line bg-surface text-bluegray',
+                                  )}
+                                  aria-hidden
+                                >
+                                  {done ? '✓' : group.offset + index + 1}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-semibold text-ink group-hover:text-cinnabar">
+                                    {task.title}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      'mt-1 block text-xs leading-5',
+                                      done ? 'text-inkgreen' : 'text-bluegray',
+                                    )}
+                                  >
+                                    {done
+                                      ? `已完成 · ${taskState?.score}分`
+                                      : `未完成 · ${task.knowledgeScore}分`}
+                                  </span>
+                                </span>
+                                <span className="text-ink-soft" aria-hidden>
+                                  ↗
+                                </span>
+                              </span>
+                          )
+                          const canOpenTask = journeyState !== 'COMPLETED' || done
+                          return (
+                            <li key={task.id}>
+                              {canOpenTask ? (
+                                <Link
+                                  to={`/task/${task.id}`}
+                                  className="group block rounded-md transition-colors hover:bg-surface"
+                                >
+                                  {content}
+                                </Link>
+                              ) : (
+                                <div className="cursor-not-allowed opacity-60" aria-disabled="true">
+                                  {content}
+                                </div>
+                              )}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </section>
+                  ) : null,
+                )}
+              </div>
             </section>
+
+            {journeyState === 'COMPLETED' && spotTasks.some((task) => taskStates[task.id]?.status !== 'completed') ? (
+              <p className="mt-4 rounded-lg border border-line bg-paper-deep/50 p-4 text-sm leading-6 text-bluegray lg:col-span-2">
+                本段旅程已结束，未完成的任务无法继续提交。如需尝试，请返回角色页开启新旅程。
+                <Link to="/role" className="ml-1 font-medium text-inkgreen underline">开启新旅程</Link>
+              </p>
+            ) : null}
 
             {npc ? (
               <section className="order-1 rounded-xl border border-line bg-surface p-6 lg:order-2">
@@ -199,9 +268,13 @@ export default function SpotPage() {
                 <p className="mt-4 text-sm leading-6 text-ink-soft">
                   知识边界：{npc.knowledgeScope}。越界的问题他会明说不知道。
                 </p>
-                <Link to={`/chat/${npc.id}`} className="btn-primary mt-5 w-full">
-                  与{npc.name}对话
-                </Link>
+                {journeyState === 'COMPLETED' ? (
+                  <p className="mt-5 text-sm text-bluegray">旅程已结束，无法继续对话。</p>
+                ) : (
+                  <Link to={`/chat/${npc.id}`} className="btn-primary mt-5 w-full">
+                    与{npc.name}对话
+                  </Link>
+                )}
               </section>
             ) : null}
           </div>

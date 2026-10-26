@@ -23,7 +23,14 @@ export type DifficultyLevel = 'easy' | 'normal' | 'advanced'
 export type KnowledgeType = 'fact' | 'disputed' | 'legend' | 'fiction'
 
 /** 任务类型 */
-export type TaskType = 'quiz' | 'password' | 'sorting' | 'combine' | 'observation'
+export type TaskType =
+  | 'quiz'
+  | 'password'
+  | 'sorting'
+  | 'combine'
+  | 'observation'
+  | 'multi_select'
+  | 'matching'
 
 export interface Theme {
   id: string
@@ -123,6 +130,7 @@ export interface QuizOption {
 
 export interface Task {
   answerMode?: 'text'
+  optional?: boolean
   id: string
   spotId: string
   type: TaskType
@@ -132,6 +140,12 @@ export interface Task {
   /** quiz / observation */
   options?: QuizOption[]
   answerKey?: string
+  /** 多选题的答案仅由服务端保存，不属于 PublicTask。 */
+  answerKeys?: string[]
+  /** 配对题选项；matchingPairs 是服务端私有答案，不属于 PublicTask。 */
+  matchingLeft?: { id: string; text: string }[]
+  matchingRight?: { id: string; text: string }[]
+  matchingPairs?: Record<string, string>
   /** password */
   password?: string
   passwordHint?: string
@@ -226,7 +240,10 @@ export type SceneStreamEvent =
   | { type: 'done'; data: SceneChatReply }
 
 /** 服务端公开任务，答案不会发送到浏览器；解释在完成后返回。 */
-export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' | 'explanation'> & {
+export type PublicTask = Omit<
+  Task,
+  'answerKey' | 'answerKeys' | 'password' | 'sortingAnswer' | 'matchingPairs' | 'explanation'
+> & {
   explanation?: string
 }
 
@@ -261,6 +278,10 @@ export interface JourneySnapshot {
 export interface JourneyReport {
   completedTaskCount: number
   totalTaskCount: number
+  requiredTaskCount?: number
+  optionalTaskCount?: number
+  completedRequiredTaskCount?: number
+  completedOptionalTaskCount?: number
   completedSpotCount: number
   totalSpotCount: number
   knowledgeScore: number

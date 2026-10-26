@@ -88,8 +88,8 @@ def _seed_city_stories(db: Session) -> None:
             insert_missing(db, StoryNode, f"spot-{spot['id']}", story_id=story_id, location_id=spot["id"], kind="spot", data={})
         for task in raw["tasks"]:
             insert_missing(db, StoryNode, task["id"], story_id=story_id, location_id=task["spotId"], kind="task", data={})
-            validation = {key: task[key] for key in ("answerKey", "password", "sortingAnswer", "requiredClues") if key in task}
-            public = {key: value for key, value in task.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation", "sourceUrl"}}
+            validation = {key: task[key] for key in ("answerKey", "answerKeys", "matchingAnswer", "password", "sortingAnswer", "requiredClues") if key in task}
+            public = {key: value for key, value in task.items() if key not in {"answerKey", "answerKeys", "matchingAnswer", "password", "sortingAnswer", "explanation", "sourceUrl"}}
             public["explanation"] = task["explanation"]
             insert_missing(db, Task, task["id"], story_id=story_id, location_id=task["spotId"], node_id=task["id"], type=task["type"], title=task["title"], knowledge_score=task["knowledgeScore"], validation=validation, rewards={}, data=public)
         db.flush()
@@ -113,11 +113,12 @@ def _seed_city_stories(db: Session) -> None:
         chain = route["stop_ids"]
         edges = [(theme["start_node_id"], f"spot-{chain[0]}", {})]
         tasks_by_spot = {spot["id"]: spot["taskIds"] for spot in raw["spots"]}
+        required_by_spot = {spot["id"]: [task_id for task_id in spot["taskIds"] if not next(task for task in raw["tasks"] if task["id"] == task_id).get("optional", False)] for spot in raw["spots"]}
         for index, location_id in enumerate(chain):
             for task_id in tasks_by_spot[location_id]:
                 edges.extend([(f"spot-{location_id}", task_id, {"location_id": location_id}), (task_id, f"spot-{location_id}", {})])
             if index + 1 < len(chain):
-                edges.append((f"spot-{location_id}", f"spot-{chain[index + 1]}", {"completed_tasks": tasks_by_spot[location_id]}))
+                edges.append((f"spot-{location_id}", f"spot-{chain[index + 1]}", {"completed_tasks": required_by_spot[location_id]}))
         edges.append((f"spot-{theme['finale_location_id']}", theme["finale_node_id"], {}))
         for source, destination, conditions in edges:
             edge_id = f"{source}--{destination}"
@@ -179,9 +180,9 @@ def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool =
         knowledge_id = codex["id"].replace("codex-", "kn-", 1)
         insert_missing(db, Item, codex["id"], story_id=story_id, knowledge_id=knowledge_id, kind="codex", name=codex["title"], data=codex)
     for task in raw["tasks"]:
-        validation = {key: task[key] for key in ("answerKey", "password", "sortingAnswer", "requiredClues") if key in task}
+        validation = {key: task[key] for key in ("answerKey", "answerKeys", "matchingAnswer", "password", "sortingAnswer", "requiredClues") if key in task}
         rewards = {key: task[key] for key in ("rewardClueId", "rewardCodexIds") if key in task}
-        public = {key: value for key, value in task.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation", "rewardClueId", "rewardCodexIds"}}
+        public = {key: value for key, value in task.items() if key not in {"answerKey", "answerKeys", "matchingAnswer", "password", "sortingAnswer", "explanation", "rewardClueId", "rewardCodexIds"}}
         public["explanation"] = task["explanation"]
         insert_missing(db, Task, task["id"], story_id=story_id, location_id=task["spotId"], node_id=task["id"], type=task["type"], title=task["title"], knowledge_score=task["knowledgeScore"], validation=validation, rewards=rewards, data=public)
     db.flush()
@@ -191,7 +192,8 @@ def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool =
             edges.append((f"spot-{spot['id']}", task_id, {"location_id": spot["id"]}))
             edges.append((task_id, f"spot-{spot['id']}", {}))
         if index + 1 < len(raw["spots"]):
-            edges.append((f"spot-{spot['id']}", f"spot-{raw['spots'][index + 1]['id']}", {"completed_tasks": spot["taskIds"]}))
+            required_ids = [task_id for task_id in spot["taskIds"] if not next(task for task in raw["tasks"] if task["id"] == task_id).get("optional", False)]
+            edges.append((f"spot-{spot['id']}", f"spot-{raw['spots'][index + 1]['id']}", {"completed_tasks": required_ids}))
     edges.append(("spot-subo", "finale", {}))
     for source, destination, conditions in edges:
         insert_missing(db, StoryEdge, f"{source}--{destination}", story_id=story_id, from_node_id=source, to_node_id=destination, conditions=conditions)

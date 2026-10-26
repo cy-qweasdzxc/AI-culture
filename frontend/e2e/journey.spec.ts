@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 /**
@@ -62,6 +62,9 @@ const endingCases = [
   { id: 'wei-jin', name: '未尽之约', choice: '把灯挂上长廊', role: '小满', complete: false },
 ]
 
+const suzhouTasks = JSON.parse(readFileSync(resolve(process.cwd(), '../data/demo/seed.json'), 'utf8')).tasks as { knowledgeScore: number }[]
+const suzhouMaxScore = suzhouTasks.reduce((sum, task) => sum + task.knowledgeScore, 0)
+
 for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清除 · ${ending.name}`, async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
@@ -83,7 +86,7 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
     await page.screenshot({ path: resolve(visualDirectory, `map-${testInfo.project.name}-viewport.png`), animations: 'disabled' })
   }
   const arrive = async (name: string, id: string) => {
-    await gotoApp(page, '/map', () => page.getByRole('heading', { level: 1, name: '平江寻梦 · 路线' }))
+    await gotoApp(page, '/map', () => page.getByRole('heading', { level: 1, name: '平江寻梦 · 经典五站' }))
     await page.getByRole('button', { name: `${name}，已发现` }).click()
     await page.getByRole('button', { name: '到达此点（虚拟游览）' }).click()
     await expect(page).toHaveURL(new RegExp(`/spot/${id}$`))
@@ -134,8 +137,10 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await page.reload()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(ending.name)
   await page.getByRole('link', { name: '查看体验报告' }).click()
-  await expect(page.getByText(`任务 ${ending.complete ? 6 : 5}/6`, { exact: true })).toBeVisible()
-  await expect(page.getByText(`知识分 ${ending.complete ? 140 : 110}/140`, { exact: true })).toBeVisible()
+  await expect(page.getByText(`全部任务 ${ending.complete ? 6 : 5}/${suzhouTasks.length}`, { exact: true })).toBeVisible()
+  await expect(page.getByText(`知识分 ${ending.complete ? 140 : 110}/${suzhouMaxScore}`, { exact: true })).toBeVisible()
+  await expect(page.getByText(`主线任务 ${ending.complete ? 6 : 5}/6`, { exact: true })).toBeVisible()
+  await expect(page.getByText('自选挑战 0/15', { exact: true })).toBeVisible()
   await page.evaluate(() => new Promise<void>((done) => {
     document.documentElement.style.scrollBehavior = 'auto'
     window.scrollTo(0, 0)

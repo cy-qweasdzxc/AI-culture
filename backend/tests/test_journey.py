@@ -21,6 +21,7 @@ from app.models import (
     UserInventory,
     UserStoryState,
 )
+from app.services.experience import task_definition
 from app.services.journey import (
     add_event,
     arrive_location,
@@ -50,7 +51,7 @@ def grant_dialogue_clue(client, state, npc, text):
     return response.json()["snapshot"]
 
 
-def complete_route(client, state, skip_final_task=False):
+def complete_route(client, state, skip_final_task=False, include_optional=False):
     raw = json.loads((Path(__file__).resolve().parents[2] / "data/demo/seed.json").read_text(encoding="utf-8"))
     for spot in raw["spots"]:
         state = trigger(client, state, spot["id"])
@@ -59,9 +60,9 @@ def complete_route(client, state, skip_final_task=False):
         if spot["id"] == "subo":
             state = grant_dialogue_clue(client, state, "xiao-shen", "片石白墙")
         for task in raw["tasks"]:
-            if task["spotId"] != spot["id"] or (skip_final_task and spot["id"] == "subo"):
+            if task["spotId"] != spot["id"] or (skip_final_task and spot["id"] == "subo") or (task.get("optional", False) and not include_optional):
                 continue
-            answer = task.get("answerKey", task.get("password", task.get("sortingAnswer")))
+            answer = task.get("answerKey", task.get("answerKeys", task.get("matchingAnswer", task.get("password", task.get("sortingAnswer")))))
             response = client.post(f"/api/tasks/{task['id']}/verify", json=action(state, answer=answer))
             assert response.status_code == 200, response.text
             assert response.json()["ok"], response.text
@@ -92,7 +93,7 @@ def test_migrations_and_idempotent_seed(db, database):
 
 def test_seed_preserves_pending_knowledge_and_does_not_forge_review(db):
     result = seed_database(db)
-    assert result["knowledge"] == 30 and result["chunks"] == 0
+    assert result["knowledge"] == 24 and result["chunks"] == 0
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge).where(
         CulturalKnowledge.review_status == "pending",
     )) == 30
@@ -119,7 +120,8 @@ def test_city_and_suzhou_branch_routes_complete_independently(db):
         for spot in journey_locations(db, journey):
             arrive_location(db, journey, spot.id)
             for task in (task for task in journey_tasks(db, journey) if task.location_id == spot.id):
-                answer = task.validation.get("answerKey") or task.validation.get("password") or task.validation.get("sortingAnswer")
+                _, rule = task_definition(task, journey)
+                answer = rule.get("answerKey", rule.get("answerKeys", rule.get("matchingAnswer", rule.get("password", rule.get("sortingAnswer")))))
                 assert verify_task(db, journey, task.id, answer)["ok"]
         ending = enter_finale(db, journey, "hang")["ending"]
         assert journey.state == "COMPLETED"
@@ -159,9 +161,9 @@ def test_future_nodes_hidden_and_task_answers_redacted(client, started):
     assert client.get("/api/tasks").json()["items"] == []
     trigger(client, started, "pingjiang")
     body = client.get("/api/tasks").json()
-    assert len(body["items"]) == 2
+    assert len(body["items"]) == 5
     for task in body["items"]:
-        assert not {"answerKey", "password", "sortingAnswer", "explanation"}.intersection(task)
+        assert not {"answerKey", "answerKeys", "matchingAnswer", "matchingPairs", "password", "sortingAnswer", "explanation"}.intersection(task)
     assert client.get("/api/codex").json()["items"] == []
 
 
@@ -183,6 +185,57 @@ def test_wrong_answer_and_missing_clues(client, started):
     assert missing["missingClues"] == ["clue-shaoding"]
     assert missing["snapshot"]["taskStates"]["task-pingjiangtu"]["attempts"] == 0
     assert missing["snapshot"]["unlockedCodex"] == []
+
+
+def test_optional_multi_select_and_matching_reject_malformed_answers(client, started):
+    state = trigger(client, started, "pingjiang")
+    tasks = {task["id"]: task for task in client.get("/api/tasks").json()["items"]}
+    multi_id = "task-pingjiang-challenge-2"
+    matching_id = "task-pingjiang-challenge-3"
+    assert tasks[multi_id]["type"] == "multi_select"
+    assert tasks[matching_id]["type"] == "matching"
+    assert tasks[multi_id]["optional"] is True
+    assert not {"answerKeys", "matchingAnswer", "matchingPairs"}.intersection(tasks[matching_id])
+    for malformed in (["A", "A", "B", "C"], ["A", "B", "C", "D"], ["A", "B"], {"A": "B"}):
+        result = client.post(f"/api/tasks/{multi_id}/verify", json=action(state, answer=malformed)).json()
+        assert result["ok"] is False
+        assert "答案还不对" in result["feedback"]
+        assert "matchingAnswer" not in result["feedback"]
+        state = result["snapshot"]
+    raw = json.loads((Path(__file__).resolve().parents[2] / "data/demo/seed.json").read_text(encoding="utf-8"))
+    definition = next(task for task in raw["tasks"] if task["id"] == matching_id)
+    correct = definition["matchingAnswer"]
+    lefts, values = list(correct), list(correct.values())
+    malformed_answers = [
+        {lefts[0]: values[0]},
+        {lefts[0]: values[0], lefts[1]: values[0]},
+        {**correct, "extra": "unknown"},
+        [values[0], values[1]],
+        dict(zip(lefts, reversed(values), strict=True)),
+    ]
+    for malformed in malformed_answers:
+        result = client.post(f"/api/tasks/{matching_id}/verify", json=action(state, answer=malformed)).json()
+        assert result["ok"] is False
+        assert "答案还不对" in result["feedback"]
+        state = result["snapshot"]
+
+
+def test_optional_task_can_be_lazily_added_to_an_existing_journey(client, started, db):
+    from app.models import UserTaskState
+
+    state = trigger(client, started, "pingjiang")
+    task_id = "task-pingjiang-challenge-1"
+    db.delete(db.get(UserTaskState, (started["journeyId"], task_id)))
+    db.commit()
+    tasks = client.get("/api/tasks").json()["items"]
+    assert task_id in {task["id"] for task in tasks}
+    body = action(state, answer="A")
+    result = client.post(f"/api/tasks/{task_id}/verify", json=body).json()
+    assert result["ok"] is True
+    assert result["snapshot"]["taskStates"][task_id] == {"status": "completed", "attempts": 1, "score": 8}
+    replay = client.post(f"/api/tasks/{task_id}/verify", json=body).json()
+    assert replay["replayed"] is True
+    assert replay["snapshot"]["taskStates"][task_id] == {"status": "completed", "attempts": 1, "score": 8}
 
 
 def test_idempotent_retries_cannot_duplicate_rewards(client, started, db):
@@ -213,11 +266,12 @@ def test_version_conflict(client, started):
 def test_old_idempotent_retry_returns_latest_snapshot(client, started):
     body = action(started, spot_id="pingjiang")
     first = client.post("/api/location/trigger", json=body).json()["snapshot"]
-    second = client.post("/api/journeys/mode", json=action(first, mode="onsite")).json()["snapshot"]
+    second = client.post("/api/journeys/profile", json=action(first, audience_mode="student", difficulty="normal")).json()["snapshot"]
     replayed = client.post("/api/location/trigger", json=body)
     assert replayed.status_code == 200
     assert replayed.json()["snapshot"]["stateVersion"] == second["stateVersion"]
-    assert replayed.json()["snapshot"]["mode"] == "onsite"
+    assert replayed.json()["snapshot"]["audienceMode"] == "student"
+    assert replayed.json()["snapshot"]["mode"] == "virtual"
 
 
 def test_approved_codex_uses_current_reviewed_version(client, started, db):
@@ -285,7 +339,12 @@ def test_parallel_mutations_one_wins(database, started):
     assert sorted(map(str, results)) == [str(started["stateVersion"] + 1), "STATE_CONFLICT"]
 
 
-def test_browser_position_checks_accuracy_distance_and_mode(client):
+def test_browser_position_checks_accuracy_distance_and_mode(client, db):
+    from app.models import Route
+
+    route = db.get(Route, "suzhou-classic")
+    route.data = {**route.data, "onsite_ready": True}
+    db.commit()
     client.post("/api/session")
     state = client.post("/api/journeys/start", json={"role_id": "apprentice", "mode": "onsite"}).json()["snapshot"]
     missing = client.post("/api/location/trigger", json=action(state, spot_id="pingjiang"))
@@ -320,14 +379,44 @@ def test_complete_route_and_persistent_endings(client, started, choice, expected
     assert final["endingId"] == expected
     assert client.get("/api/ending").json()["ending"]["id"] == expected
     report = client.get("/api/report").json()
-    assert report["knowledgeScore"] == report["maxScore"] == 140
+    assert report["knowledgeScore"] == 140
+    assert report["maxScore"] == 260
     assert report["completedTaskCount"] == 6
+    assert report["requiredTaskCount"] == 6
+    assert report["optionalTaskCount"] == 15
+    assert report["completedRequiredTaskCount"] == 6
+    assert report["completedOptionalTaskCount"] == 0
     assert report["completedSpotCount"] == 5
     # Every codex entry must be reachable: task rewards plus the ending grant cover them all.
     assert report["unlockedCodexCount"] == report["totalCodexCount"] == 24
     assert report["metricSource"] == "persisted_journey"
     blocked = client.post("/api/journeys/mode", json=action(final, mode="onsite"))
     assert blocked.json()["error"]["code"] == "JOURNEY_COMPLETED"
+
+
+def test_all_optional_challenges_are_authoritatively_scored(client, started):
+    state = complete_route(client, started, include_optional=True)
+    assert state["state"] == "ENDING_READY"
+    report = client.get("/api/report").json()
+    assert report["knowledgeScore"] == report["maxScore"] == 260
+    assert report["completedTaskCount"] == 21
+    assert report["completedOptionalTaskCount"] == 15
+    assert report["completedSpotCount"] == 5
+
+
+def test_returning_to_completed_spot_keeps_later_progress(client, started):
+    state = complete_route(client, started)
+    available = client.get("/api/tasks").json()["items"]
+    assert "task-pingjiang-challenge-1" in {task["id"] for task in available}
+    state = trigger(client, state, "pingjiang")
+    response = client.get("/api/tasks").json()["items"]
+    optional = next(task for task in response if task["id"] == "task-pingjiang-challenge-1")
+    assert optional["optional"] is True
+    result = client.post(f"/api/tasks/{optional['id']}/verify", json=action(state, answer="A")).json()
+    assert result["ok"] is True
+    assert result["snapshot"]["spotStatus"]["ouyuan"] == "completed"
+    assert result["snapshot"]["spotStatus"]["subo"] == "completed"
+    assert result["snapshot"]["taskStates"][optional["id"]]["score"] == 8
 
 
 def test_incomplete_ending_uses_rule_priority(client, started):

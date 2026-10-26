@@ -1,5 +1,5 @@
 {
-  "seedVersion": "frontend-demo-v1",
+  "seedVersion": "frontend-demo-v3-suzhou-challenges",
   "isDemo": true,
   "reviewStatus": "reviewed",
   "theme": {
@@ -26,7 +26,10 @@
       "npcId": "zhou-bo",
       "taskIds": [
         "task-shuangqipan",
-        "task-pingjiangtu"
+        "task-pingjiangtu",
+        "task-pingjiang-challenge-1",
+        "task-pingjiang-challenge-2",
+        "task-pingjiang-challenge-3"
       ],
       "codexIds": [
         "codex-shuangqipan",
@@ -46,7 +49,10 @@
       "story": "清末，沈秉成携夫人严永华在此隐居，把园子改名\"耦园\"。三面临水的小园不事张扬，却把\"佳偶\"二字藏进了名字里。",
       "npcId": "a-heng",
       "taskIds": [
-        "task-jiaou"
+        "task-jiaou",
+        "task-ouyuan-challenge-1",
+        "task-ouyuan-challenge-2",
+        "task-ouyuan-challenge-3"
       ],
       "codexIds": [
         "codex-ouyuan-jiaou",
@@ -65,7 +71,10 @@
       "story": "至正二年，弟子们为天如禅师建起这座园子。满园的湖石假山盘旋起伏，相传连乾隆皇帝都在里面转得兴致盎然，题下\"真趣\"二字。",
       "npcId": "a-heng",
       "taskIds": [
-        "task-shizi-dynasty"
+        "task-shizi-dynasty",
+        "task-shizilin-challenge-1",
+        "task-shizilin-challenge-2",
+        "task-shizilin-challenge-3"
       ],
       "codexIds": [
         "codex-shizi-origin",
@@ -84,7 +93,10 @@
       "story": "明正德年间，御史王献臣辞官归乡，以潘岳《闲居赋》中一句\"拙者之为政\"为园命名。数百年间园分园合，1997年，它作为苏州古典园林的代表列入《世界遗产名录》。",
       "npcId": "a-heng",
       "taskIds": [
-        "task-zhuozheng-timeline"
+        "task-zhuozheng-timeline",
+        "task-zhuozhengyuan-challenge-1",
+        "task-zhuozhengyuan-challenge-2",
+        "task-zhuozhengyuan-challenge-3"
       ],
       "codexIds": [
         "codex-zhuozheng-origin",
@@ -104,7 +116,10 @@
       "story": "2006年，贝聿铭设计的苏博新馆在忠王府旁落成。灰白几何的屋顶接住了古城的天际线，一庭片石假山，把山水收进了一面白墙。青年馆员小沈在这里等你，她手里有一盏\"守园灯\"。",
       "npcId": "xiao-shen",
       "taskIds": [
-        "task-pianshi"
+        "task-pianshi",
+        "task-subo-challenge-1",
+        "task-subo-challenge-2",
+        "task-subo-challenge-3"
       ],
       "codexIds": [
         "codex-subo-bei",
@@ -387,6 +402,492 @@
         "codex-subo-chuangyi"
       ],
       "explanation": "\"以壁为纸，以石为绘\"，贝聿铭借米芾山水画意，在白墙前叠石成山。"
+    },
+    {
+      "id": "task-pingjiang-challenge-1",
+      "spotId": "pingjiang",
+      "type": "observation",
+      "optional": true,
+      "title": "沿河看街",
+      "briefing": "从“河街并行”线索看，最贴切的空间关系是什么？",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-shuangqipan"
+      ],
+      "explanation": "平江路的空间观察要抓住河与街并行这条线索；“水陆并行、河街相邻”是图鉴明确记录的格局。",
+      "options": [
+        {
+          "key": "A",
+          "text": "河道与街道相伴"
+        },
+        {
+          "key": "B",
+          "text": "街道只沿城墙布置"
+        },
+        {
+          "key": "C",
+          "text": "道路集中在中轴"
+        },
+        {
+          "key": "D",
+          "text": "河道与街道彼此远离"
+        }
+      ],
+      "answerKey": "A"
+    },
+    {
+      "id": "task-pingjiang-challenge-2",
+      "spotId": "pingjiang",
+      "type": "multi_select",
+      "optional": true,
+      "title": "事实与争议",
+      "briefing": "周伯提醒你把碑刻资料与文学掌故分开。以下哪些说法有本路线图鉴支持？可多选。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-yuxiang"
+      ],
+      "explanation": "事实与争议要分开：《平江图》碑的纪年和水陆格局有图鉴依据；《雨巷》是否写于丁香巷并无定论，因此只能选“关联有争议”。",
+      "options": [
+        {
+          "key": "A",
+          "text": "《平江图》碑刻于南宋绍定二年（1229年）"
+        },
+        {
+          "key": "B",
+          "text": "《雨巷》可以确定写于丁香巷"
+        },
+        {
+          "key": "C",
+          "text": "平江路一带河道与街道两两相伴"
+        },
+        {
+          "key": "D",
+          "text": "《雨巷》与丁香巷的关联存在争议"
+        }
+      ],
+      "answerKeys": [
+        "A",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "task-pingjiang-challenge-3",
+      "spotId": "pingjiang",
+      "type": "matching",
+      "optional": true,
+      "title": "街巷线索配对",
+      "briefing": "把平江路空间线索与对应描述配起来。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-shuangqipan"
+      ],
+      "explanation": "临水民居把两种出入口接到不同空间：后门连河埠，前门通街巷。这是水陆并行落到日常生活中的样子。",
+      "matchingPairs": [
+        {
+          "id": "l1",
+          "left": "后门",
+          "right": "河埠"
+        },
+        {
+          "id": "l2",
+          "left": "前门",
+          "right": "街巷"
+        }
+      ],
+      "matchingAnswer": {
+        "l1": "d23ed43d-a847-4ba8-bf48-b8da1a14d075",
+        "l2": "718fe79c-0a18-4ec6-8422-22d323bdaa8c"
+      }
+    },
+    {
+      "id": "task-ouyuan-challenge-1",
+      "spotId": "ouyuan",
+      "type": "observation",
+      "optional": true,
+      "title": "园宅关系",
+      "briefing": "按耦园图鉴，耦园的宅园与东西花园呈现哪种布局？",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-ouyuan-jiaou"
+      ],
+      "explanation": "耦园的“耦”与“偶”相通，沈秉成夫妇偕隐于此；住宅居中、东西花园相对的布局也呼应成双之意。",
+      "options": [
+        {
+          "key": "A",
+          "text": "住宅居中，东西花园分列两侧"
+        },
+        {
+          "key": "B",
+          "text": "住宅在西，花园全部在东"
+        },
+        {
+          "key": "C",
+          "text": "三座园林沿一条街排列"
+        },
+        {
+          "key": "D",
+          "text": "宅园与河道完全隔开"
+        }
+      ],
+      "answerKey": "A"
+    },
+    {
+      "id": "task-ouyuan-challenge-2",
+      "spotId": "ouyuan",
+      "type": "multi_select",
+      "optional": true,
+      "title": "东园西园",
+      "briefing": "依据图鉴，耦园东西花园各自对应哪些石景描述？可多选。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-ouyuan-jiashan"
+      ],
+      "explanation": "东花园以黄石假山为中心，西花园在织帘老屋前堆叠湖石；材料和气质不同，构成相携的东西园。",
+      "options": [
+        {
+          "key": "A",
+          "text": "东花园以黄石假山居中"
+        },
+        {
+          "key": "B",
+          "text": "西花园有湖石假山"
+        },
+        {
+          "key": "C",
+          "text": "东西花园呈对偶布局"
+        },
+        {
+          "key": "D",
+          "text": "两园都以片石白墙为主题"
+        }
+      ],
+      "answerKeys": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "task-ouyuan-challenge-3",
+      "spotId": "ouyuan",
+      "type": "matching",
+      "optional": true,
+      "title": "园林线索配对",
+      "briefing": "把耦园线索和对应的图鉴描述连起来。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-ouyuan-jiashan"
+      ],
+      "explanation": "耦园不是只有一处石景：东园黄石峭拔，西园湖石偏柔。按位置辨认后，才能看出这组对照关系。",
+      "matchingPairs": [
+        {
+          "id": "l1",
+          "left": "东花园",
+          "right": "黄石假山居中"
+        },
+        {
+          "id": "l2",
+          "left": "西花园",
+          "right": "织帘老屋前的湖石假山"
+        }
+      ],
+      "matchingAnswer": {
+        "l1": "28063511-20df-491b-b7ea-4e2d632aa6d4",
+        "l2": "26d9e02c-5c17-4294-a160-3f94bf881470"
+      }
+    },
+    {
+      "id": "task-shizilin-challenge-1",
+      "spotId": "shizilin",
+      "type": "observation",
+      "optional": true,
+      "title": "假山路径",
+      "briefing": "根据狮子林图鉴，园内湖石假山给人的空间体验最接近哪项？",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-shizi-origin"
+      ],
+      "explanation": "狮子林的湖石假山有多层洞壑和回转路径，观察重点是行走体验像迷阵，不是平直的中轴空间。",
+      "options": [
+        {
+          "key": "A",
+          "text": "群峰回路转、洞壑盘旋"
+        },
+        {
+          "key": "B",
+          "text": "沿一条笔直中轴穿行"
+        },
+        {
+          "key": "C",
+          "text": "水陆棋盘式街巷"
+        },
+        {
+          "key": "D",
+          "text": "单面白墙前的片石山景"
+        }
+      ],
+      "answerKey": "A"
+    },
+    {
+      "id": "task-shizilin-challenge-2",
+      "spotId": "shizilin",
+      "type": "multi_select",
+      "optional": true,
+      "title": "假山细节",
+      "briefing": "以下哪些细节来自狮子林假山图鉴？可多选。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-shizilin-jiashan"
+      ],
+      "explanation": "图鉴把假山结构具体写为上、中、下三层、9条山路、21个洞口；灰白几何坡顶属于苏博新馆的建筑线索。",
+      "options": [
+        {
+          "key": "A",
+          "text": "假山分上、中、下三层"
+        },
+        {
+          "key": "B",
+          "text": "共有9条山路"
+        },
+        {
+          "key": "C",
+          "text": "共有21个洞口"
+        },
+        {
+          "key": "D",
+          "text": "建筑屋顶以灰白几何坡顶为主"
+        }
+      ],
+      "answerKeys": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "task-shizilin-challenge-3",
+      "spotId": "shizilin",
+      "type": "matching",
+      "optional": true,
+      "title": "狮林线索配对",
+      "briefing": "把狮子林的沿革线索和对应事件配起来。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-shizilin-bei"
+      ],
+      "explanation": "两件沿革事件相隔数十年：贝润生1917年购园整修，狮子林1954年对公众开放。",
+      "matchingPairs": [
+        {
+          "id": "l1",
+          "left": "1917年",
+          "right": "贝润生购园整修"
+        },
+        {
+          "id": "l2",
+          "left": "1954年",
+          "right": "狮子林对公众开放"
+        }
+      ],
+      "matchingAnswer": {
+        "l1": "82344a7c-71d3-4580-83e5-7da8c81e2de7",
+        "l2": "10b9c2c1-dc8f-453b-affe-79290d088afe"
+      }
+    },
+    {
+      "id": "task-zhuozhengyuan-challenge-1",
+      "spotId": "zhuozhengyuan",
+      "type": "observation",
+      "optional": true,
+      "title": "水院观察",
+      "briefing": "根据拙政园图鉴，全园布局的核心特征是什么？",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-zhuozheng-origin"
+      ],
+      "explanation": "拙政园园名借“拙者之为政”，园林设计以水为中心；这与耦园宅园居中、东西分园的布局不同。",
+      "options": [
+        {
+          "key": "A",
+          "text": "全园以水为中心"
+        },
+        {
+          "key": "B",
+          "text": "全园以狮形湖石为中心"
+        },
+        {
+          "key": "C",
+          "text": "住宅居中、东西两园对称"
+        },
+        {
+          "key": "D",
+          "text": "新馆灰白几何屋顶"
+        }
+      ],
+      "answerKey": "A"
+    },
+    {
+      "id": "task-zhuozhengyuan-challenge-2",
+      "spotId": "zhuozhengyuan",
+      "type": "multi_select",
+      "optional": true,
+      "title": "园中布局",
+      "briefing": "根据图鉴，拙政园哪些描述成立？可多选。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-zhuozheng-layout"
+      ],
+      "explanation": "拙政园分东、中、西三部分，中部是精华，池水约占中部面积三分之一；“全园只有一座建筑”不符合图鉴。",
+      "options": [
+        {
+          "key": "A",
+          "text": "分为东、中、西三部分"
+        },
+        {
+          "key": "B",
+          "text": "中部是全园精华"
+        },
+        {
+          "key": "C",
+          "text": "中部池水面积约占三分之一"
+        },
+        {
+          "key": "D",
+          "text": "全园只有一座建筑"
+        }
+      ],
+      "answerKeys": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "task-zhuozhengyuan-challenge-3",
+      "spotId": "zhuozhengyuan",
+      "type": "matching",
+      "optional": true,
+      "title": "园史证据配对",
+      "briefing": "把拙政园的时间线索和对应信息配起来。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-zhuozheng-siming"
+      ],
+      "explanation": "明正德年间对应王献臣建园；1997年对应苏州古典园林列入世界遗产名录。辨认年代可避免把园史事件混在一起。",
+      "matchingPairs": [
+        {
+          "id": "l1",
+          "left": "明正德年间",
+          "right": "王献臣辞官归乡建园"
+        },
+        {
+          "id": "l2",
+          "left": "1997年",
+          "right": "列入《世界遗产名录》"
+        }
+      ],
+      "matchingAnswer": {
+        "l1": "653e77c3-5633-4c7e-a1a3-17e5f84973fc",
+        "l2": "e76ad88e-c053-4274-a8ee-d733a2651fd2"
+      }
+    },
+    {
+      "id": "task-subo-challenge-1",
+      "spotId": "subo",
+      "type": "observation",
+      "optional": true,
+      "title": "古今并置",
+      "briefing": "根据苏博现有图鉴，新馆与忠王府旧址呈现哪种关系？",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-zhongwangfu"
+      ],
+      "explanation": "苏博馆址把新旧建筑并置：贝聿铭设计的新馆与太平天国忠王府旧址相邻，呈现古城记忆与当代设计的对话。",
+      "options": [
+        {
+          "key": "A",
+          "text": "新馆建筑与旧址相邻，新旧并置"
+        },
+        {
+          "key": "B",
+          "text": "旧址完全取代新馆"
+        },
+        {
+          "key": "C",
+          "text": "新馆位于平江路河道中央"
+        },
+        {
+          "key": "D",
+          "text": "馆址只有新建园林，没有旧建筑"
+        }
+      ],
+      "answerKey": "A"
+    },
+    {
+      "id": "task-subo-challenge-2",
+      "spotId": "subo",
+      "type": "multi_select",
+      "optional": true,
+      "title": "新馆观察",
+      "briefing": "以下哪些描述来自苏博新馆图鉴？可多选。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-subo-bei"
+      ],
+      "explanation": "这些都是新馆图鉴中的建筑特征：贝聿铭设计、2006年开放、灰白几何坡顶，以及嵌入古城肌理的设计取向。",
+      "options": [
+        {
+          "key": "A",
+          "text": "由贝聿铭设计"
+        },
+        {
+          "key": "B",
+          "text": "2006年建成开放"
+        },
+        {
+          "key": "C",
+          "text": "灰白主调、几何形坡顶"
+        },
+        {
+          "key": "D",
+          "text": "新建筑谦逊嵌入古城肌理"
+        }
+      ],
+      "answerKeys": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "id": "task-subo-challenge-3",
+      "spotId": "subo",
+      "type": "matching",
+      "optional": true,
+      "title": "建筑线索配对",
+      "briefing": "把苏博线索与对应的建筑或空间描述配起来。",
+      "knowledgeScore": 8,
+      "rewardCodexIds": [
+        "codex-pianshi"
+      ],
+      "explanation": "新馆建筑用几何坡顶回应传统民居轮廓；主庭园则以白墙作纸、叠石成山。把建筑外观与庭园造景分开辨认。",
+      "matchingPairs": [
+        {
+          "id": "l1",
+          "left": "新馆",
+          "right": "贝聿铭设计，灰白几何坡顶"
+        },
+        {
+          "id": "l2",
+          "left": "主庭园",
+          "right": "白墙前叠石成山，以壁为纸、以石为绘"
+        }
+      ],
+      "matchingAnswer": {
+        "l1": "798df40b-7b18-4cc0-97d1-4af4ee3c61e3",
+        "l2": "31831a00-4050-404f-96c3-f5dbb911d04a"
+      }
     }
   ],
   "clues": [

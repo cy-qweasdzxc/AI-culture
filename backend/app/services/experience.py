@@ -1,5 +1,6 @@
 """Server-owned audience, difficulty and task variants; no age or identity data."""
 import copy
+import hashlib
 import re
 import unicodedata
 
@@ -43,6 +44,12 @@ def task_definition(task: Task, journey: UserStoryState) -> tuple[dict, dict]:
     difficulty = selected["difficulty"]
     data.update(audienceMode=selected["audience_mode"], difficulty=difficulty,
                 knowledgeScore=int(task.knowledge_score * {"easy": 0.75, "normal": 1, "advanced": 1.5}[difficulty]))
+    if task.type == "matching":
+        pairs = data.get("matchingPairs", [])
+        data["matchingLeft"] = [{"id": pair["id"], "text": pair["left"]} for pair in pairs]
+        answers = rule.get("matchingAnswer", {})
+        right = [{"id": answers[pair["id"]], "text": pair["right"]} for pair in pairs]
+        data["matchingRight"] = sorted(right, key=lambda item: hashlib.sha256(f"{task.id}:{item['id']}".encode()).hexdigest())
     if difficulty == "easy":
         data["briefing"] = data.get("briefing", "") + " 简单难度：先看点位介绍与线索，再作答。"
         options = data.get("options", [])
@@ -65,6 +72,8 @@ def task_definition(task: Task, journey: UserStoryState) -> tuple[dict, dict]:
             rule["sortingAnswer"] = [size - 1 - index for index in rule.get("sortingAnswer", [])]
         elif task.type == "password":
             data["passwordHint"] = "深入难度：请从已有线索中寻找答案。"
+        elif task.type in {"multi_select", "matching"}:
+            data["briefing"] += " 请逐项核对线索之间的对应关系。"
     return data, rule
 
 
