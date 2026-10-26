@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
 import SpotMedia from '@/components/SpotMedia'
+import ExplorationPanel from '@/components/ExplorationPanel'
 import AudioGuide from '@/components/AudioGuide'
+import SourceStatus from '@/components/SourceStatus'
+import { api } from '@/services/api'
+import type { KnowledgeType } from '@/types'
 import { finalChoices } from '@/data/publicRoute'
 import { canEnterFinale, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
+
+interface PlaceKnowledge {
+  id: string; title: string; content: string; content_type: KnowledgeType; source: string
+  review_status: string; trust_level: string; is_demo: boolean; is_fictional: boolean; human_review_verified: boolean
+  source_url: string; license: string
+}
+interface PlaceCulture { knowledge: PlaceKnowledge[]; source_candidates: PlaceKnowledge[] }
 
 export default function SpotPage() {
   const { spotId } = useParams<{ spotId: string }>()
@@ -29,6 +40,24 @@ export default function SpotPage() {
   const endingId = useJourney((s) => s.endingId)
 
   const [choice, setChoice] = useState<'hang' | 'keep' | null>(null)
+  const [culture, setCulture] = useState<PlaceCulture | null>(null)
+  const [cultureError, setCultureError] = useState('')
+  useEffect(() => {
+    let alive = true
+    setCulture(null); setCultureError('')
+    if (spotId) api.get<PlaceCulture>(`/places/${encodeURIComponent(spotId)}`)
+      .then((data) => { if (alive) setCulture(data) })
+      .catch(() => { if (alive) setCultureError('文化资料暂时无法加载。') })
+    return () => { alive = false }
+  }, [spotId])
+  const cultureCard = (entry: PlaceKnowledge) => <article key={entry.id} className="min-w-0 rounded-lg border border-line p-4">
+    <h3 className="font-semibold">{entry.title}</h3>
+    <TypeTag type={entry.content_type} />
+    <p className="mt-3 text-sm leading-7">{entry.content}</p>
+    <p className="mt-2 text-xs leading-6 text-bluegray">来源：{entry.source}</p>
+    <SourceStatus trustLevel={entry.trust_level} reviewStatus={entry.review_status} isDemo={entry.is_demo}
+      isFictional={entry.is_fictional} sourceUrl={entry.source_url} license={entry.license} humanReviewVerified={entry.human_review_verified} />
+  </article>
 
   if (!spot) {
     return (
@@ -94,7 +123,9 @@ export default function SpotPage() {
           <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight text-ink">
             {spot.name}
           </h1>
-          <p className="mt-3 text-base font-medium leading-7 text-inkgreen">{spot.intro}</p>
+          <p className="mt-3 text-xs text-bluegray">地点简介 · 演示资料，未经人工事实核验</p>
+          <p className="mt-1 text-base font-medium leading-7 text-inkgreen">{spot.intro}</p>
+          <p className="mt-4 text-xs text-bluegray">剧情设定（虚构）</p>
           <p
             className="mt-5 max-w-prose text-sm leading-7 text-ink-soft"
             style={{ textWrap: 'pretty' }}
@@ -104,6 +135,20 @@ export default function SpotPage() {
         </div>
         <div><SpotMedia locationId={spot.id} name={spot.name} /><AudioGuide locationId={spot.id} text={audience === 'child' ? spot.intro : `${spot.intro}\n剧情设定（虚构）：${spot.story}`} audience={audience} /></div>
       </header>
+
+      <section className="mt-8 border-t border-line pt-6" aria-labelledby="spot-culture-title">
+        <h2 id="spot-culture-title" className="font-serif text-xl font-semibold">文化资料与审核状态</h2>
+        <p className="mt-2 text-xs leading-6 text-bluegray">演示资料与未核验候选仅供浏览，不会自动用于 NPC 的正式文化事实检索。</p>
+        {cultureError && <p role="status" className="mt-2 text-sm">{cultureError}</p>}
+        {culture && <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">{culture.knowledge.map(cultureCard)}</div>
+          {culture.knowledge.length === 0 && <p className="mt-3 text-sm text-bluegray">当前没有独立人工审核通过的文化资料。</p>}
+          {culture.source_candidates.length > 0 && <details className="mt-4 rounded-lg border border-line p-4">
+            <summary className="min-h-11 cursor-pointer leading-[44px]">演示资料与待审核来源候选（{culture.source_candidates.length}）</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">{culture.source_candidates.map(cultureCard)}</div>
+          </details>}
+        </>}
+      </section>
 
       {!arrived ? (
         <section className="mt-10 rounded-xl border border-line bg-surface p-6 sm:p-8">
@@ -325,6 +370,7 @@ export default function SpotPage() {
         </div>
       )}
 
+      <ExplorationPanel spotId={spot.id} />
       <div className="mt-10">
         <DemoDataNotice />
       </div>

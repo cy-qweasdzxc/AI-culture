@@ -9,6 +9,7 @@ interface Choice {
   spots?: string[]
   /** 当前点位优先保留的任务推进题，问过一次后不再置顶。 */
   priority?: boolean
+  taskId?: string
 }
 
 export interface ChoiceContext {
@@ -17,13 +18,16 @@ export interface ChoiceContext {
   turn?: number
   offset?: number
   asked?: string[]
+  completedTaskIds?: string[]
+  inventory?: string[]
+  difficulty?: string
 }
 
 const CHOICE_POOLS: Record<string, Choice[]> = {
   'zhou-bo': [
-    { text: '《平江图》是什么？', kind: 'task', priority: true },
-    { text: '《平江图》上画了些什么？', kind: 'task' },
-    { text: '绍定二年是哪一年？', kind: 'task' },
+    { text: '《平江图》是什么？', kind: 'task', taskId: 'task-pingjiangtu', priority: true },
+    { text: '《平江图》上画了些什么？', kind: 'task', taskId: 'task-pingjiangtu' },
+    { text: '绍定二年是哪一年？', kind: 'task', taskId: 'task-pingjiangtu' },
     { text: '平江路的格局有什么讲究？', kind: 'culture' },
     { text: '为什么说平江路是“双棋盘”？', kind: 'culture' },
     { text: '“水陆并行、河街相邻”是什么意思？', kind: 'culture' },
@@ -34,14 +38,14 @@ const CHOICE_POOLS: Record<string, Choice[]> = {
     { text: '丁香巷的名字是怎么来的？', kind: 'story' },
   ],
   'a-heng': [
-    { text: '耦园为什么改名？', kind: 'task', spots: ['ouyuan'], priority: true },
+    { text: '耦园为什么改名？', kind: 'task', taskId: 'task-jiaou', spots: ['ouyuan'], priority: true },
     { text: '耦园的“耦”是什么意思？', kind: 'culture', spots: ['ouyuan'] },
     { text: '耦园为什么三面临水？', kind: 'culture', spots: ['ouyuan'] },
     { text: '耦园走马楼是做什么用的？', kind: 'culture', spots: ['ouyuan'] },
     { text: '耦园的假山有什么讲究？', kind: 'craft', spots: ['ouyuan'] },
     { text: '什么样的假山才算好？', kind: 'craft', spots: ['ouyuan'] },
     { text: '园子三面临水有什么好处？', kind: 'craft', spots: ['ouyuan'] },
-    { text: '狮子林始建于什么朝代？', kind: 'task', spots: ['shizilin'], priority: true },
+    { text: '狮子林始建于什么朝代？', kind: 'task', taskId: 'task-shizi-dynasty', spots: ['shizilin'], priority: true },
     { text: '狮子林为什么叫“假山王国”？', kind: 'culture', spots: ['shizilin'] },
     { text: '狮子林“真趣”匾有什么来历？', kind: 'story', spots: ['shizilin'] },
     { text: '贝润生和狮子林有什么关系？', kind: 'culture', spots: ['shizilin'] },
@@ -50,6 +54,7 @@ const CHOICE_POOLS: Record<string, Choice[]> = {
     {
       text: '拙政园是什么时候列入世界遗产的？',
       kind: 'task',
+      taskId: 'task-zhuozheng-timeline',
       spots: ['zhuozhengyuan'],
       priority: true,
     },
@@ -60,8 +65,8 @@ const CHOICE_POOLS: Record<string, Choice[]> = {
     { text: '拙政园以水为中心吗？', kind: 'craft', spots: ['zhuozhengyuan'] },
   ],
   'xiao-shen': [
-    { text: '片石假山妙在哪里？', kind: 'task', priority: true },
-    { text: '“以壁为纸，以石为画”是什么意思？', kind: 'task' },
+    { text: '片石假山妙在哪里？', kind: 'task', taskId: 'task-pianshi', priority: true },
+    { text: '“以壁为纸，以石为画”是什么意思？', kind: 'task', taskId: 'task-pianshi' },
     { text: '贝聿铭是怎么设计新馆的？', kind: 'culture' },
     { text: '新馆为什么用白墙灰瓦？', kind: 'culture' },
     { text: '苏博和忠王府是什么关系？', kind: 'culture' },
@@ -145,15 +150,19 @@ function select(pool: Choice[], seed: number, turn: number): Choice[] {
 export function suggestedChoices(npcId: string, context: ChoiceContext): string[] {
   const spotId = context.spotId ?? ''
   const pool = (CHOICE_POOLS[npcId] ?? []).filter(
-    (choice) => !choice.spots || choice.spots.includes(spotId),
+    (choice) => (!choice.spots || choice.spots.includes(spotId)) &&
+      (!choice.taskId || !context.completedTaskIds?.includes(choice.taskId)) &&
+      !(choice.taskId === 'task-pingjiangtu' && context.inventory?.includes('clue-shaoding')) &&
+      !(choice.taskId === 'task-pianshi' && context.inventory?.includes('clue-baibi') && context.inventory?.includes('clue-pianshi')),
   )
   if (pool.length === 0) return []
 
   const asked = (context.asked ?? []).map(normalize).filter(Boolean)
   const unasked = pool.filter((choice) => !alreadyAsked(choice.text, asked))
-  const available = unasked.length > 0 ? unasked : pool
+  const available = unasked
+  if (!available.length) return []
   const seed = seedFrom(
-    [npcId, context.roleId ?? '', spotId, context.turn ?? 0, context.offset ?? 0].join('|'),
+    [npcId, context.roleId ?? '', spotId, context.turn ?? 0, context.offset ?? 0, context.difficulty ?? '', [...(context.inventory ?? [])].sort().join(',')].join('|'),
   )
   return select(available, seed, context.turn ?? 0).map((choice) => choice.text)
 }

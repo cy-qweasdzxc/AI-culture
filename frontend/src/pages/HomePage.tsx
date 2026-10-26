@@ -1,3 +1,4 @@
+import ResilientImage from '@/components/ResilientImage'
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import PersonaAvatar from '@/components/PersonaAvatar'
@@ -78,7 +79,7 @@ export default function HomePage() {
           <p className="mt-5 text-xs text-bluegray">无需注册 · 支持线上游览与实地探索</p>
         </div>
         <Link to="/theme" className="home-hero-scene group" aria-label="了解平江寻梦文化路线">
-          <img
+          <ResilientImage
             src="/assets/scenes/pingjiang.webp"
             alt="平江水巷的石桥、柳影与临河茶馆艺术化示意，非实景摄影"
             {...{ fetchpriority: 'high' }}
@@ -143,7 +144,7 @@ export default function HomePage() {
             <li key={place.id}>
               <Link to={`/theme#${place.id}`} className="destination-link group">
                 <div className="destination-image">
-                  <img
+                  <ResilientImage
                     src={`/assets/scenes/${place.id}.webp`}
                     alt={`${publicRouteStops[index]}艺术化示意`}
                     loading="lazy"

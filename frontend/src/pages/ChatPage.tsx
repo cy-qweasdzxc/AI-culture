@@ -36,6 +36,8 @@ export default function ChatPage() {
   const reportIssue = useJourney((s) => s.reportIssue)
   const inventory = useJourney((s) => s.inventory)
   const taskStates = useJourney((s) => s.taskStates)
+  const activities = useJourney((s) => s.activities)
+  const difficulty = useJourney((s) => s.difficulty)
   const spotStatus = useJourney((s) => s.spotStatus)
 
   const [input, setInput] = useState('')
@@ -47,7 +49,7 @@ export default function ChatPage() {
   const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([])
   const [liveDirection, setLiveDirection] = useState<SceneDirection | null>(null)
   const [phase, setPhase] = useState('')
-  const [evidenceId, setEvidenceId] = useState<string | null>(null)
+  const [evidenceSelection, setEvidenceSelection] = useState<{ messageId: string; id: string } | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [contextOpen, setContextOpen] = useState(false)
   const [reportingId, setReportingId] = useState<string | null>(null)
@@ -93,8 +95,8 @@ export default function ChatPage() {
     )
     .map((item) => item.id)
   const evidence = displayedMessages
-    .flatMap((message) => message.evidence ?? [])
-    .find((item) => item.id === evidenceId)
+    .find((message) => message.id === evidenceSelection?.messageId)
+    ?.evidence?.find((item) => item.id === evidenceSelection?.id)
   const asked = messages.filter((message) => message.from === 'user').map((message) => message.text)
   const choices = npc
     ? suggestedChoices(npc.id, {
@@ -103,8 +105,11 @@ export default function ChatPage() {
         turn: asked.length,
         offset: choiceOffset,
         asked,
+        inventory, difficulty,
+        completedTaskIds: Object.entries(taskStates).filter(([, state]) => state.status === 'completed').map(([id]) => id),
       })
     : []
+  const activityQuestions = activities.filter((a) => a.spotId === currentSpotId && a.npcId === npcId && a.hintQuestion && !a.npcHintObtained && a.progress.status !== 'completed').map((a) => a.hintQuestion!).filter((text) => !asked.includes(text))
   const hasChoices = choices.length > 0
 
   useEffect(() => {
@@ -528,7 +533,7 @@ export default function ChatPage() {
                               <button
                                 key={eid}
                                 type="button"
-                                onClick={() => setEvidenceId(eid)}
+                                onClick={() => setEvidenceSelection({ messageId: m.id, id: eid })}
                                 className="min-h-11 rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-5 text-inkgreen transition-colors hover:border-inkgreen focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar"
                               >
                                 证据 · {ev.title}
@@ -585,6 +590,7 @@ export default function ChatPage() {
           {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
           <div className="shrink-0 border-t border-line bg-surface p-3 sm:p-4">
             <div className="flex flex-col gap-2">
+              {activityQuestions.map((question) => <button key={question} type="button" disabled={thinking || busy} className="chat-quick-question min-h-11 rounded-md border border-inkgreen p-3 text-left text-sm leading-7" onClick={() => void send(question)}>可选探索：{question}</button>)}
               {choices.map((c) => (
                 <button
                   key={c}
@@ -668,7 +674,7 @@ export default function ChatPage() {
       {/* 证据详情抽屉 */}
       <Drawer
         open={!!evidence}
-        onClose={() => setEvidenceId(null)}
+        onClose={() => setEvidenceSelection(null)}
         title={evidence ? '证据来源' : ''}
       >
         {evidence ? (
@@ -681,7 +687,7 @@ export default function ChatPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
-              <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} />
+              <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} isDemo={evidence.is_demo} isFictional={evidence.is_fictional ?? evidence.type === 'fiction'} citationCurrent={evidence.citation_current} humanReviewVerified={evidence.human_review_verified} />
               <p className="mt-2 text-xs text-bluegray">
                 审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
               </p>

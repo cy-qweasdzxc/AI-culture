@@ -34,10 +34,15 @@ body {
   font-family: 'Noto Sans SC', 'Source Han Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 h1,
 h2,
-h3 {
+h3,
+h4 {
+  min-width: 0;
+  max-width: 100%;
   text-wrap: balance;
 }
 p {
@@ -170,7 +175,8 @@ main:focus {
   border-radius: 12px;
   background: var(--inkgreen-deep);
 }
-.home-hero-scene > img {
+.home-hero-scene > img,
+.home-hero-scene > .image-placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -234,7 +240,8 @@ main:focus {
   border-radius: 8px;
   background: var(--paper-deep);
 }
-.destination-image img {
+.destination-image img,
+.destination-image .image-placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -437,4 +444,15 @@ main:focus {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4rem;
+  background: var(--paper-deep);
+  color: var(--bluegray);
+  font-size: 0.75rem;
+  text-align: center;
 }

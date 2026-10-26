@@ -56,8 +56,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
+async function retryGet<T>(path: string): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await request<T>(path)
+    } catch (error) {
+      if (
+        attempt >= 2 ||
+        !(error instanceof ApiError) ||
+        error.code !== 'NETWORK_ERROR'
+      ) throw error
+      await new Promise((resolve) => window.setTimeout(resolve, attempt === 0 ? 200 : 500))
+    }
+  }
+}
+
 export const api = {
-  get: <T>(path: string) => request<T>(path),
+  get: <T>(path: string) => retryGet<T>(path),
   post: <T>(path: string, data?: unknown) =>
     request<T>(path, { method: 'POST', body: JSON.stringify(data ?? {}) }),
   patch: <T>(path: string, data: unknown) =>
@@ -110,10 +125,8 @@ export async function streamSceneChat(
         response.status,
       )
     }
-    if (!response.headers.get('content-type')?.includes('text/event-stream') || !response.body)
+    if (!response.headers.get('content-type')?.includes('text/event-stream'))
       throw new ApiError('STREAM_INVALID', '对话连接格式异常，请重试。', response.status)
-    reader = response.body.getReader()
-    const decoder = new TextDecoder()
     let buffer = ''
     let result: SceneChatReply | undefined
     const consume = (frame: string) => {
@@ -157,9 +170,8 @@ export async function streamSceneChat(
       }
       onEvent({ type: name, data: value } as SceneStreamEvent)
     }
-    while (!result) {
-      const chunk = await reader.read()
-      buffer += decoder.decode(chunk.value, { stream: !chunk.done })
+    const append = (text: string) => {
+      buffer += text
       if (buffer.length > 8 * 1024 * 1024)
         throw new ApiError('STREAM_TOO_LARGE', '对话内容过长，请重新同步旅程。', 0)
       let separator = /\r?\n\r?\n/.exec(buffer)
@@ -168,11 +180,21 @@ export async function streamSceneChat(
         buffer = buffer.slice(separator.index + separator[0].length)
         separator = /\r?\n\r?\n/.exec(buffer)
       }
-      if (chunk.done) {
-        if (!result && buffer.trim()) consume(buffer)
-        break
-      }
     }
+    // Some embedded browsers expose fetch without a readable response stream.
+    // Read the same POST response once; never send a second scene turn.
+    if (response.body?.getReader && typeof TextDecoder !== 'undefined') {
+      reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      while (!result) {
+        const chunk = await reader.read()
+        append(decoder.decode(chunk.value, { stream: !chunk.done }))
+        if (chunk.done) break
+      }
+    } else {
+      append(await response.text())
+    }
+    if (!result && buffer.trim()) consume(buffer)
     if (!result)
       throw new ApiError(
         'STREAM_INTERRUPTED',

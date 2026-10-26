@@ -72,3 +72,17 @@ def test_catalog_seed_retains_staff_edits_and_verified_media_hashes(db):
             assert hashlib.sha256(image.read_bytes()).hexdigest() == asset['sha256']
         assert asset['license_url'].startswith('https://creativecommons.org/')
         assert asset['author'] and asset['source_url'].startswith('https://commons.wikimedia.org/')
+
+
+def test_place_availability_tracks_city_and_route_status(client, db):
+    from app.models import City, Route
+    city = db.get(City, "suzhou")
+    city.status = "planned"
+    db.commit()
+    rows = client.get("/api/cities/suzhou/places").json()["items"]
+    assert all(row["status"] != "open" for row in rows)
+    city.status = "open"
+    db.get(Route, "suzhou-classic").status = "building"
+    db.commit()
+    rows = client.get("/api/cities/suzhou/places").json()["items"]
+    assert all(not row["playable"] for row in rows)

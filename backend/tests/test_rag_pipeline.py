@@ -18,6 +18,7 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.models import CulturalKnowledge, DialogueLog
+from app.models.entities import utcnow
 
 CHAT_REPLY = {
     "dialogue": "这座桥的来历在我们点位的资料里有记载。",
@@ -97,7 +98,7 @@ def publish_reviewed(db, *, knowledge_id: str, title: str, content: str, locatio
         id=knowledge_id, story_id="suzhou-pingjiang", location_id=location_id, title=title,
         content=content, content_type="fact", source="合成测试来源（非真实授权）",
         source_url="https://example.invalid/audited-source", license="合成测试授权，非真实凭证",
-        review_status="reviewed", trust_level="human_reviewed", reviewer="合成测试审核员", is_demo=False,
+        review_status="reviewed", trust_level="human_reviewed", reviewer="合成测试审核员", reviewed_at=utcnow(), is_demo=False,
         metadata_json={"min_chapter": 1},
     )
     db.add(knowledge)

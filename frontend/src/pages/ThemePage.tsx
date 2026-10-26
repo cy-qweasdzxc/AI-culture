@@ -1,3 +1,4 @@
+import ResilientImage from '@/components/ResilientImage'
 import { Link } from 'react-router-dom'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import CityExplorer from '@/components/CityExplorer'
@@ -67,7 +68,7 @@ export default function ThemePage() {
         </header>
         <figure className="overflow-hidden rounded-xl bg-paper-deep">
           <div className="h-64 overflow-hidden sm:h-[380px] lg:h-[420px]">
-            <img
+            <ResilientImage
               src="/assets/scenes/pingjiang.webp"
               alt="平江路沿河茶馆、石桥与水巷的场景插画"
               width="1920"
@@ -108,7 +109,7 @@ export default function ThemePage() {
                 <span className="w-5 shrink-0 text-sm tabular-nums text-bluegray">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <img
+                <ResilientImage
                   src={`/assets/scenes/${routeScenes[i]?.image ?? 'pingjiang'}.webp`}
                   alt={`${name}艺术化示意`}
                   loading="lazy"

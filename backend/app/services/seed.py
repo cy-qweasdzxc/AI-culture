@@ -120,6 +120,8 @@ def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool =
     for destination, choice, priority, complete in (("cheng-huai", "hang", 20, True), ("qu-jing", "keep", 20, True), ("wei-jin", "hang", 10, False), ("wei-jin", "keep", 10, False)):
         insert_missing(db, StoryEdge, f"finale--{destination}--{choice}", story_id=story_id, from_node_id="finale", to_node_id=destination, choice_key=choice, priority=priority, conditions={"all_tasks_complete": complete})
     seed_catalog(db)
+    from app.services.activities import seed_items
+    seed_items(db, story_id)
     chunks = _auto_publish_knowledge(db, story_id, new_knowledge_ids) if auto_publish else 0
     db.commit()
     return {"spots": len(raw["spots"]), "tasks": len(raw["tasks"]), "knowledge": len(raw["knowledge"]), "chunks": chunks}

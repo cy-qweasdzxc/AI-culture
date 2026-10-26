@@ -29,7 +29,8 @@ def update_profile(db: Session, journey: UserStoryState, audience: str, difficul
     previous = profile(journey)
     selected = validate_profile(audience, difficulty or previous["difficulty"])
     attempted = db.scalar(select(UserTaskState).where(UserTaskState.journey_id == journey.id, UserTaskState.attempts > 0).limit(1))
-    if attempted and previous["difficulty"] != selected["difficulty"]:
+    optional_attempted = any(s.get("attempts", 0) > 0 for s in journey.state_data.get("activities", {}).values())
+    if (attempted or optional_attempted) and previous["difficulty"] != selected["difficulty"]:
         raise DomainError("DIFFICULTY_LOCKED", "开始答题后难度固定，避免重复领取奖励；可在新旅程选择其他难度。", 409)
     data = copy.deepcopy(journey.state_data)
     data["profile"] = selected
