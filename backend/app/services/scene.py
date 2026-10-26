@@ -13,7 +13,7 @@ from app.ai.agents.scene import SCENE_PROMPT_VERSION, Narration
 from app.ai.llm.providers import ChatProvider, EmbeddingProvider, ProviderError
 from app.ai.rag.conversation import ConversationTurn, QueryContext, resolve_query
 from app.ai.rag.index import approved_records
-from app.ai.rag.retrieval import Evidence, Hit, is_eligible, retrieve_knowledge
+from app.ai.rag.retrieval import Evidence, Hit, evidence_dto, is_eligible, retrieve_knowledge
 from app.ai.safety.policy import POLICY_VERSION, input_risk, redact_log_text
 from app.ai.settings import AISettings
 from app.core.errors import DomainError
@@ -220,6 +220,11 @@ def prepare_scene(db: Session, journey, anchor_id: str, question: str, participa
 
 
 def retrieve_actor(actor: PreparedActor, question: str, settings: AISettings) -> ActorMaterial:
+    from app.services.activities import hint_text
+    authored = hint_text(actor.id, actor.context["spot"], question)
+    if authored:
+        return ActorMaterial(actor, [], AgentReply(authored, "activity_hint", "calm", [], "rules", "authored-activity-v1", False,
+                                                  "ACTIVITY_HINT", [], "authored_story"))
     """Pure provider/retrieval preparation, safe to run concurrently for every actor."""
     if risk := input_risk(question):
         return ActorMaterial(actor, [], refuse(risk))
@@ -251,6 +256,11 @@ def retrieve_actor(actor: PreparedActor, question: str, settings: AISettings) ->
 def generate_actor(actor: PreparedActor, question: str, direction: dict, settings: AISettings,
                    material: ActorMaterial | None = None, public_messages: list[dict] | None = None) -> ActorOutput:
     material = material or retrieve_actor(actor, question, settings)
+    from app.services.activities import hint_text
+    authored = hint_text(actor.id, actor.context["spot"], question)
+    if authored:
+        return ActorOutput(actor, AgentReply(authored, "activity_hint", "calm", [], "rules", "authored-activity-v1", False,
+                                            "ACTIVITY_HINT", [], "authored_story"), [])
     if not input_risk(question) and is_narrative_guidance(question):
         return ActorOutput(actor, narrative_guidance(actor, direction), [])
     if material.early_reply:
@@ -267,13 +277,9 @@ def generate_actor(actor: PreparedActor, question: str, direction: dict, setting
 
 def actor_message(scene: PreparedScene, output: ActorOutput) -> dict:
     reply, actor = output.reply, output.actor
-    evidence = [{"id": hit.evidence.knowledge_id, "spotId": hit.evidence.spot_id,
-                 "type": hit.evidence.content_type, "title": hit.evidence.title, "content": hit.evidence.content,
-                 "source": hit.evidence.source, "source_url": hit.evidence.source_url,
-                 "review_status": hit.evidence.review_status, "trust_level": hit.evidence.trust_level,
-                 "license": hit.evidence.license}
+    evidence = [evidence_dto(hit.evidence)
                 for hit in output.hits if hit.evidence.knowledge_id in reply.evidence_ids]
-    data_scope = "authored_story" if reply.intent == "narrative_guidance" else "reviewed_only"
+    data_scope = "authored_story" if reply.intent in {"narrative_guidance", "activity_hint"} else "reviewed_only"
     return {"id": actor.log_id + "-npc", "from": "npc", "text": reply.dialogue, "at": scene.at,
             "evidenceIds": reply.evidence_ids, "evidence": evidence, "provider": reply.provider,
             "mock": reply.mock, "dataScope": data_scope, "data_scope": data_scope,
@@ -321,6 +327,13 @@ def commit_scene(db: Session, journey, scene: PreparedScene, direction: dict,
     approved = []
     if clue and grant_item(db, journey, clue, "authored-puzzle:" + scene.anchor_id):
         approved.append({"type": "grant_clue", "id": clue, "origin": "authored_rule"})
+    from app.services.activities import authored_hint
+    hint, hint_actions = authored_hint(db, journey, scene.anchor_id, scene.question)
+    approved.extend(hint_actions)
+    if hint:
+        anchor_message = next((message for message in messages if message.get("npcId") == scene.anchor_id), None)
+        if anchor_message is not None and hint not in anchor_message["text"]:
+            anchor_message["text"] += "\n" + hint
     if approved:
         # This confirmation is added only inside the committing transaction. Streamed
         # provisional lines must never claim that inventory has already changed.
@@ -353,7 +366,7 @@ def commit_scene(db: Session, journey, scene: PreparedScene, direction: dict,
         if reply.proposed_actions:
             db.add(SafetyLog(id=str(uuid4()), journey_id=journey.id, risk_type="ACTION_REJECTED",
                              reason="模型建议不在当前动作白名单中", rule_version=POLICY_VERSION, result="blocked"))
-        if reply.reason and reply.reason not in {"API_KEY_MISSING", "NARRATIVE_GUIDANCE"} and reply.intent != "clarification":
+        if reply.reason and reply.reason not in {"API_KEY_MISSING", "NARRATIVE_GUIDANCE", "ACTIVITY_HINT"} and reply.intent != "clarification":
             db.add(SafetyLog(id=str(uuid4()), journey_id=journey.id, risk_type=reply.reason,
                              reason="多人对话输入、证据或输出校验拒答", rule_version=POLICY_VERSION, result="refused"))
     evidence = [entry for message in messages for entry in message.get("evidence", [])]

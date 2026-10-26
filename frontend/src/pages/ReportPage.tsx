@@ -128,6 +128,12 @@ export default function ReportPage() {
         </div>
       </section>
 
+      <section className="mt-6 rounded-xl border border-line bg-surface p-5 sm:p-7" aria-labelledby="exploration-report-title">
+        <h2 id="exploration-report-title" className="text-lg font-semibold">可选探索记录</h2>
+        <p className="mt-2 text-sm leading-7">可选探索 {report.optionalCompletedCount ?? 0}/{report.optionalTotalCount ?? 0} · 不影响主线结局</p>
+        <ProgressBar value={report.optionalScore ?? 0} max={report.optionalMaxScore ?? 0} label={`探索积分 ${report.optionalScore ?? 0}/${report.optionalMaxScore ?? 0}`} />
+        <p className="mt-3 text-sm leading-7">体验总分 {report.totalScore ?? score}/{report.totalMaxScore ?? maxScore}（主线知识分与探索积分合计，不代表已核验的学习成效）</p>
+      </section>
       <div className="mt-9 grid gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
         {/* 知识得分与图鉴 */}
         <section>

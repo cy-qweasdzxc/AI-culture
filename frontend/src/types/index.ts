@@ -84,6 +84,12 @@ export interface Npc {
 
 /** 证据条目（RAG 检索单元的 Mock；阶段三起由后端审核库提供） */
 export interface KnowledgeEvidence {
+  human_review_verified?: boolean
+  is_demo?: boolean
+  is_fictional?: boolean
+  version?: number
+  reviewed_at?: string | null
+  citation_current?: boolean
   trust_level?: string
   license?: string
   id: string
@@ -99,6 +105,8 @@ export interface KnowledgeEvidence {
 }
 
 export interface CodexEntry {
+  humanReviewVerified?: boolean
+  isFictional?: boolean
   trustLevel?: string
   license?: string
   id: string
@@ -227,6 +235,23 @@ export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' |
   explanation?: string
 }
 
+export interface ExplorationCard { id: string; label: string }
+export interface ActivityProgress {
+  status: 'available' | 'completed'
+  attempts: number
+  score: number
+  answer?: string[] | Record<string, string> | { selected: string[]; supports: Record<string, string> }
+}
+export interface ExplorationActivity {
+  id: string; spotId: string; title: string; mechanism: 'ordering' | 'matching' | 'evidence'
+  contentKind: 'fiction' | 'synthetic' | 'image_observation'; publication: 'demo'
+  version: number; briefing: string; readingGuide: string; sourceLabel: string
+  difficulty: DifficultyLevel; audienceMode: AudienceMode; score: number
+  items: ExplorationCard[]; targets: ExplorationCard[]; evidence: ExplorationCard[]; statements: ExplorationCard[]
+  hint: string; photo: boolean; needsEvidenceLinks: boolean; needsNpcHint: boolean; npcHintObtained: boolean
+  npcId?: string; hintQuestion?: string; progress: ActivityProgress; explanation?: string
+}
+
 export interface JourneySnapshot {
   audienceMode?: AudienceMode
   difficulty?: DifficultyLevel
@@ -241,6 +266,7 @@ export interface JourneySnapshot {
   state: JourneyState
   currentSpotId: string | null
   spotStatus: Record<string, SpotStatus>
+  activityStates?: Record<string, ActivityProgress>
   taskStates: Record<string, TaskState>
   inventory: string[]
   unlockedCodex: string[]
@@ -255,6 +281,12 @@ export interface JourneySnapshot {
 }
 
 export interface JourneyReport {
+  optionalScore?: number
+  optionalMaxScore?: number
+  optionalCompletedCount?: number
+  optionalTotalCount?: number
+  totalScore?: number
+  totalMaxScore?: number
   completedTaskCount: number
   totalTaskCount: number
   completedSpotCount: number

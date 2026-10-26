@@ -6,7 +6,7 @@ import { safeSourceUrl } from '@/utils/sourceUrl'
 
 type Status = 'open' | 'demo' | 'building' | 'planned'
 interface City { id: string; name: string; status: Status; theme: string }
-interface Place { id: string; name: string; status: Status; intro?: string; note?: string; source_url?: string; coordinate_status?: string; source_checked_at?: string }
+interface Place { playable?: boolean; intro_is_demo?: boolean; id: string; name: string; status: Status; intro?: string; note?: string; source_url?: string; coordinate_status?: string; source_checked_at?: string }
 interface Route { id: string; name: string; status: Status; playable: boolean; note?: string; stops: {id:string}[] }
 interface Recommendation { route_id:string; name:string; preview_only:boolean; reasons:string[]; estimated_visit_minutes:number|null; walking_distance_m:number|null; stop_ids:string[] }
 const statusLabels:Record<Status,string> = {open:'已开放', demo:'片段预览', building:'建设中', planned:'规划中'}
@@ -71,8 +71,9 @@ export default function CityExplorer() {
       <summary className="min-h-11 cursor-pointer font-semibold leading-[44px]">地点与可选支线预览</summary>
       <div className="grid gap-4 pt-3 sm:grid-cols-2 lg:grid-cols-3">
         {places.map((place) => <article key={place.id} className="min-w-0 border-t border-line pt-3">
-          <h3 className="font-semibold">{place.name}</h3><p className="mt-1 text-xs text-bluegray">{statusLabels[place.status]} · {place.coordinate_status === 'approximate_demo' ? '示意坐标，入口未核验' : '开放安排待确认'}</p>
+          <h3 className="font-semibold">{place.name}</h3><p className="mt-1 text-xs text-bluegray">{place.playable ? '主线可游玩' : `资料预览 · ${statusLabels[place.status]}`} · {place.coordinate_status === 'approximate_demo' ? '近似坐标，入口未核验' : place.coordinate_status === 'verified' ? '坐标已核验，非入口核验' : '开放安排待确认'}</p>
           <p className="mt-2 text-sm leading-7">{place.intro ?? place.note ?? '详情可在主线解锁后查看。'}</p>
+          {place.intro && <p className="mt-1 text-xs leading-6 text-bluegray">{place.intro_is_demo ? '演示简介 · 未经人工事实核验' : '来源候选介绍 · 未经人工事实核验'}</p>}
           {safeSourceUrl(place.source_url) && <a className="inline-link mt-2 inline-flex min-h-11 items-center text-xs" href={safeSourceUrl(place.source_url)} target="_blank" rel="noreferrer">原始资料来源</a>}
           {place.source_checked_at && <p className="text-xs leading-6 text-bluegray">来源检查：{place.source_checked_at}，不代表当天开放核验。</p>}
         </article>)}

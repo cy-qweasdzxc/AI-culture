@@ -10,7 +10,7 @@ from app.ai.agents.npc import PROMPT_VERSION, AgentReply, refuse, respond
 from app.ai.llm.providers import ChatProvider, EmbeddingProvider, ProviderError
 from app.ai.rag.conversation import ConversationTurn, resolve_query
 from app.ai.rag.index import approved_records
-from app.ai.rag.retrieval import is_eligible, retrieve_knowledge
+from app.ai.rag.retrieval import evidence_dto, is_eligible, retrieve_knowledge
 from app.ai.safety.policy import POLICY_VERSION, input_risk, redact_log_text
 from app.ai.settings import AISettings
 from app.core.database import get_db
@@ -93,7 +93,9 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
         # Never embed injection text or send it to a model.
         vector = None
         retrieval_reason = None
-        can_retrieve = query.mode not in {"clarification", "unavailable"} and not input_risk(question)
+        from app.services.activities import hint_text
+        authored = hint_text(body.npc_id, context["spot"], question)
+        can_retrieve = not authored and query.mode not in {"clarification", "unavailable"} and not input_risk(question)
         if can_retrieve and settings.embedding_provider != "none" and retrieval_records:
             try:
                 vector = EmbeddingProvider(settings).embed([query.query])[0]
@@ -102,7 +104,10 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
         hits = []
         if can_retrieve:
             hits = retrieve_knowledge(query.query, retrieval_records, {context["spot"]}, context["chapter"], vector, settings.embedding_model)
-        if query.clarification:
+        if authored:
+            reply = AgentReply(authored, "activity_hint", "calm", [], "rules", "authored-activity-v1", False,
+                               "ACTIVITY_HINT", [], "authored_story")
+        elif query.clarification:
             reply = AgentReply(query.clarification, "clarification", "calm", [], "none", "none", False,
                                "CONTEXT_AMBIGUOUS" if query.knowledge_ids else "CONTEXT_REQUIRED", [])
         elif query.mode == "unavailable":
@@ -136,25 +141,24 @@ def chat(body: ChatBody, db: Session = Depends(get_db), user: User = Depends(get
             db.add(SafetyLog(id=str(uuid4()), journey_id=j.id, risk_type="ACTION_REJECTED",
                              reason="模型建议不在当前动作白名单中", rule_version=POLICY_VERSION, result="blocked"))
         message_id = str(uuid4())
-        evidence = [{"id": h.evidence.knowledge_id, "spotId": h.evidence.spot_id,
-                     "type": h.evidence.content_type, "title": h.evidence.title, "content": h.evidence.content,
-                     "source": h.evidence.source, "source_url": h.evidence.source_url,
-                     "review_status": h.evidence.review_status, "trust_level": h.evidence.trust_level,
-                     "license": h.evidence.license} for h in hits if h.evidence.knowledge_id in reply.evidence_ids]
-        dialogue = reply.dialogue
+        evidence = [evidence_dto(h.evidence) for h in hits if h.evidence.knowledge_id in reply.evidence_ids]
+        from app.services.activities import authored_hint
+        hint, hint_actions = authored_hint(db, j, npc.id, question)
+        approved.extend(hint_actions)
+        dialogue = reply.dialogue + ("\n" + hint if hint and hint not in reply.dialogue else "")
         if approved:
             dialogue += "\n（已发放演示剧情线索；该道具不代表文化资料完成了人工事实核验。）"
         result = asdict(reply)
         result.pop("proposed_actions")
         result.update(dialogue=dialogue, approved_actions=approved, evidence=evidence,
-                      data_scope="reviewed_only", message_id=message_id + "-npc",
+                      data_scope="authored_story" if reply.intent == "activity_hint" else "reviewed_only", message_id=message_id + "-npc",
                       retrieval_mode="hybrid" if vector else "keyword", retrieval_reason=retrieval_reason,
                       context_spot_id=j.current_location_id,
                       query_context={"mode": query.mode, "knowledge_ids": list(query.knowledge_ids)})
         db.add(DialogueLog(id=message_id, journey_id=j.id, npc_id=npc.id, user_input=redact_log_text(question),
                            response=result, evidence_ids=reply.evidence_ids, approved_actions=approved,
                            provider=reply.provider, model=reply.model, prompt_version=PROMPT_VERSION))
-        if reply.reason and reply.reason != "API_KEY_MISSING" and reply.intent != "clarification":
+        if reply.reason and reply.reason != "API_KEY_MISSING" and reply.intent not in {"clarification", "activity_hint"}:
             db.add(SafetyLog(id=str(uuid4()), journey_id=j.id, risk_type=reply.reason,
                              reason="输入、证据或输出校验拒答", rule_version=POLICY_VERSION, result="refused"))
         if j.state in {"AT_SPOT", "DIALOGUE", "TASK_ACTIVE"}:

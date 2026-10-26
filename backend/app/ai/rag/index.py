@@ -1,6 +1,7 @@
 """Versioned SQL chunks; optional pgvector exact storage, no unreviewed publication."""
 
 import json
+from urllib.parse import urlparse
 
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
@@ -12,11 +13,26 @@ from app.core.errors import DomainError
 from app.models import CulturalKnowledge, KnowledgeChunk
 
 
+def reviewable_source(knowledge: CulturalKnowledge) -> bool:
+    try:
+        source = urlparse(knowledge.source_url)
+        valid_url = bool(source.scheme in {"http", "https"} and source.hostname and source.port != 0
+                         and source.username is None and source.password is None
+                         and not any(character.isspace() for character in knowledge.source_url))
+    except ValueError:
+        valid_url = False
+    return (valid_url and len(knowledge.source.strip()) >= 2 and len(knowledge.license.strip()) >= 2
+            and not any(marker in knowledge.source + knowledge.license
+                        for marker in ("待补充", "待正式审核", "不明", "未授权")))
+
+
 def has_human_review(knowledge: CulturalKnowledge) -> bool:
     reviewer = (knowledge.reviewer or "").strip()
     return (knowledge.review_status == "reviewed" and not knowledge.is_demo
             and knowledge.trust_level == "human_reviewed" and len(reviewer) >= 2
-            and reviewer != "system-auto-publish")
+            and reviewer != "system-auto-publish" and knowledge.reviewed_at is not None
+            and reviewable_source(knowledge)
+            and not any(marker in reviewer for marker in ("待确认", "待补充")))
 
 
 def rebuild_knowledge(db: Session, knowledge: CulturalKnowledge, settings: AISettings) -> int:
@@ -49,6 +65,7 @@ def approved_records(db: Session, story_id: str) -> list[Evidence]:
         CulturalKnowledge.story_id == story_id,
         CulturalKnowledge.review_status == "reviewed", CulturalKnowledge.is_demo.is_(False),
         CulturalKnowledge.trust_level == "human_reviewed",
+        CulturalKnowledge.reviewed_at.is_not(None),
         CulturalKnowledge.reviewer.is_not(None), CulturalKnowledge.reviewer != "system-auto-publish",
         func.length(func.trim(CulturalKnowledge.reviewer)) >= 2,
         KnowledgeChunk.knowledge_version == CulturalKnowledge.version,
@@ -59,4 +76,5 @@ def approved_records(db: Session, story_id: str) -> list[Evidence]:
         source_url=k.source_url, license=k.license, review_status=k.review_status, trust_level=k.trust_level,
         chapter=int(k.metadata_json.get("min_chapter", 1)), embedding=chunk.embedding,
         embedding_model=chunk.embedding_model, conflicted=bool(k.metadata_json.get("conflicted", False)),
-    ) for chunk, k in rows]
+        knowledge_version=k.version, reviewed_at=k.reviewed_at.isoformat(), is_demo=k.is_demo,
+    ) for chunk, k in rows if has_human_review(k)]

@@ -2,7 +2,6 @@ import hmac
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Literal
-from urllib.parse import urlparse
 from uuid import uuid4
 
 import jwt
@@ -13,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import set_committed_value
 
 from app.ai.llm.providers import EmbeddingProvider, ProviderError
-from app.ai.rag.index import approved_records, has_human_review, rebuild_knowledge
+from app.ai.rag.index import approved_records, has_human_review, rebuild_knowledge, reviewable_source
 from app.ai.rag.retrieval import RETRIEVAL_CONFIG, clean_text, fingerprint, retrieve_knowledge
 from app.ai.safety.policy import redact_log_text
 from app.ai.settings import AISettings
@@ -35,6 +34,7 @@ from app.models import (
     UserStoryState,
     utcnow,
 )
+from app.services.knowledge import provenance
 
 router = APIRouter(prefix="/api/admin", tags=["administration"])
 COOKIE = "citystory_admin"
@@ -109,7 +109,7 @@ def knowledge_dto(k: CulturalKnowledge) -> dict:
             "source_url": k.source_url, "license": k.license, "review_status": k.review_status,
             "reviewer": k.reviewer, "reviewed_at": k.reviewed_at.isoformat() if k.reviewed_at else None,
             "version": k.version, "is_demo": k.is_demo, "trust_level": k.trust_level,
-            "tags": k.tags, "metadata": k.metadata_json}
+            "tags": k.tags, "metadata": k.metadata_json, **provenance(k)}
 
 
 class KnowledgeBody(StrictBody):
@@ -215,16 +215,7 @@ def review_knowledge(knowledge_id: str, body: ReviewBody, db: Session = Depends(
     if k.version != body.version:
         raise DomainError("CONTENT_CONFLICT", "资料版本已更新。", 409)
     if body.status == "reviewed":
-        try:
-            source = urlparse(k.source_url)
-            source_valid = bool(source.scheme in {"http", "https"} and source.hostname
-                                and source.port != 0 and source.username is None and source.password is None
-                                and not any(character.isspace() for character in k.source_url))
-        except ValueError:
-            source_valid = False
-        if not body.confirm_sources or not source_valid or any(
-            marker in k.source + k.license for marker in ["待补充", "待正式审核", "不明", "未授权"]
-        ) or len(k.source.strip()) < 2 or len(k.license.strip()) < 2:
+        if not body.confirm_sources or not reviewable_source(k):
             raise DomainError("SOURCE_REVIEW_REQUIRED", "审核人员须核对来源URL和授权说明，并明确确认。", 409)
     claim_content_version(db, k, body.version)
     if body.status == "reviewed":

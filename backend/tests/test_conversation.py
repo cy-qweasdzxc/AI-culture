@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.ai.rag.index import rebuild_knowledge
 from app.ai.settings import AISettings
 from app.models import CulturalKnowledge, DialogueLog
+from app.models.entities import utcnow
 
 
 @pytest.fixture
@@ -17,7 +18,7 @@ def conversation(client, db, started):
             id=key, story_id="suzhou-pingjiang", location_id=location,
             title=title, content=content, content_type="fiction", source="自有合成测试夹具",
             source_url="https://example.invalid/conversation", license="仅供合成测试",
-            review_status="reviewed", trust_level="human_reviewed", reviewer="合成夹具审核员", is_demo=False,
+            review_status="reviewed", trust_level="human_reviewed", reviewer="合成夹具审核员", reviewed_at=utcnow(), is_demo=False,
         )
         db.add(knowledge)
         db.flush()

@@ -16,6 +16,7 @@ from app.core.errors import DomainError
 from app.models import (
     ActionReceipt,
     Character,
+    CulturalKnowledge,
     DialogueLog,
     Item,
     Story,
@@ -31,6 +32,7 @@ from app.models import (
 )
 from app.repositories import catalog
 from app.services.experience import profile, task_definition, text_answer, validate_profile
+from app.services.knowledge import current_citation, refresh_response
 
 
 def timestamp_ms(value: datetime | None) -> int | None:
@@ -67,22 +69,35 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     messages: dict[str, list[dict[str, Any]]] = {}
     audit = []
     evidence: dict[str, dict[str, Any]] = {}
+    knowledge_cache: dict[str, CulturalKnowledge | None] = {}
+
+    def refresh(entries):
+        result = []
+        for entry in entries:
+            if entry["id"] not in knowledge_cache:
+                knowledge_cache[entry["id"]] = db.get(CulturalKnowledge, entry["id"])
+            result.append(current_citation(entry, knowledge_cache[entry["id"]]))
+        return result
+
     for log in db.scalars(select(DialogueLog).where(DialogueLog.journey_id == journey.id).order_by(DialogueLog.created_at, DialogueLog.id)):
         at = timestamp_ms(log.created_at)
         if log.feedback:
             audit.append({"at": at, "npcId": log.npc_id, "messageId": f"{log.id}-npc", "reason": log.feedback})
-        for entry in log.response.get("evidence", []):
+        cited = refresh(log.response.get("evidence", []))
+        for entry in cited:
             evidence[entry["id"]] = entry
         if log.response.get("scene_hidden"):
             continue
         thread = messages.setdefault(log.response.get("scene_anchor", log.npc_id), [])
         if log.response.get("scene_envelope"):
             thread.append(log.response["scene_user_message"])
-            thread.extend(log.response.get("scene_messages", []))
+            thread.extend({**message, "evidence": refresh(message["evidence"])}
+                          if "evidence" in message else dict(message)
+                          for message in log.response.get("scene_messages", []))
             continue
         thread.extend([
             {"id": f"{log.id}-user", "from": "user", "text": log.user_input, "at": at},
-            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": log.response.get("evidence", []), "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
+            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": cited, "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
         ])
     data = journey.state_data
     return {
@@ -99,6 +114,7 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
         "state": journey.state,
         "currentSpotId": journey.current_location_id,
         "spotStatus": data.get("spotStatus", {}),
+        "activityStates": copy.deepcopy(data.get("activities", {})),
         "taskStates": {t.task_id: {"status": t.status, "attempts": t.attempts, "score": t.score} for t in task_states},
         "inventory": inventory,
         "unlockedCodex": collections,
@@ -127,7 +143,7 @@ def validate_journey_action(
                 raise DomainError("IDEMPOTENCY_CONFLICT", "同一 request_id 不能用于不同的操作。", 409)
             # Return the recorded result, but refresh state so delayed retries cannot rewind the client.
             db.refresh(journey)
-            return {**receipt.response, "snapshot": snapshot(db, journey), "replayed": True}
+            return {**refresh_response(db, receipt.response), "snapshot": snapshot(db, journey), "replayed": True}
     if journey.state == "COMPLETED" and not allow_completed:
         raise DomainError("JOURNEY_COMPLETED", "旅程已经结束，请查看结局或重置旅程。", 409)
     if journey.state_version != expected_version:
@@ -264,7 +280,8 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
     if status == "discovered":
         source = "journey-start" if spot.route_order == 1 else f"spot-{spots[spot.route_order - 2].id}"
         require_edge(db, journey, source, target)
-    elif status != "completed" and journey.current_node_id != target:
+    # A visited unfinished stop can be revisited after exploring a completed stop.
+    elif status not in {"current", "completed"} and journey.current_node_id != target:
         raise DomainError("TRANSITION_INVALID", "当前剧情节点与请求点位不匹配。", 409)
     data = copy.deepcopy(journey.state_data)
     if status != "completed":
@@ -375,6 +392,7 @@ def reset_journey(db: Session, journey: UserStoryState, expected_version: int) -
 
 
 def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
+    from app.services.activities import activity_report
     state = snapshot(db, journey)
     tasks = catalog.tasks(db, journey.story_id)
     spots = catalog.locations(db, journey.story_id)
@@ -382,4 +400,4 @@ def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
     by_spot = [{"spotId": spot.id, "completed": sum(progress[t.id]["status"] == "completed" for t in tasks if t.location_id == spot.id), "total": sum(t.location_id == spot.id for t in tasks), "score": sum(progress[t.id]["score"] for t in tasks if t.location_id == spot.id)} for spot in spots]
     codex_total = len(list(db.scalars(select(Item).where(Item.story_id == journey.story_id, Item.kind == "codex"))))
     end = state["finishedAt"] or timestamp_ms(utcnow())
-    return {"knowledgeScore": sum(t["score"] for t in progress.values()), "audienceMode": state["audienceMode"], "difficulty": state["difficulty"], "routeId": state["routeId"], "storyRoleId": journey.role_id, "visitMode": journey.mode, "maxScore": sum(task_definition(t, journey)[0]["knowledgeScore"] for t in tasks), "completedTaskCount": sum(t["status"] == "completed" for t in progress.values()), "totalTaskCount": len(tasks), "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()), "totalSpotCount": len(spots), "unlockedCodexCount": len(state["unlockedCodex"]), "totalCodexCount": codex_total, "startedAt": state["startedAt"], "finishedAt": state["finishedAt"], "durationMinutes": round((end - state["startedAt"]) / 60000, 1), "roleId": journey.role_id, "endingId": journey.ending_id, "events": state["events"], "bySpot": by_spot, "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]} for t in tasks if progress[t.id]["attempts"] > 1], "isDemo": True, "metricSource": "persisted_journey"}
+    return {**activity_report(journey), "totalScore": sum(t["score"] for t in progress.values()) + activity_report(journey)["optionalScore"], "totalMaxScore": sum(task_definition(t, journey)[0]["knowledgeScore"] for t in tasks) + activity_report(journey)["optionalMaxScore"], "knowledgeScore": sum(t["score"] for t in progress.values()), "audienceMode": state["audienceMode"], "difficulty": state["difficulty"], "routeId": state["routeId"], "storyRoleId": journey.role_id, "visitMode": journey.mode, "maxScore": sum(task_definition(t, journey)[0]["knowledgeScore"] for t in tasks), "completedTaskCount": sum(t["status"] == "completed" for t in progress.values()), "totalTaskCount": len(tasks), "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()), "totalSpotCount": len(spots), "unlockedCodexCount": len(state["unlockedCodex"]), "totalCodexCount": codex_total, "startedAt": state["startedAt"], "finishedAt": state["finishedAt"], "durationMinutes": round((end - state["startedAt"]) / 60000, 1), "roleId": journey.role_id, "endingId": journey.ending_id, "events": state["events"], "bySpot": by_spot, "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]} for t in tasks if progress[t.id]["attempts"] > 1], "isDemo": True, "metricSource": "persisted_journey"}

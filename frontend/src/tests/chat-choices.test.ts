@@ -68,3 +68,18 @@ describe('推荐问题', () => {
     expect(suggestedChoices('unknown', base)).toEqual([])
   })
 })
+
+
+it('任务完成与线索到手后不再推荐对应主线推进题', () => {
+  const done = suggestedChoices('zhou-bo', { ...base, completedTaskIds: ['task-pingjiangtu'] })
+  expect(done).not.toContain('《平江图》是什么？')
+  const clue = suggestedChoices('zhou-bo', { ...base, inventory: ['clue-shaoding'] })
+  expect(clue).not.toContain('绍定二年是哪一年？')
+})
+it('问题池问尽后不循环推荐旧问题', () => {
+  const seen = new Set<string>()
+  for (let turn = 0; turn < 20; turn++)
+    suggestedChoices('zhou-bo', { ...base, turn, asked: [...seen] }).forEach((text) => seen.add(text))
+  expect(seen.size).toBeGreaterThan(3)
+  expect(suggestedChoices('zhou-bo', { ...base, asked: [...seen] })).toEqual([])
+})

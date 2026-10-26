@@ -1,140 +1,50 @@
 import type { Spot, SpotStatus } from '@/types'
-import { cn } from '@/utils/cn'
-
-/**
- * 示意地图（无密钥环境下的完整可用降级方案）：
- * 以写意水巷路线呈现 5 个点位，节点可点击，状态三通道（形状+文字+色彩）。
- */
 
 const NODE_POS = [
-  { x: 90, y: 420 },
-  { x: 480, y: 330 },
-  { x: 300, y: 230 },
-  { x: 210, y: 120 },
-  { x: 430, y: 60 },
+  { x: 100, y: 420 }, { x: 460, y: 330 }, { x: 300, y: 230 },
+  { x: 210, y: 120 }, { x: 430, y: 70 },
 ]
-
-const statusStyle: Record<SpotStatus, { ring: string; fill: string; text: string; label: string }> =
-  {
-    undiscovered: {
-      ring: 'stroke-[#8b8b8b]',
-      fill: 'fill-[#e5e2da]',
-      text: 'fill-[#6b6b6b]',
-      label: '未发现',
-    },
-    discovered: {
-      ring: 'stroke-bronze',
-      fill: 'fill-surface',
-      text: 'fill-bronze',
-      label: '已发现',
-    },
-    current: {
-      ring: 'stroke-cinnabar',
-      fill: 'fill-cinnabar',
-      text: 'fill-white',
-      label: '当前点位',
-    },
-    completed: {
-      ring: 'stroke-inkgreen',
-      fill: 'fill-inkgreen',
-      text: 'fill-white',
-      label: '已完成',
-    },
-  }
-
-interface SchematicMapProps {
+const statuses: Record<SpotStatus, { label: string; circle: string }> = {
+  undiscovered: { label: '未发现', circle: 'border-bluegray bg-paper-deep text-bluegray' },
+  discovered: { label: '已发现', circle: 'border-bronze bg-surface text-bronze' },
+  current: { label: '当前点位', circle: 'border-cinnabar bg-cinnabar text-white' },
+  completed: { label: '已完成', circle: 'border-inkgreen bg-inkgreen text-white' },
+}
+interface Props {
   spots: Spot[]
   spotStatus: Record<string, SpotStatus>
   reason?: string
   onSpotClick?: (spotId: string) => void
 }
 
-export default function SchematicMap({
-  spots,
-  spotStatus,
-  reason,
-  onSpotClick,
-}: SchematicMapProps) {
-  const path = NODE_POS.slice(0, spots.length)
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-    .join(' ')
-  return (
-    <div className="flex h-full flex-col">
-      {reason ? (
-        <p className="border-b border-line bg-paper-deep px-3 py-1.5 text-xs text-bluegray">
-          当前显示路线示意图，点击已发现的点位继续探索。
-        </p>
-      ) : null}
-      <svg
-        viewBox="0 0 560 470"
-        className="min-h-0 w-full flex-1"
-        role="group"
-        aria-label="文化路线示意图"
-      >
-        {/* 水巷 */}
-        <path
-          d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60"
-          fill="none"
-          stroke="oklch(0.75 0.05 230)"
-          strokeWidth="22"
-          strokeLinecap="round"
-          opacity="0.35"
-        />
-        <path
-          d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60"
-          fill="none"
-          stroke="oklch(0.65 0.05 230)"
-          strokeWidth="2"
-          strokeDasharray="1 8"
-          strokeLinecap="round"
-        />
-        {/* 路线 */}
-        <path
-          d={path}
-          fill="none"
-          stroke="var(--cinnabar)"
-          strokeWidth="2.5"
-          strokeDasharray="6 8"
-          strokeLinecap="round"
-          className="route-line-draw"
-          style={{ strokeDashoffset: 0 }}
-        />
-        {spots.map((s, i) => {
-          const st = spotStatus[s.id] ?? 'undiscovered'
-          const c = statusStyle[st]
-          const p = NODE_POS[i]
-          const clickable = st !== 'undiscovered'
-          return (
-            <g
-              key={s.id}
-              transform={`translate(${p.x}, ${p.y})`}
-              onClick={() => clickable && onSpotClick?.(s.id)}
-              className={cn(clickable && 'cursor-pointer')}
-              role={clickable ? 'button' : undefined}
-              tabIndex={clickable ? 0 : undefined}
-              onKeyDown={(event) => {
-                if (clickable && (event.key === 'Enter' || event.key === ' ')) {
-                  event.preventDefault()
-                  onSpotClick?.(s.id)
-                }
-              }}
-              aria-label={`${s.name}：${c.label}`}
-            >
-              <circle r="40" fill="transparent" />
-              <circle r="20" className={cn(c.fill, c.ring)} strokeWidth="2.5" />
-              <text textAnchor="middle" dy="5" fontSize="13" className={c.text} fontWeight="700">
-                {st === 'completed' ? '✓' : st === 'undiscovered' ? '?' : s.order}
-              </text>
-              <text textAnchor="middle" y="38" fontSize="14" className="fill-ink" fontWeight="600">
-                {s.shortName}
-              </text>
-              <text textAnchor="middle" y="54" fontSize="11" className="fill-bluegray">
-                {c.label}
-              </text>
-            </g>
-          )
-        })}
+/** Schematic positions express story order, never real distances or walking times. */
+export default function SchematicMap({ spots, spotStatus, reason, onSpotClick }: Props) {
+  const positions = spots.map((spot, index) => NODE_POS[spot.order - 1] ?? NODE_POS[index % NODE_POS.length])
+  const path = positions.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  return <div className="flex h-full flex-col">
+    {reason && <p className="shrink-0 border-b border-line bg-paper-deep px-3 py-1.5 text-xs text-bluegray">
+      {reason}。当前显示路线示意图，可通过点位或下方列表继续虚拟游览。
+    </p>}
+    <div className="relative min-h-0 w-full flex-1" role="group" aria-label="文化路线示意图">
+      <svg viewBox="0 0 560 500" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <path d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60" fill="none" stroke="var(--bluegray)" strokeWidth="22" strokeLinecap="round" opacity="0.15" />
+        <path d={path} fill="none" stroke="var(--cinnabar)" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
       </svg>
+      {spots.map((spot, index) => {
+        const status = spotStatus[spot.id] ?? 'undiscovered'
+        const state = statuses[status]
+        const point = positions[index]
+        return <button key={spot.id} type="button" disabled={status === 'undiscovered'}
+          aria-label={`${spot.name}：${state.label}`} onClick={() => onSpotClick?.(spot.id)}
+          className="absolute flex min-h-11 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-md px-1 py-1 text-center disabled:cursor-default"
+          style={{ left: `${point.x / 560 * 100}%`, top: `${point.y / 500 * 100}%` }}>
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${state.circle}`}>
+            {status === 'completed' ? '✓' : status === 'undiscovered' ? '?' : spot.order}
+          </span>
+          <span className="mt-1 max-w-full rounded bg-surface/95 px-1 text-xs font-semibold leading-4 text-ink">{spot.name}</span>
+          <span className="rounded bg-surface/95 px-1 text-[10px] leading-4 text-bluegray">{state.label}</span>
+        </button>
+      })}
     </div>
-  )
+  </div>
 }

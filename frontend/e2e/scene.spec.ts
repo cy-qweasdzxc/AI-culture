@@ -30,11 +30,11 @@ test('导演调度两位已相识角色，旁白串场并在刷新后恢复', as
     'true',
   )
   const openDirector = async () => {
-    if (testInfo.project.name === 'mobile')
+    if ((page.viewportSize()?.width ?? 1440) < 768)
       await page.getByRole('button', { name: /查看导演调度与/ }).click()
   }
   const closeDirector = async () => {
-    if (testInfo.project.name === 'mobile')
+    if ((page.viewportSize()?.width ?? 1440) < 768)
       await page.getByRole('button', { name: '关闭', exact: true }).click()
   }
   await openDirector()

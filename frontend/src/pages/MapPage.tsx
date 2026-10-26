@@ -1,3 +1,4 @@
+import ResilientImage from '@/components/ResilientImage'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MapView from '@/components/MapView'
@@ -75,6 +76,10 @@ export default function MapPage() {
 
   const doLocate = () => {
     if (!selected) return
+    if (!window.isSecureContext) {
+      setFeedback('实地定位需要 HTTPS 安全连接。可以切换为虚拟游览继续体验。')
+      return
+    }
     if (!navigator.geolocation) {
       setFeedback('当前浏览器不支持定位，可切换为虚拟游览模式。')
       return
@@ -172,12 +177,11 @@ export default function MapPage() {
           >
             <div className="order-2 h-[360px] border-t border-line sm:order-1 sm:h-[440px] sm:border-b sm:border-t-0 lg:h-[420px]">
               {mapError ? (
-                <SchematicMap
-                  spots={spots}
-                  spotStatus={spotStatus}
-                  reason={mapError}
-                  onSpotClick={selectSpot}
-                />
+                <div className="flex h-full flex-col">
+                  <div className="min-h-0 flex-1"><SchematicMap spots={spots} spotStatus={spotStatus} reason={mapError} onSpotClick={selectSpot} /></div>
+                  {mapError !== '未配置地图密钥' && <button type="button" className="min-h-11 shrink-0 border-t border-line bg-surface px-3 text-xs text-inkgreen"
+                    onClick={() => setMapError(null)}>重新加载在线地图</button>}
+                </div>
               ) : (
                 <MapView
                   spots={spots}
@@ -194,7 +198,7 @@ export default function MapPage() {
                 <div key={selected.id}>
                   <div className="flex items-start gap-4">
                     {selectedScene ? (
-                      <img
+                      <ResilientImage
                         src={selectedScene.src}
                         alt={`${selected.name}艺术化示意`}
                         className="h-20 w-20 shrink-0 rounded-md object-cover sm:h-24 sm:w-28"

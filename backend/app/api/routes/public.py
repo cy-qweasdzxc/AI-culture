@@ -32,6 +32,7 @@ from app.services.journey import (
     start_journey,
     verify_task,
 )
+from app.services.knowledge import provenance
 from app.services.location import check_location
 from app.services.session import create_or_restore_session, get_current_user
 
@@ -199,10 +200,17 @@ def codex(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
     for entry in db.scalars(select(Item).where(Item.id.in_(state["unlockedCodex"]), Item.kind == "codex")):
         knowledge = db.get(CulturalKnowledge, entry.knowledge_id) if entry.knowledge_id else None
         data = dict(entry.data)
-        if knowledge and knowledge.review_status == "reviewed":
-            # A newly approved version must never label the old demonstration copy as reviewed.
+        if knowledge:
+            # Body and provenance always describe the same stored version, including withdrawal.
             data.update(content=knowledge.content, source=knowledge.source, type=knowledge.content_type, title=knowledge.title, summary=knowledge.content[:120])
-        result.append({**data, "reviewStatus": knowledge.review_status if knowledge else "pending", "isDemo": knowledge.is_demo if knowledge else True, "sourceUrl": knowledge.source_url if knowledge else "", "license": knowledge.license if knowledge else "【待补充】", "trustLevel": knowledge.trust_level if knowledge else "unverified"})
+        meta = provenance(knowledge) if knowledge else {
+            "review_status": "pending", "trust_level": "unverified", "is_demo": True,
+            "is_fictional": data.get("type") == "fiction", "source_url": "", "license": "【待补充】",
+            "version": None, "reviewed_at": None, "human_review_verified": False,
+        }
+        result.append({**data, **meta, "reviewStatus": meta["review_status"], "isDemo": meta["is_demo"],
+                       "sourceUrl": meta["source_url"], "trustLevel": meta["trust_level"],
+                       "isFictional": meta["is_fictional"], "humanReviewVerified": meta["human_review_verified"]})
     total = len(list(db.scalars(select(Item.id).where(Item.story_id == journey.story_id, Item.kind == "codex"))))
     return {"items": result, "total": total}
 

@@ -88,6 +88,21 @@ class Evidence:
     embedding_model: str = ""
     conflicted: bool = False
     trust_level: str = "unverified"
+    knowledge_version: int = 0
+    reviewed_at: str | None = None
+    is_demo: bool = False
+
+
+def evidence_dto(evidence: Evidence) -> dict:
+    """The same factual provenance for single NPCs and multi-agent scenes."""
+    return {"id": evidence.knowledge_id, "spotId": evidence.spot_id,
+            "type": evidence.content_type, "title": evidence.title, "content": evidence.content,
+            "source": evidence.source, "source_url": evidence.source_url, "license": evidence.license,
+            "review_status": evidence.review_status, "trust_level": evidence.trust_level,
+            "is_demo": evidence.is_demo, "is_fictional": evidence.content_type == "fiction",
+            "version": evidence.knowledge_version, "current_version": evidence.knowledge_version,
+            "reviewed_at": evidence.reviewed_at,
+            "human_review_verified": True, "citation_current": True}
 
 
 @dataclass(frozen=True)

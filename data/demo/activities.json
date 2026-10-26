@@ -1,0 +1,1052 @@
+{
+  "schemaVersion": 1,
+  "storyId": "suzhou-pingjiang",
+  "activities": [
+    {
+      "id": "explore-pingjiang-photo",
+      "spotId": "pingjiang",
+      "title": "水巷观察札记",
+      "mechanism": "evidence",
+      "contentKind": "image_observation",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "观察当前平江路照片：选出照片能支持的判断。年代与街区整体历史不在这张照片的证明范围内。",
+      "variants": {
+        "easy": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中有水道、船只和沿水建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "单张照片没有提供建造年代、街区全貌或实时开放信息。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "water",
+              "label": "画面里能看见水道和船只。"
+            },
+            {
+              "id": "date",
+              "label": "可以仅凭照片确定这条街的始建年代。"
+            },
+            {
+              "id": "buildings",
+              "label": "画面里有沿水建筑。"
+            }
+          ],
+          "answer": [
+            "water",
+            "buildings"
+          ],
+          "supports": {
+            "water": "photo",
+            "buildings": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "normal": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中有水道、船只和沿水建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "单张照片没有提供建造年代、街区全貌或实时开放信息。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "water",
+              "label": "画面里能看见水道和船只。"
+            },
+            {
+              "id": "date",
+              "label": "可以仅凭照片确定这条街的始建年代。"
+            },
+            {
+              "id": "buildings",
+              "label": "画面里有沿水建筑。"
+            },
+            {
+              "id": "whole",
+              "label": "照片可以证明整座城市的布局完全相同。"
+            }
+          ],
+          "answer": [
+            "water",
+            "buildings"
+          ],
+          "supports": {
+            "water": "photo",
+            "buildings": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "advanced": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中有水道、船只和沿水建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "单张照片没有提供建造年代、街区全貌或实时开放信息。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "water",
+              "label": "画面里能看见水道和船只。"
+            },
+            {
+              "id": "date",
+              "label": "可以仅凭照片确定这条街的始建年代。"
+            },
+            {
+              "id": "buildings",
+              "label": "画面里有沿水建筑。"
+            },
+            {
+              "id": "whole",
+              "label": "照片可以证明整座城市的布局完全相同。"
+            },
+            {
+              "id": "limits",
+              "label": "这张照片不足以核验当天开放情况。"
+            }
+          ],
+          "answer": [
+            "water",
+            "buildings",
+            "limits"
+          ],
+          "supports": {
+            "water": "photo",
+            "buildings": "photo",
+            "limits": "scope"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        }
+      },
+      "explanation": "你把“看见什么”和“能够证明什么”分开了。照片是观察材料，不是园史审核凭据。",
+      "rewardCodexIds": [
+        "codex-shuangqipan"
+      ],
+      "sourceLabel": "当前景点照片与替代观察说明",
+      "photo": true
+    },
+    {
+      "id": "explore-pingjiang-letter",
+      "spotId": "pingjiang",
+      "title": "周伯的送信顺序",
+      "mechanism": "ordering",
+      "contentKind": "fiction",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "虚构手札规定：取信在看桥之前，看桥在抄录之前，抄录在交信之前，交信在归还灯笼之前。只排列本难度出现的步骤；这不是现实道路导航。",
+      "variants": {
+        "easy": {
+          "items": [
+            {
+              "id": "s2",
+              "label": "抄录"
+            },
+            {
+              "id": "s1",
+              "label": "看桥"
+            },
+            {
+              "id": "s0",
+              "label": "取信"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        },
+        "normal": {
+          "items": [
+            {
+              "id": "s3",
+              "label": "交信"
+            },
+            {
+              "id": "s2",
+              "label": "抄录"
+            },
+            {
+              "id": "s1",
+              "label": "看桥"
+            },
+            {
+              "id": "s0",
+              "label": "取信"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2",
+            "s3"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        },
+        "advanced": {
+          "items": [
+            {
+              "id": "s4",
+              "label": "归还灯笼"
+            },
+            {
+              "id": "s3",
+              "label": "交信"
+            },
+            {
+              "id": "s2",
+              "label": "抄录"
+            },
+            {
+              "id": "s1",
+              "label": "看桥"
+            },
+            {
+              "id": "s0",
+              "label": "取信"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        }
+      },
+      "explanation": "你遵循了手札中的先后约束。这段送信流程为剧情虚构，不是平江路实地线路。",
+      "rewardCodexIds": [],
+      "sourceLabel": "本项目虚构探索手札"
+    },
+    {
+      "id": "explore-ouyuan-pairs",
+      "spotId": "ouyuan",
+      "title": "阿蘅的两室手札",
+      "mechanism": "matching",
+      "contentKind": "fiction",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "虚构布置题：请把物件放到手札指定的用途区域。这不是耦园实测平面图；深入难度还需主动向阿蘅询问并收下剧情线索。",
+      "variants": {
+        "easy": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "记录窗外光线的空白册"
+            },
+            {
+              "id": "l1",
+              "label": "尚未封口的回信"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r1",
+              "label": "回信桌：只收信件"
+            },
+            {
+              "id": "r0",
+              "label": "观察桌：只收记录册"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "normal": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "记录窗外光线的空白册"
+            },
+            {
+              "id": "l1",
+              "label": "尚未封口的回信"
+            },
+            {
+              "id": "l2",
+              "label": "照路的小灯"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r2",
+              "label": "廊边灯架：只收照明物"
+            },
+            {
+              "id": "r1",
+              "label": "回信桌：只收信件"
+            },
+            {
+              "id": "r0",
+              "label": "观察桌：只收记录册"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "advanced": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "记录窗外光线的空白册"
+            },
+            {
+              "id": "l1",
+              "label": "尚未封口的回信"
+            },
+            {
+              "id": "l2",
+              "label": "照路的小灯"
+            },
+            {
+              "id": "l3",
+              "label": "准备栽种的种子袋"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r3",
+              "label": "育苗台：只收种植材料"
+            },
+            {
+              "id": "r2",
+              "label": "廊边灯架：只收照明物"
+            },
+            {
+              "id": "r1",
+              "label": "回信桌：只收信件"
+            },
+            {
+              "id": "r0",
+              "label": "观察桌：只收记录册"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2",
+            "l3": "r3"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        }
+      },
+      "explanation": "你按物件用途完成了布置。两室与用途均为本项目虚构谜面。",
+      "rewardCodexIds": [
+        "codex-ouyuan-jiaou"
+      ],
+      "sourceLabel": "本项目虚构探索手札",
+      "npcId": "a-heng",
+      "hintQuestion": "请给我两室手札的剧情线索。",
+      "npcHint": "两室手札是虚构布置：先按物件用途找区域，册归观察桌、信归回信桌，照明与种植材料各有专门去处。",
+      "requiredHintOnAdvanced": true
+    },
+    {
+      "id": "explore-shizilin-path",
+      "spotId": "shizilin",
+      "title": "迷径回声的次序",
+      "mechanism": "ordering",
+      "contentKind": "fiction",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "虚构迷径札记写道：从入口拿到木签后才能听回声；听回声后去石窗核对，核对后盖印，盖印后才在出口归还木签。只排列出现的节点，不用它寻找真实园内出口。",
+      "variants": {
+        "easy": {
+          "items": [
+            {
+              "id": "s2",
+              "label": "石窗核对"
+            },
+            {
+              "id": "s1",
+              "label": "听回声"
+            },
+            {
+              "id": "s0",
+              "label": "入口取木签"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        },
+        "normal": {
+          "items": [
+            {
+              "id": "s3",
+              "label": "盖印"
+            },
+            {
+              "id": "s2",
+              "label": "石窗核对"
+            },
+            {
+              "id": "s1",
+              "label": "听回声"
+            },
+            {
+              "id": "s0",
+              "label": "入口取木签"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2",
+            "s3"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        },
+        "advanced": {
+          "items": [
+            {
+              "id": "s4",
+              "label": "出口还木签"
+            },
+            {
+              "id": "s3",
+              "label": "盖印"
+            },
+            {
+              "id": "s2",
+              "label": "石窗核对"
+            },
+            {
+              "id": "s1",
+              "label": "听回声"
+            },
+            {
+              "id": "s0",
+              "label": "入口取木签"
+            }
+          ],
+          "answer": [
+            "s0",
+            "s1",
+            "s2",
+            "s3",
+            "s4"
+          ],
+          "hint": "把每条规则中的“之前”和“之后”画成箭头，再找起点。",
+          "feedback": "仍有先后约束没有满足；请逐条对照手札，不要按照卡片初始位置猜。"
+        }
+      },
+      "explanation": "把空间故事转换成了前后约束；这一条路径只是剧情推理，不提供实地指路。",
+      "rewardCodexIds": [],
+      "sourceLabel": "本项目虚构探索手札"
+    },
+    {
+      "id": "explore-shizilin-photo",
+      "spotId": "shizilin",
+      "title": "湖石画面的证据边界",
+      "mechanism": "evidence",
+      "contentKind": "image_observation",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "观察狮子林现有照片，区分可见构件与照片无法证明的说法。",
+      "variants": {
+        "easy": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：前景有不规则石块及孔洞，中间可见水面，后方有带屋顶的建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "图片没有给出石块成因鉴定、建造年代或完整游览出口。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "holes",
+              "label": "前景能看到带孔洞的不规则石块。"
+            },
+            {
+              "id": "exit",
+              "label": "能仅凭这张照片确定整个园内唯一出口。"
+            },
+            {
+              "id": "water",
+              "label": "中间能看到水面。"
+            }
+          ],
+          "answer": [
+            "holes",
+            "water"
+          ],
+          "supports": {
+            "holes": "photo",
+            "water": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "normal": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：前景有不规则石块及孔洞，中间可见水面，后方有带屋顶的建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "图片没有给出石块成因鉴定、建造年代或完整游览出口。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "holes",
+              "label": "前景能看到带孔洞的不规则石块。"
+            },
+            {
+              "id": "exit",
+              "label": "能仅凭这张照片确定整个园内唯一出口。"
+            },
+            {
+              "id": "water",
+              "label": "中间能看到水面。"
+            },
+            {
+              "id": "age",
+              "label": "可以直接从画面算出石块的确切年龄。"
+            }
+          ],
+          "answer": [
+            "holes",
+            "water"
+          ],
+          "supports": {
+            "holes": "photo",
+            "water": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "advanced": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：前景有不规则石块及孔洞，中间可见水面，后方有带屋顶的建筑。"
+            },
+            {
+              "id": "scope",
+              "label": "图片没有给出石块成因鉴定、建造年代或完整游览出口。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "holes",
+              "label": "前景能看到带孔洞的不规则石块。"
+            },
+            {
+              "id": "exit",
+              "label": "能仅凭这张照片确定整个园内唯一出口。"
+            },
+            {
+              "id": "water",
+              "label": "中间能看到水面。"
+            },
+            {
+              "id": "age",
+              "label": "可以直接从画面算出石块的确切年龄。"
+            },
+            {
+              "id": "roof",
+              "label": "后方可见带屋顶的建筑。"
+            }
+          ],
+          "answer": [
+            "holes",
+            "water",
+            "roof"
+          ],
+          "supports": {
+            "holes": "photo",
+            "water": "photo",
+            "roof": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        }
+      },
+      "explanation": "从孔洞、水面与屋顶开始观察，比用单张图猜年代或路线更可靠。",
+      "rewardCodexIds": [
+        "codex-shizi-origin"
+      ],
+      "sourceLabel": "当前景点照片与替代观察说明",
+      "photo": true
+    },
+    {
+      "id": "explore-zhuozheng-plan",
+      "spotId": "zhuozhengyuan",
+      "title": "一方小园的设计委托",
+      "mechanism": "matching",
+      "contentKind": "synthetic",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "合成设计委托：把四份使用需求与对应方案关联。它用于理解需求与设计的联系，不声称这些是拙政园原设计者的真实决策。",
+      "variants": {
+        "easy": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "想安静阅读，避免穿行干扰"
+            },
+            {
+              "id": "l1",
+              "label": "想停留观察水面倒影"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r1",
+              "label": "水边停留点：朝向水面"
+            },
+            {
+              "id": "r0",
+              "label": "静读角：与穿行通道分开"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "normal": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "想安静阅读，避免穿行干扰"
+            },
+            {
+              "id": "l1",
+              "label": "想停留观察水面倒影"
+            },
+            {
+              "id": "l2",
+              "label": "需要连接入口与休息区"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r2",
+              "label": "连接步道：串联两区"
+            },
+            {
+              "id": "r1",
+              "label": "水边停留点：朝向水面"
+            },
+            {
+              "id": "r0",
+              "label": "静读角：与穿行通道分开"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "advanced": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "想安静阅读，避免穿行干扰"
+            },
+            {
+              "id": "l1",
+              "label": "想停留观察水面倒影"
+            },
+            {
+              "id": "l2",
+              "label": "需要连接入口与休息区"
+            },
+            {
+              "id": "l3",
+              "label": "想集中照料小盆栽"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r3",
+              "label": "育植角：集中放置盆栽"
+            },
+            {
+              "id": "r2",
+              "label": "连接步道：串联两区"
+            },
+            {
+              "id": "r1",
+              "label": "水边停留点：朝向水面"
+            },
+            {
+              "id": "r0",
+              "label": "静读角：与穿行通道分开"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2",
+            "l3": "r3"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        }
+      },
+      "explanation": "方案要回应具体使用需求；这组设计条件是合成材料，不是设计史实。",
+      "rewardCodexIds": [
+        "codex-zhuozheng-origin"
+      ],
+      "sourceLabel": "本项目合成推理材料"
+    },
+    {
+      "id": "explore-subo-object",
+      "spotId": "subo",
+      "title": "从展品照片到谨慎判断",
+      "mechanism": "evidence",
+      "contentKind": "image_observation",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "当前苏博照片拍的是展品，不是博物馆建筑。请区分能看到的造型与需要展签、鉴定或其他来源才能确认的信息。",
+      "variants": {
+        "easy": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中央是浅色立体雕刻，下面有深色底座；背景不是场馆建筑外观。"
+            },
+            {
+              "id": "scope",
+              "label": "这张照片没有提供可读展签；不能只凭色泽断定材质、年代、真伪或当前是否仍在展出。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "base",
+              "label": "能看到浅色立体雕刻和深色底座。"
+            },
+            {
+              "id": "date",
+              "label": "不看展签也能确定展品的精确年代。"
+            },
+            {
+              "id": "notbuilding",
+              "label": "当前画面不能代替建筑外观观察。"
+            }
+          ],
+          "answer": [
+            "base",
+            "notbuilding"
+          ],
+          "supports": {
+            "base": "photo",
+            "notbuilding": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "normal": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中央是浅色立体雕刻，下面有深色底座；背景不是场馆建筑外观。"
+            },
+            {
+              "id": "scope",
+              "label": "这张照片没有提供可读展签；不能只凭色泽断定材质、年代、真伪或当前是否仍在展出。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "base",
+              "label": "能看到浅色立体雕刻和深色底座。"
+            },
+            {
+              "id": "date",
+              "label": "不看展签也能确定展品的精确年代。"
+            },
+            {
+              "id": "notbuilding",
+              "label": "当前画面不能代替建筑外观观察。"
+            },
+            {
+              "id": "material",
+              "label": "仅凭照片就能完成材质和真伪鉴定。"
+            }
+          ],
+          "answer": [
+            "base",
+            "notbuilding"
+          ],
+          "supports": {
+            "base": "photo",
+            "notbuilding": "photo"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        },
+        "advanced": {
+          "evidence": [
+            {
+              "id": "photo",
+              "label": "替代观察说明：画面中央是浅色立体雕刻，下面有深色底座；背景不是场馆建筑外观。"
+            },
+            {
+              "id": "scope",
+              "label": "这张照片没有提供可读展签；不能只凭色泽断定材质、年代、真伪或当前是否仍在展出。"
+            }
+          ],
+          "statements": [
+            {
+              "id": "base",
+              "label": "能看到浅色立体雕刻和深色底座。"
+            },
+            {
+              "id": "date",
+              "label": "不看展签也能确定展品的精确年代。"
+            },
+            {
+              "id": "notbuilding",
+              "label": "当前画面不能代替建筑外观观察。"
+            },
+            {
+              "id": "material",
+              "label": "仅凭照片就能完成材质和真伪鉴定。"
+            },
+            {
+              "id": "label",
+              "label": "确定年代或材质还需要额外资料。"
+            }
+          ],
+          "answer": [
+            "base",
+            "notbuilding",
+            "label"
+          ],
+          "supports": {
+            "base": "photo",
+            "notbuilding": "photo",
+            "label": "scope"
+          },
+          "hint": "只选择证据确实能推出的判断；没有描述的信息不能补猜。",
+          "feedback": "观察与推断需要分开：可见形状不能证明年代、材质、作者或开放情况；剧情卡也不能证明真实园史。"
+        }
+      },
+      "explanation": "你保留了判断边界：看形状与读展签是不同的证据工作，图片许可也不等于文化审核。",
+      "rewardCodexIds": [],
+      "sourceLabel": "当前景点照片与替代观察说明",
+      "photo": true
+    },
+    {
+      "id": "explore-subo-recap",
+      "spotId": "subo",
+      "title": "五站探索回顾",
+      "mechanism": "matching",
+      "contentKind": "synthetic",
+      "publication": "demo",
+      "version": 1,
+      "baseScore": 8,
+      "briefing": "回顾本次虚拟旅程中的探索材料，把站点与对应互动主题关联。这里核对的是本项目玩法安排，不是历史事实考试。",
+      "variants": {
+        "easy": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "平江路的探索札记"
+            },
+            {
+              "id": "l1",
+              "label": "耦园的探索札记"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r1",
+              "label": "两室物件与用途"
+            },
+            {
+              "id": "r0",
+              "label": "水巷观察与送信次序"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "normal": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "平江路的探索札记"
+            },
+            {
+              "id": "l1",
+              "label": "耦园的探索札记"
+            },
+            {
+              "id": "l2",
+              "label": "狮子林的探索札记"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r2",
+              "label": "迷径次序与石块观察"
+            },
+            {
+              "id": "r1",
+              "label": "两室物件与用途"
+            },
+            {
+              "id": "r0",
+              "label": "水巷观察与送信次序"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        },
+        "advanced": {
+          "items": [
+            {
+              "id": "l0",
+              "label": "平江路的探索札记"
+            },
+            {
+              "id": "l1",
+              "label": "耦园的探索札记"
+            },
+            {
+              "id": "l2",
+              "label": "狮子林的探索札记"
+            },
+            {
+              "id": "l3",
+              "label": "拙政园的探索札记"
+            },
+            {
+              "id": "l4",
+              "label": "苏州博物馆的探索札记"
+            }
+          ],
+          "targets": [
+            {
+              "id": "r4",
+              "label": "展品观察与证据边界"
+            },
+            {
+              "id": "r3",
+              "label": "一方小园的设计委托"
+            },
+            {
+              "id": "r2",
+              "label": "迷径次序与石块观察"
+            },
+            {
+              "id": "r1",
+              "label": "两室物件与用途"
+            },
+            {
+              "id": "r0",
+              "label": "水巷观察与送信次序"
+            }
+          ],
+          "answer": {
+            "l0": "r0",
+            "l1": "r1",
+            "l2": "r2",
+            "l3": "r3",
+            "l4": "r4"
+          },
+          "hint": "先找每张卡片的独有条件；每个去处只能使用一次。",
+          "feedback": "搭配没有同时满足卡片条件。请检查同一去处是否重复，以及用途是否对应。"
+        }
+      },
+      "explanation": "你把不同站点的探索方式联系起来了。苏博在尾声汇总证据边界与五站回顾。",
+      "rewardCodexIds": [],
+      "sourceLabel": "本项目合成推理材料",
+      "recap": true
+    }
+  ],
+  "candidates": [
+    {
+      "id": "candidate-ouyuan-layout",
+      "spotId": "ouyuan",
+      "title": "耦园空间与园史关联",
+      "contentKind": "cultural_fact",
+      "publication": "pending",
+      "sourceKnowledgeIds": [
+        "kn-ouyuan-water",
+        "kn-ouyuan-jiaou"
+      ],
+      "reason": "现有文化来源尚无独立人工审核；不发布为事实题，不影响主线。"
+    },
+    {
+      "id": "candidate-zhuozheng-history",
+      "spotId": "zhuozhengyuan",
+      "title": "拙政园设计史料推理",
+      "contentKind": "cultural_fact",
+      "publication": "pending",
+      "sourceKnowledgeIds": [
+        "kn-zhuozheng-origin",
+        "kn-wenzhengming"
+      ],
+      "reason": "需要人工核验设计史料与对应版本；尚未形成可发布答案。"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { createRequestId } from '@/utils/requestId'
 import { api, ApiError, streamSceneChat, type SceneChatRequest } from '@/services/api'
 import type {
   ChatReply,
+  ExplorationActivity,
   AudienceMode,
   DifficultyLevel,
   Clue,
@@ -39,6 +40,7 @@ const emptyJourney = {
   currentSpotId: null as string | null,
   spotStatus: {},
   taskStates: {},
+  activityStates: {},
   inventory: [],
   unlockedCodex: [],
   flags: {},
@@ -62,6 +64,7 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   npcs: Npc[]
   spots: Spot[]
   tasks: PublicTask[]
+  activities: ExplorationActivity[]
   clues: Clue[]
   codexEntries: CodexEntry[]
   codexTotal: number
@@ -75,6 +78,7 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   setMode: (mode: JourneyMode) => Promise<void>
   arriveSpot: (spotId: string, location?: LocationReading) => Promise<boolean>
   verifyTask: (taskId: string, answer: unknown) => Promise<VerifyResult>
+  verifyActivity: (activityId: string, answer: unknown) => Promise<VerifyResult & { awardedScore: number; awardedClues: string[]; unlockedCodex: string[] }>
   sendChat: (npcId: string, text: string) => Promise<ChatReply>
   sendSceneChat: (
     npcId: string,
@@ -100,12 +104,13 @@ export const useJourney = create<JourneyStore>((set, get) => {
     if (snapshot && snapshot.journeyId === get().journeyId && snapshot.stateVersion < get().stateVersion)
       return
     latestSnapshot = snapshot
-    if (snapshot) set({ ...snapshot, sceneDirections: snapshot.sceneDirections ?? {} })
+    if (snapshot) set({ ...snapshot, activityStates: snapshot.activityStates ?? {}, sceneDirections: snapshot.sceneDirections ?? {} })
     else
       set({
         ...emptyJourney,
         spots: [],
         tasks: [],
+        activities: [],
         clues: [],
         codexEntries: [],
         codexTotal: 0,
@@ -123,19 +128,21 @@ export const useJourney = create<JourneyStore>((set, get) => {
     const catalogJourney = get().journeyId!
     const catalogVersion = get().stateVersion
     const query = `?journey_id=${encodeURIComponent(catalogJourney)}`
-    const [route, tasks, clues, codex, ending, report] = await Promise.all([
+    const [route, tasks, clues, codex, ending, report, activities] = await Promise.all([
       api.get<{ spots: Spot[]; npcs: Npc[] }>(`/routes/suzhou-pingjiang${query}`),
       api.get<{ items: PublicTask[] }>(`/tasks${query}`),
       api.get<{ items: Clue[] }>(`/clues${query}`),
       api.get<{ items: CodexEntry[]; total: number }>(`/codex${query}`),
       api.get<{ ending: Ending | null }>(`/ending${query}`),
       api.get<JourneyReport>(`/report${query}`),
+      api.get<{ items: ExplorationActivity[] }>(`/activities${query}`),
     ])
     if (get().journeyId !== catalogJourney || get().stateVersion !== catalogVersion) return
     set({
       spots: route.spots,
       npcs: route.npcs,
       tasks: tasks.items,
+      activities: activities.items,
       clues: clues.items,
       codexEntries: codex.items,
       codexTotal: codex.total,
@@ -191,6 +198,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
     npcs: [],
     spots: [],
     tasks: [],
+    activities: [],
     clues: [],
     codexEntries: [],
     codexTotal: 0,
@@ -244,6 +252,10 @@ export const useJourney = create<JourneyStore>((set, get) => {
       action<ActionResponse & VerifyResult>(`/tasks/${encodeURIComponent(taskId)}/verify`, {
         answer,
       }),
+    verifyActivity: async (activityId, answer) =>
+      action<ActionResponse & VerifyResult & { awardedScore: number; awardedClues: string[]; unlockedCodex: string[] }>(
+        `/activities/${encodeURIComponent(activityId)}/verify`, { answer },
+      ),
     sendChat: async (npcId, text) =>
       action<ChatReply>('/chat/message', { npc_id: npcId, message: text }),
     sendSceneChat: async (npcId, text, participantIds, onEvent, signal) => {
