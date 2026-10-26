@@ -32,8 +32,11 @@ export interface Theme {
   city: string
   district: string
   description: string
-  durationMinutes: number
-  distanceKm: number
+  durationMinutes: number | null
+  distanceKm: number | null
+  onsiteReady?: boolean
+  sourceReviewStatus?: string
+  storyDisclosure?: string
 }
 
 export interface Spot {
@@ -228,6 +231,7 @@ export type PublicTask = Omit<Task, 'answerKey' | 'password' | 'sortingAnswer' |
 }
 
 export interface JourneySnapshot {
+  storyId?: string
   audienceMode?: AudienceMode
   difficulty?: DifficultyLevel
   routeId?: string | null

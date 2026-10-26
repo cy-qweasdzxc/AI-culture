@@ -68,6 +68,84 @@ def _auto_publish_knowledge(db: Session, story_id: str, new_ids: set[str]) -> in
     return chunks_created
 
 
+def _seed_city_stories(db: Session) -> None:
+    """Seed fully playable, virtual-only city story packs with pending knowledge review."""
+    packs = [PROJECT_ROOT / "data/demo/stories/hangzhou-xihu.json", PROJECT_ROOT / "data/demo/stories/nanjing-zhongshan.json"]
+    loaded = [json.loads(path.read_text(encoding="utf-8")) for path in packs if path.exists()]
+    for raw in loaded:
+        theme = raw["theme"]
+        story_id = theme["id"]
+        insert_missing(db, Story, story_id, name=theme["name"], status="published", version=raw["seedVersion"], data={**theme, "isDemo": True})
+        for spot in raw["spots"]:
+            insert_missing(db, CulturalLocation, spot["id"], story_id=story_id, name=spot["name"], route_order=spot["order"], lat=spot["lat"], lng=spot["lng"], trigger_radius_m=80, dwell_seconds=0, coordinates_verified=False, data=spot)
+        for kind, records in (("player", raw["roles"]), ("npc", raw["npcs"])):
+            for card in records:
+                insert_missing(db, Character, card["id"], story_id=story_id, kind=kind, name=card["name"], data=card)
+        for record in raw["knowledge"]:
+            insert_missing(db, CulturalKnowledge, record["id"], story_id=story_id, location_id=record["spotId"], content_type=record["type"], title=record["title"], content=record["content"], source=record["source"], source_url=record.get("sourceUrl", ""), license=record.get("license", "【待正式审核】"), trust_level="unverified", review_status="pending", is_demo=True, tags=[], metadata_json={"seedVersion": raw["seedVersion"], "human_review_required": True})
+        insert_missing(db, StoryNode, theme["start_node_id"], story_id=story_id, kind="start", data={})
+        for spot in raw["spots"]:
+            insert_missing(db, StoryNode, f"spot-{spot['id']}", story_id=story_id, location_id=spot["id"], kind="spot", data={})
+        for task in raw["tasks"]:
+            insert_missing(db, StoryNode, task["id"], story_id=story_id, location_id=task["spotId"], kind="task", data={})
+            validation = {key: task[key] for key in ("answerKey", "password", "sortingAnswer", "requiredClues") if key in task}
+            public = {key: value for key, value in task.items() if key not in {"answerKey", "password", "sortingAnswer", "explanation", "sourceUrl"}}
+            public["explanation"] = task["explanation"]
+            insert_missing(db, Task, task["id"], story_id=story_id, location_id=task["spotId"], node_id=task["id"], type=task["type"], title=task["title"], knowledge_score=task["knowledgeScore"], validation=validation, rewards={}, data=public)
+        db.flush()
+        for clue in raw["clues"]:
+            insert_missing(db, Item, clue["id"], story_id=story_id, kind=clue["kind"], name=clue["name"], data={**clue, "isDemo": True})
+        for codex in raw["codex"]:
+            knowledge_id = "kn-" + codex["id"].removeprefix("codex-")
+            insert_missing(db, Item, codex["id"], story_id=story_id, knowledge_id=knowledge_id, kind="codex", name=codex["title"], data=codex)
+        finale_id = theme["finale_node_id"]
+        insert_missing(db, StoryNode, finale_id, story_id=story_id, location_id=theme["finale_location_id"], kind="choice", data={"choices": [choice["key"] for choice in theme["finale_choices"]]})
+        for ending in raw["endings"]:
+            insert_missing(db, StoryNode, ending["id"], story_id=story_id, kind="ending", data={**ending, "isDemo": True, "isFictional": True})
+    # Create route rows/stops after the location records exist.
+    seed_catalog(db)
+    routes = json.loads((PROJECT_ROOT / "data/demo/catalog.json").read_text(encoding="utf-8"))["routes"]
+    for raw in loaded:
+        theme = raw["theme"]
+        route = next((row for row in routes if row.get("story_id") == theme["id"]), None)
+        if not route:
+            continue
+        chain = route["stop_ids"]
+        edges = [(theme["start_node_id"], f"spot-{chain[0]}", {})]
+        tasks_by_spot = {spot["id"]: spot["taskIds"] for spot in raw["spots"]}
+        for index, location_id in enumerate(chain):
+            for task_id in tasks_by_spot[location_id]:
+                edges.extend([(f"spot-{location_id}", task_id, {"location_id": location_id}), (task_id, f"spot-{location_id}", {})])
+            if index + 1 < len(chain):
+                edges.append((f"spot-{location_id}", f"spot-{chain[index + 1]}", {"completed_tasks": tasks_by_spot[location_id]}))
+        edges.append((f"spot-{theme['finale_location_id']}", theme["finale_node_id"], {}))
+        for source, destination, conditions in edges:
+            edge_id = f"{source}--{destination}"
+            insert_missing(db, StoryEdge, edge_id, story_id=theme["id"], from_node_id=source, to_node_id=destination, conditions=conditions)
+        for choice in theme["finale_choices"]:
+            for ending in raw["endings"]:
+                matches = (choice["key"] == "hang" and ending["id"].endswith("-hang")) or (choice["key"] == "keep" and ending["id"].endswith("-keep"))
+                if matches:
+                    insert_missing(db, StoryEdge, f"{theme['finale_node_id']}--{ending['id']}--{choice['key']}", story_id=theme["id"], from_node_id=theme["finale_node_id"], to_node_id=ending["id"], choice_key=choice["key"], priority=20, conditions={"all_tasks_complete": True})
+    # The Suzhou garden branch reuses reviewed-in-demo task mechanics but has its own
+    # start node and endings; no branch can accidentally enter the classic finale.
+    garden = next((row for row in routes if row["id"] == "suzhou-garden-stones"), None)
+    if garden and garden["status"] == "open":
+        start_id, finale_id = garden["start_node_id"], garden["finale_node_id"]
+        insert_missing(db, StoryNode, start_id, story_id="suzhou-pingjiang", kind="start", data={})
+        insert_missing(db, StoryNode, finale_id, story_id="suzhou-pingjiang", location_id="zhuozhengyuan", kind="choice", data={"choices": [c["key"] for c in garden["finale_choices"]]})
+        garden_edges = [(start_id, "spot-ouyuan", {}), ("spot-zhuozhengyuan", finale_id, {})]
+        for source, destination, conditions in garden_edges:
+            insert_missing(db, StoryEdge, f"{source}--{destination}", story_id="suzhou-pingjiang", from_node_id=source, to_node_id=destination, conditions=conditions)
+        for choice in garden["finale_choices"]:
+            ending_id = f"ending-suzhou-garden-{choice['key']}"
+            ending_data = {"id": ending_id, "name": "园林留影" if choice["key"] == "hang" else "石影未尽", "category": "完整支线", "narrative": "你走完耦园、狮子林与拙政园的虚构寻石支线，把观察留在手札里。", "conditionText": choice["label"]}
+            insert_missing(db, StoryNode, ending_id, story_id="suzhou-pingjiang", kind="ending", data={**ending_data, "isDemo": True, "isFictional": True})
+            edge_id = f"{finale_id}--{ending_id}--{choice['key']}"
+            insert_missing(db, StoryEdge, edge_id, story_id="suzhou-pingjiang", from_node_id=finale_id, to_node_id=ending_id, choice_key=choice["key"], priority=20, conditions={"all_tasks_complete": True})
+    db.flush()
+
+
 def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool = False) -> dict[str, int]:
     raw = json.loads((path or PROJECT_ROOT / "data/demo/seed.json").read_text(encoding="utf-8"))
     theme = raw["theme"]
@@ -120,6 +198,7 @@ def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool =
     for destination, choice, priority, complete in (("cheng-huai", "hang", 20, True), ("qu-jing", "keep", 20, True), ("wei-jin", "hang", 10, False), ("wei-jin", "keep", 10, False)):
         insert_missing(db, StoryEdge, f"finale--{destination}--{choice}", story_id=story_id, from_node_id="finale", to_node_id=destination, choice_key=choice, priority=priority, conditions={"all_tasks_complete": complete})
     seed_catalog(db)
+    _seed_city_stories(db)
     chunks = _auto_publish_knowledge(db, story_id, new_knowledge_ids) if auto_publish else 0
     db.commit()
     return {"spots": len(raw["spots"]), "tasks": len(raw["tasks"]), "knowledge": len(raw["knowledge"]), "chunks": chunks}

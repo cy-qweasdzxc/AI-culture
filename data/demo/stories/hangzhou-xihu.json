@@ -1,0 +1,384 @@
+{
+  "seedVersion": "city-preview-v1",
+  "theme": {
+    "id": "hangzhou-xihu",
+    "name": "西湖听景",
+    "subtitle": "湖山与古寺的虚拟文化路线",
+    "city": "杭州",
+    "district": "西湖风景名胜区",
+    "description": "沿湖岸读景，再到古寺听一段有出处的故事。路线适合线上体验；现场入口和步行顺序尚未核验。",
+    "durationMinutes": null,
+    "distanceKm": null,
+    "isDemo": true,
+    "coordinateStatus": "approximate_demo",
+    "onsiteReady": false,
+    "sourceReviewStatus": "pending",
+    "storyDisclosure": "官方网页目录已核对；文化事实和任务答案待人工复核后才进入 NPC 知识检索。",
+    "start_node_id": "start-hangzhou-xihu",
+    "finale_node_id": "finale-hangzhou-xihu",
+    "finale_location_id": "hangzhou-lingyin",
+    "final_codex_id": "codex-hangzhou-route",
+    "finale_choices": [
+      {
+        "key": "hang",
+        "label": "把湖山写进行旅",
+        "detail": "让沿途的风景成为继续讲述的开端。"
+      },
+      {
+        "key": "keep",
+        "label": "留一页未完",
+        "detail": "把还没走到的地方留给下一次。"
+      }
+    ]
+  },
+  "spots": [
+    {
+      "id": "hangzhou-westlake",
+      "name": "西湖景观",
+      "short": "西湖",
+      "lat": 30.2446,
+      "lng": 120.15,
+      "intro": "西湖风景名胜区的官方资料覆盖湖域、湖滨及周边景点。眼前的湖面只是路线起点，岸线与景点共同组成游览的空间。",
+      "story": "你把一张虚构的游览手札摊在湖边，先从景区资料里辨认“湖域”“湖滨”与各处景点的层次。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "fact": "景区管理资料将西湖水域、湖滨景区等列入管理范围。",
+      "question": "这份景区资料把哪些空间纳入西湖景区管理范围？",
+      "answer": "西湖水域与湖滨等景区空间",
+      "distractors": [
+        "仅有湖心的一座岛",
+        "只包括一座博物馆",
+        "只包括城市道路"
+      ],
+      "title": "西湖景区的空间范围",
+      "order": 1,
+      "taskIds": [
+        "task-hangzhou-westlake"
+      ],
+      "codexIds": [
+        "codex-hangzhou-westlake"
+      ],
+      "coordinateStatus": "approximate_demo",
+      "coordinatesVerified": false,
+      "sourceReviewStatus": "pending",
+      "sourceCheckedAt": "2026-10-26",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "npcId": "guide-hangzhou-westlake"
+    },
+    {
+      "id": "hangzhou-leifeng",
+      "name": "雷峰塔",
+      "short": "雷峰塔",
+      "lat": 30.2317,
+      "lng": 120.1487,
+      "intro": "西湖景区管理委员会的导览规划资料列有雷峰塔标识点位。这里的路线任务只核对官方资料中的景点记录，不推断现场开放情况。",
+      "story": "手札翻到雷峰塔这一页。你把景点名称与官方导览规划的记录对上，再决定下一页该去哪里。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "fact": "雷峰塔出现在西湖风景名胜区标识标牌规划的点位表中。",
+      "question": "雷峰塔在这份官方导览规划中对应什么？",
+      "answer": "西湖景区导览标识的点位",
+      "distractors": [
+        "路线终点的博物馆",
+        "湖面上的游船码头",
+        "一条城市地铁线路"
+      ],
+      "title": "导览图上的雷峰塔",
+      "order": 2,
+      "taskIds": [
+        "task-hangzhou-leifeng"
+      ],
+      "codexIds": [
+        "codex-hangzhou-leifeng"
+      ],
+      "coordinateStatus": "approximate_demo",
+      "coordinatesVerified": false,
+      "sourceReviewStatus": "pending",
+      "sourceCheckedAt": "2026-10-26",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "npcId": "guide-hangzhou-leifeng"
+    },
+    {
+      "id": "hangzhou-lingyin",
+      "name": "灵隐寺与飞来峰",
+      "short": "灵隐寺",
+      "lat": 30.2449,
+      "lng": 120.1017,
+      "intro": "杭州灵隐寺的公开公告将灵隐寺、永福寺和韬光寺列在灵隐飞来峰景区范围内。预约与开放安排会变化，请以官方最新通知为准。",
+      "story": "走到最后一页，手札提醒你把景区范围与寺院本身分开看：名称相邻，管理与预约信息仍要查官方通知。",
+      "source": "杭州灵隐寺公开公告：《杭州灵隐飞来峰景区预约游览须知》",
+      "fact": "灵隐寺、永福寺、韬光寺都在灵隐飞来峰景区范围内；该公告说明景区采用实名预约、分时游览。",
+      "question": "官方公告所列的灵隐飞来峰景区包括哪组寺院？",
+      "answer": "灵隐寺、永福寺与韬光寺",
+      "distractors": [
+        "雷峰塔、净慈寺与岳王庙",
+        "六和塔、保俶塔与三潭印月",
+        "南京中山陵、明孝陵与灵谷寺"
+      ],
+      "title": "灵隐飞来峰景区范围",
+      "order": 3,
+      "taskIds": [
+        "task-hangzhou-lingyin"
+      ],
+      "codexIds": [
+        "codex-hangzhou-lingyin"
+      ],
+      "coordinateStatus": "approximate_demo",
+      "coordinatesVerified": false,
+      "sourceReviewStatus": "pending",
+      "sourceCheckedAt": "2026-10-26",
+      "sourceUrl": "https://www.lingyinsi.org/detail_57_19455.html",
+      "npcId": "guide-hangzhou-lingyin"
+    }
+  ],
+  "roles": [
+    {
+      "id": "traveler-hangzhou-xihu",
+      "name": "行旅记录者",
+      "identity": "文化路线访客（虚构身份）",
+      "tagline": "把出处和现场印象分开记录",
+      "description": "你带着一本空白手札来到这座城。每到一站，先观察，再用公开资料核对。",
+      "perk": "初始持有路线手札。",
+      "storyEffect": "NPC 会提醒你区分资料记载、现场观察与剧情设定。",
+      "personaPrompt": "玩家是虚构的文化路线访客。请提醒区分事实来源、现场观察和虚构剧情；不得因为角色身份补造事实。",
+      "startClueId": "clue-hangzhou-xihu-field-notes",
+      "isFictional": true
+    }
+  ],
+  "npcs": [
+    {
+      "id": "guide-hangzhou-westlake",
+      "name": "西湖资料员1",
+      "title": "虚构的文化路线讲述者",
+      "spotId": "hangzhou-westlake",
+      "personality": [
+        "谨慎",
+        "重视出处"
+      ],
+      "greeting": "我们先看眼前这一站的公开资料；尚未核验的内容我会明确标出。",
+      "knowledgeScope": "本点位资料仍待人工复核；可提供路线指引，事实问题应说明暂缺已审核依据。",
+      "personaPrompt": "你是虚构角色。只进行路线引导与礼貌交流；本点位资料待人工复核，不得将待审内容当作事实。没有当前回合的已审核证据时，应明确说明资料不足。",
+      "isFictional": true,
+      "locationIds": [
+        "hangzhou-westlake"
+      ]
+    },
+    {
+      "id": "guide-hangzhou-leifeng",
+      "name": "西湖资料员2",
+      "title": "虚构的文化路线讲述者",
+      "spotId": "hangzhou-leifeng",
+      "personality": [
+        "谨慎",
+        "重视出处"
+      ],
+      "greeting": "我们先看眼前这一站的公开资料；尚未核验的内容我会明确标出。",
+      "knowledgeScope": "本点位资料仍待人工复核；可提供路线指引，事实问题应说明暂缺已审核依据。",
+      "personaPrompt": "你是虚构角色。只进行路线引导与礼貌交流；本点位资料待人工复核，不得将待审内容当作事实。没有当前回合的已审核证据时，应明确说明资料不足。",
+      "isFictional": true,
+      "locationIds": [
+        "hangzhou-leifeng"
+      ]
+    },
+    {
+      "id": "guide-hangzhou-lingyin",
+      "name": "西湖资料员3",
+      "title": "虚构的文化路线讲述者",
+      "spotId": "hangzhou-lingyin",
+      "personality": [
+        "谨慎",
+        "重视出处"
+      ],
+      "greeting": "我们先看眼前这一站的公开资料；尚未核验的内容我会明确标出。",
+      "knowledgeScope": "本点位资料仍待人工复核；可提供路线指引，事实问题应说明暂缺已审核依据。",
+      "personaPrompt": "你是虚构角色。只进行路线引导与礼貌交流；本点位资料待人工复核，不得将待审内容当作事实。没有当前回合的已审核证据时，应明确说明资料不足。",
+      "isFictional": true,
+      "locationIds": [
+        "hangzhou-lingyin"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-hangzhou-westlake",
+      "spotId": "hangzhou-westlake",
+      "type": "quiz",
+      "title": "西湖景区的空间范围",
+      "briefing": "这份景区资料把哪些空间纳入西湖景区管理范围？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "西湖水域与湖滨等景区空间"
+        },
+        {
+          "key": "B",
+          "text": "仅有湖心的一座岛"
+        },
+        {
+          "key": "C",
+          "text": "只包括一座博物馆"
+        },
+        {
+          "key": "D",
+          "text": "只包括城市道路"
+        }
+      ],
+      "answerKey": "A",
+      "explanation": "景区管理资料将西湖水域、湖滨景区等列入管理范围。",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf"
+    },
+    {
+      "id": "task-hangzhou-leifeng",
+      "spotId": "hangzhou-leifeng",
+      "type": "quiz",
+      "title": "导览图上的雷峰塔",
+      "briefing": "雷峰塔在这份官方导览规划中对应什么？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "西湖景区导览标识的点位"
+        },
+        {
+          "key": "B",
+          "text": "路线终点的博物馆"
+        },
+        {
+          "key": "C",
+          "text": "湖面上的游船码头"
+        },
+        {
+          "key": "D",
+          "text": "一条城市地铁线路"
+        }
+      ],
+      "answerKey": "A",
+      "explanation": "雷峰塔出现在西湖风景名胜区标识标牌规划的点位表中。",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf"
+    },
+    {
+      "id": "task-hangzhou-lingyin",
+      "spotId": "hangzhou-lingyin",
+      "type": "quiz",
+      "title": "灵隐飞来峰景区范围",
+      "briefing": "官方公告所列的灵隐飞来峰景区包括哪组寺院？",
+      "knowledgeScore": 20,
+      "options": [
+        {
+          "key": "A",
+          "text": "灵隐寺、永福寺与韬光寺"
+        },
+        {
+          "key": "B",
+          "text": "雷峰塔、净慈寺与岳王庙"
+        },
+        {
+          "key": "C",
+          "text": "六和塔、保俶塔与三潭印月"
+        },
+        {
+          "key": "D",
+          "text": "南京中山陵、明孝陵与灵谷寺"
+        }
+      ],
+      "answerKey": "A",
+      "explanation": "灵隐寺、永福寺、韬光寺都在灵隐飞来峰景区范围内；该公告说明景区采用实名预约、分时游览。",
+      "sourceUrl": "https://www.lingyinsi.org/detail_57_19455.html"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "kn-hangzhou-westlake",
+      "spotId": "hangzhou-westlake",
+      "type": "fact",
+      "title": "西湖景区的空间范围",
+      "content": "景区管理资料将西湖水域、湖滨景区等列入管理范围。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "license": "official_public_reference_pending_human_review",
+      "reviewStatus": "pending"
+    },
+    {
+      "id": "kn-hangzhou-leifeng",
+      "spotId": "hangzhou-leifeng",
+      "type": "fact",
+      "title": "导览图上的雷峰塔",
+      "content": "雷峰塔出现在西湖风景名胜区标识标牌规划的点位表中。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "license": "official_public_reference_pending_human_review",
+      "reviewStatus": "pending"
+    },
+    {
+      "id": "kn-hangzhou-lingyin",
+      "spotId": "hangzhou-lingyin",
+      "type": "fact",
+      "title": "灵隐飞来峰景区范围",
+      "content": "灵隐寺、永福寺、韬光寺都在灵隐飞来峰景区范围内；该公告说明景区采用实名预约、分时游览。",
+      "source": "杭州灵隐寺公开公告：《杭州灵隐飞来峰景区预约游览须知》",
+      "sourceUrl": "https://www.lingyinsi.org/detail_57_19455.html",
+      "license": "official_public_reference_pending_human_review",
+      "reviewStatus": "pending"
+    }
+  ],
+  "clues": [
+    {
+      "id": "clue-hangzhou-xihu-field-notes",
+      "name": "路线手札",
+      "kind": "clue",
+      "description": "一本空白的虚构手札，用来记录各站来源与待核问题。",
+      "fromSpotId": "hangzhou-westlake"
+    }
+  ],
+  "codex": [
+    {
+      "id": "codex-hangzhou-westlake",
+      "spotId": "hangzhou-westlake",
+      "type": "fact",
+      "title": "西湖景区的空间范围",
+      "summary": "景区管理资料将西湖水域、湖滨景区等列入管理范围。",
+      "content": "景区管理资料将西湖水域、湖滨景区等列入管理范围。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "reviewStatus": "pending"
+    },
+    {
+      "id": "codex-hangzhou-leifeng",
+      "spotId": "hangzhou-leifeng",
+      "type": "fact",
+      "title": "导览图上的雷峰塔",
+      "summary": "雷峰塔出现在西湖风景名胜区标识标牌规划的点位表中。",
+      "content": "雷峰塔出现在西湖风景名胜区标识标牌规划的点位表中。",
+      "source": "杭州西湖风景名胜区管理委员会公开资料：《杭州西湖风景名胜区指示牌标志牌规划》",
+      "sourceUrl": "https://westlake.hangzhou.gov.cn/attach/-1/2010091025032014399.pdf",
+      "reviewStatus": "pending"
+    },
+    {
+      "id": "codex-hangzhou-lingyin",
+      "spotId": "hangzhou-lingyin",
+      "type": "fact",
+      "title": "灵隐飞来峰景区范围",
+      "summary": "灵隐寺、永福寺、韬光寺都在灵隐飞来峰景区范围内；该公告说明景区采用实名预约、分时游览。",
+      "content": "灵隐寺、永福寺、韬光寺都在灵隐飞来峰景区范围内；该公告说明景区采用实名预约、分时游览。",
+      "source": "杭州灵隐寺公开公告：《杭州灵隐飞来峰景区预约游览须知》",
+      "sourceUrl": "https://www.lingyinsi.org/detail_57_19455.html",
+      "reviewStatus": "pending"
+    }
+  ],
+  "endings": [
+    {
+      "id": "ending-hangzhou-xihu-hang",
+      "name": "一湖留白",
+      "category": "完整探索型",
+      "narrative": "你沿着杭州的路线走完了三站，把每条来源、每个问题都留在手札里。故事没有替你补上未核验的事实；它把继续查证的入口留在下一页。",
+      "conditionText": "完成本路线全部任务，并选择“把湖山写进行旅”"
+    },
+    {
+      "id": "ending-hangzhou-xihu-keep",
+      "name": "留待再访",
+      "category": "分支选择型",
+      "narrative": "你把杭州的手札收好，记下已经找到的官方出处，也留下仍需现场核验的问题。下一次再来时，这条路线还可以继续补全。",
+      "conditionText": "完成本路线全部任务，并选择“留一页未完”"
+    }
+  ],
+  "finaleNodeId": "finale-hangzhou-xihu"
+}

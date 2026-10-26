@@ -24,6 +24,9 @@ from app.services.journey import (
     arrive_location,
     current_journey,
     enter_finale,
+    journey_locations,
+    journey_route,
+    journey_tasks,
     mutate_journey,
     owned_journey,
     report,
@@ -100,6 +103,10 @@ def mode(body: ModeAction, db: Session = Depends(get_db), user: User = Depends(g
     journey = owned_journey(db, user, body.journey_id)
 
     def operation(current):
+        if body.mode == "onsite":
+            route = journey_route(db, current)
+            if route is None or not route.data.get("onsite_ready", False):
+                raise DomainError("ONSITE_UNAVAILABLE", "该路线的现场入口与步行顺序尚未核验，目前只开放虚拟游览。", 409)
         current.mode = body.mode
         add_event(current, "mode", f"切换为{'虚拟游览' if body.mode == 'virtual' else '实地探索'}模式")
         return {}
@@ -124,8 +131,11 @@ def route(story_id: str, journey_id: str | None = None, db: Session = Depends(ge
     journey = owned_journey(db, user, journey_id)
     if journey.story_id != story_id:
         raise DomainError("ROUTE_INVALID", "路线不属于当前旅程。", 404)
-    visible = [spot for spot in catalog.locations(db, story_id) if journey.state_data.get("spotStatus", {}).get(spot.id) != "undiscovered"]
-    return {"id": story_id, "spots": [{**spot.data, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for spot in visible)], "snapshot": snapshot(db, journey)}
+    route_record = journey_route(db, journey)
+    ordered = journey_locations(db, journey)
+    visible = [(index, spot) for index, spot in enumerate(ordered) if journey.state_data.get("spotStatus", {}).get(spot.id) != "undiscovered"]
+    route_data = {**(route_record.data if route_record else {}), "id": route_record.id if route_record else journey.state_data.get("route_id"), "story_id": story_id, "finale_location_id": (route_record.data.get("finale_location_id") if route_record else None) or db.get(Story, story_id).data.get("finale_location_id", "subo"), "finale_choices": (route_record.data.get("finale_choices") if route_record else None) or db.get(Story, story_id).data.get("finale_choices", [{"key":"hang","label":"把灯挂上长廊","detail":"让故事继续被更多人讲述。"},{"key":"keep","label":"把灯收进行囊","detail":"把一路的故事留作自己的回忆。"}])}
+    return {"id": story_id, "route": route_data, "spots": [{**spot.data, "shortName": spot.data.get("shortName") or spot.data.get("short") or spot.name, "triggerRadiusM": spot.trigger_radius_m, "order": index + 1, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for index, spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for _, spot in visible)], "snapshot": snapshot(db, journey)}
 
 
 def requested_location(db: Session, journey, spot_id: str) -> CulturalLocation:
@@ -164,7 +174,7 @@ def tasks(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
     journey = owned_journey(db, user, journey_id)
     state = snapshot(db, journey)
     result = []
-    for task in catalog.tasks(db, journey.story_id):
+    for task in journey_tasks(db, journey):
         progress = state["taskStates"][task.id]
         if task.location_id != journey.current_location_id and progress["status"] != "completed":
             continue

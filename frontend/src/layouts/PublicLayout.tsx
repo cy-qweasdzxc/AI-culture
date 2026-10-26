@@ -54,7 +54,7 @@ export default function PublicLayout() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to={inJourney ? '/map' : '/role'} className="btn-primary gap-4 px-4 sm:px-5">
+            <Link to={inJourney ? '/map' : '/theme#city-catalog'} className="btn-primary gap-4 px-4 sm:px-5">
               {inJourney ? '继续旅程' : '开始体验'}
               <Icon name="arrow" className="hidden h-4 w-4 sm:block" />
             </Link>

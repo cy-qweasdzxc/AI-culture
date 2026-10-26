@@ -13,7 +13,7 @@ const routeScenes = [
 ]
 
 export default function ThemePage() {
-  const demoTheme = useJourney((s) => s.themes[0])
+  const demoTheme = useJourney((s) => s.themes.find((theme) => theme.id === 'suzhou-pingjiang') ?? s.themes[0])
   if (!demoTheme)
     return (
       <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">

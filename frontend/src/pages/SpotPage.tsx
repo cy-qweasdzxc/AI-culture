@@ -5,7 +5,6 @@ import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
 import SpotMedia from '@/components/SpotMedia'
 import AudioGuide from '@/components/AudioGuide'
-import { finalChoices } from '@/data/publicRoute'
 import { canEnterFinale, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -27,6 +26,7 @@ export default function SpotPage() {
   const enterFinale = useJourney((s) => s.enterFinale)
   const finaleOpen = useJourney(canEnterFinale)
   const endingId = useJourney((s) => s.endingId)
+  const routeInfo = useJourney((s) => s.routeInfo)
 
   const [choice, setChoice] = useState<'hang' | 'keep' | null>(null)
 
@@ -47,7 +47,11 @@ export default function SpotPage() {
   const status = spotStatus[spot.id] ?? 'undiscovered'
   const npc = npcs.find((item) => item.id === spot.npcId)
   const arrived = status === 'current' || status === 'completed'
-  const isFinaleSpot = spot.id === 'subo'
+  const isFinaleSpot = spot.id === (routeInfo?.finale_location_id ?? 'subo')
+  const finalChoices = routeInfo?.finale_choices ?? [
+    { key: 'hang' as const, label: '把灯挂上长廊', detail: '把这一路的故事，讲给更多人听' },
+    { key: 'keep' as const, label: '把灯收进行囊', detail: '把故事留给自己，慢慢消化' },
+  ]
   const completedTasks = spot.taskIds.filter((id) => taskStates[id]?.status === 'completed').length
 
   const confirmFinale = async () => {
@@ -246,9 +250,9 @@ export default function SpotPage() {
 
           {isFinaleSpot && finaleOpen ? (
             <section className="mt-10 rounded-xl border border-cinnabar/30 bg-surface p-6 sm:p-8">
-              <h2 className="text-xl font-semibold text-cinnabar">尾声 · 守园灯</h2>
+              <h2 className="text-xl font-semibold text-cinnabar">尾声 · {routeInfo?.name ?? '路线终章'}</h2>
               <p className="mt-3 max-w-prose text-sm leading-7 text-ink-soft">
-                小沈把那盏灯递到你面前。灯是剧情里的意象，不是史实，但选择是真的：它会决定你的结局。
+                这是本路线的虚构尾声。选择会决定你达成的故事结局。
               </p>
               <div
                 className="mt-6 divide-y divide-line border-y border-line"

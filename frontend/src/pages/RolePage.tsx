@@ -4,15 +4,21 @@ import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
 import type { AudienceMode, DifficultyLevel, JourneyMode } from '@/types'
 import { cn } from '@/utils/cn'
+import { api } from '@/services/api'
+import type { Role } from '@/types'
 
 export default function RolePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const storyId = searchParams.get('story') || 'suzhou-pingjiang'
+  const cityId = searchParams.get('city') || 'suzhou'
   const routeId = searchParams.get('route') || 'suzhou-classic'
   const state = useJourney((s) => s.state)
   const startJourney = useJourney((s) => s.startJourney)
   const resetJourney = useJourney((s) => s.resetJourney)
-  const roles = useJourney((s) => s.roles)
+  const [roles, setRoles] = useState<Role[]>([])
+  const [onsiteReady, setOnsiteReady] = useState(false)
+  const [routeName, setRouteName] = useState('')
   const busy = useJourney((s) => s.busy)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,6 +37,22 @@ export default function RolePage() {
   const submitting = busy || starting
 
   useEffect(() => {
+    let active = true
+    Promise.all([
+      api.get<{ items: Role[] }>(`/roles?story_id=${encodeURIComponent(storyId)}`),
+      api.get<{ items: { id: string; name: string; onsite_ready?: boolean }[] }>(`/cities/${encodeURIComponent(cityId)}/routes`),
+    ]).then(([roleData, routeData]) => {
+      if (!active) return
+      setRoles(roleData.items)
+      const route = routeData.items.find((item) => item.id === routeId)
+      setRouteName(route?.name ?? '')
+      setOnsiteReady(Boolean(route?.onsite_ready))
+      setRoleId(roleData.items[0]?.id ?? null)
+    }).catch((err: Error) => { if (active) setError(err.message) })
+    return () => { active = false }
+  }, [storyId, cityId, routeId])
+
+  useEffect(() => {
     const dialog = restartDialogRef.current
     if (!dialog) return
     if (confirming && !dialog.open) dialog.showModal()
@@ -44,7 +66,7 @@ export default function RolePage() {
     try {
       setError(null)
       if (hasJourney) await resetJourney()
-      await startJourney(roleId, mode, { audience_mode: audience, difficulty, route_id: routeId })
+      await startJourney(roleId, mode, { audience_mode: audience, difficulty, story_id: storyId, route_id: routeId })
       navigate('/map')
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建旅程失败。')
@@ -73,10 +95,12 @@ export default function RolePage() {
             三位角色均为虚构身份。
           </p>
         </div>
-        <Link to="/theme" className="btn-ghost shrink-0 !px-0 sm:!px-3">
-          返回路线详情
+        <Link to="/" className="btn-ghost shrink-0 !px-0 sm:!px-3">
+          返回城市与路线
         </Link>
       </header>
+      {routeName && <p className="mt-4 text-sm text-inkgreen">当前路线：{routeName}</p>}
+      {!onsiteReady && <p className="mt-3 rounded-md bg-paper-deep px-4 py-3 text-sm leading-6 text-ink-soft">该路线现场入口与步行顺序尚未核验，目前开放虚拟游览。</p>}
 
       <fieldset className="mt-6 grid gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-2">
         <legend className="px-2 font-semibold">适合人群与难度</legend>
@@ -215,6 +239,7 @@ export default function RolePage() {
               name="mode"
               className="mt-1 h-4 w-4 shrink-0 accent-cinnabar"
               checked={mode === 'onsite'}
+              disabled={!onsiteReady}
               onChange={() => setMode('onsite')}
             />
             <span>

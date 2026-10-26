@@ -1,5 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,8 +11,26 @@ from sqlalchemy.orm import Session
 from app.ai.rag.index import approved_records
 from app.ai.rag.retrieval import retrieve_knowledge
 from app.core.errors import DomainError
-from app.models import CulturalKnowledge, KnowledgeChunk, StoryEdge, User, UserInventory, UserStoryState
-from app.services.journey import add_event, mutate_journey, start_journey
+from app.models import (
+    Character,
+    CulturalKnowledge,
+    KnowledgeChunk,
+    Route,
+    StoryEdge,
+    User,
+    UserInventory,
+    UserStoryState,
+)
+from app.services.journey import (
+    add_event,
+    arrive_location,
+    enter_finale,
+    journey_locations,
+    journey_tasks,
+    mutate_journey,
+    start_journey,
+    verify_task,
+)
 from app.services.seed import seed_database
 
 
@@ -65,7 +84,7 @@ def test_migrations_and_idempotent_seed(db, database):
     assert {"cities", "routes", "route_stops", "media_assets"} <= set(tables)
     seed_database(db, auto_publish=False)
     seed_database(db, auto_publish=False)
-    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
+    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 30
     assert not db.scalar(select(func.count()).select_from(CulturalKnowledge).where(CulturalKnowledge.review_status != "pending"))
     assert not db.scalar(select(func.count()).select_from(KnowledgeChunk))
     assert db.scalar(select(func.count()).select_from(StoryEdge)) > 20
@@ -73,10 +92,10 @@ def test_migrations_and_idempotent_seed(db, database):
 
 def test_seed_preserves_pending_knowledge_and_does_not_forge_review(db):
     result = seed_database(db)
-    assert result["knowledge"] == 24 and result["chunks"] == 0
+    assert result["knowledge"] == 30 and result["chunks"] == 0
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge).where(
         CulturalKnowledge.review_status == "pending",
-    )) == 24
+    )) == 30
     assert db.scalar(select(func.count()).select_from(KnowledgeChunk)) == result["chunks"]
     assert approved_records(db, "suzhou-pingjiang") == []
     hits = retrieve_knowledge(
@@ -84,6 +103,28 @@ def test_seed_preserves_pending_knowledge_and_does_not_forge_review(db):
         approved_records(db, "suzhou-pingjiang"), {"pingjiang"}, 1,
     )
     assert hits == []
+
+
+def test_city_and_suzhou_branch_routes_complete_independently(db):
+    for route_id in ("suzhou-garden-stones", "hangzhou-xihu-classic", "nanjing-zhongshan-classic"):
+        route = db.get(Route, route_id)
+        role = db.scalar(select(Character).where(Character.story_id == route.story_id, Character.kind == "player"))
+        user_id = f"route-flow-{uuid4()}"
+        user = User(id=user_id, session_hash=user_id, expires_at=datetime.now(UTC))
+        db.add(user)
+        db.flush()
+        with pytest.raises(DomainError, match="入口与现场"):
+            start_journey(db, user, route.story_id, role.id, "onsite", route_id=route_id)
+        journey = start_journey(db, user, route.story_id, role.id, "virtual", route_id=route_id)
+        for spot in journey_locations(db, journey):
+            arrive_location(db, journey, spot.id)
+            for task in (task for task in journey_tasks(db, journey) if task.location_id == spot.id):
+                answer = task.validation.get("answerKey") or task.validation.get("password") or task.validation.get("sortingAnswer")
+                assert verify_task(db, journey, task.id, answer)["ok"]
+        ending = enter_finale(db, journey, "hang")["ending"]
+        assert journey.state == "COMPLETED"
+        assert ending["id"].endswith("-hang")
+        assert journey.state_data["route_id"] == route_id
 
     rerun = seed_database(db, auto_publish=True)
     assert rerun["chunks"] == 0

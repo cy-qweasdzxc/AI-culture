@@ -28,6 +28,7 @@ export interface VerifyResult {
   missingClues?: string[]
 }
 const emptyJourney = {
+  storyId: 'suzhou-pingjiang',
   journeyId: null as string | null,
   stateVersion: 0,
   roleId: null as string | null,
@@ -58,6 +59,7 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   busy: boolean
   error: string | null
   themes: Theme[]
+  routeInfo: { id: string; name: string; finale_location_id: string; finale_choices: { key: 'hang' | 'keep'; label: string; detail: string }[]; onsite_ready?: boolean } | null
   roles: Role[]
   npcs: Npc[]
   spots: Spot[]
@@ -70,7 +72,7 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   sceneDirections: Record<string, SceneDirection>
   restore: () => Promise<void>
   refresh: () => Promise<void>
-  startJourney: (roleId: string, mode: JourneyMode, profile?: { audience_mode: AudienceMode; difficulty: DifficultyLevel; route_id?: string }) => Promise<void>
+  startJourney: (roleId: string, mode: JourneyMode, profile?: { audience_mode: AudienceMode; difficulty: DifficultyLevel; route_id?: string; story_id?: string }) => Promise<void>
   setProfile: (audience_mode: AudienceMode, difficulty?: DifficultyLevel) => Promise<void>
   setMode: (mode: JourneyMode) => Promise<void>
   arriveSpot: (spotId: string, location?: LocationReading) => Promise<boolean>
@@ -114,9 +116,10 @@ export const useJourney = create<JourneyStore>((set, get) => {
       })
   }
   async function catalogs() {
+    const storyId = get().storyId || 'suzhou-pingjiang'
     const [themes, roles] = await Promise.all([
       api.get<{ items: Theme[] }>('/themes'),
-      api.get<{ items: Role[] }>('/roles?story_id=suzhou-pingjiang'),
+      api.get<{ items: Role[] }>(`/roles?story_id=${encodeURIComponent(storyId)}`),
     ])
     set({ themes: themes.items, roles: roles.items })
     if (!get().journeyId) return
@@ -124,7 +127,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
     const catalogVersion = get().stateVersion
     const query = `?journey_id=${encodeURIComponent(catalogJourney)}`
     const [route, tasks, clues, codex, ending, report] = await Promise.all([
-      api.get<{ spots: Spot[]; npcs: Npc[] }>(`/routes/suzhou-pingjiang${query}`),
+      api.get<{ spots: Spot[]; npcs: Npc[]; route: NonNullable<JourneyStore['routeInfo']> }>(`/routes/${encodeURIComponent(storyId)}${query}`),
       api.get<{ items: PublicTask[] }>(`/tasks${query}`),
       api.get<{ items: Clue[] }>(`/clues${query}`),
       api.get<{ items: CodexEntry[]; total: number }>(`/codex${query}`),
@@ -134,6 +137,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
     if (get().journeyId !== catalogJourney || get().stateVersion !== catalogVersion) return
     set({
       spots: route.spots,
+      routeInfo: route.route,
       npcs: route.npcs,
       tasks: tasks.items,
       clues: clues.items,
@@ -187,6 +191,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
     busy: false,
     error: null,
     themes: [],
+    routeInfo: null,
     roles: [],
     npcs: [],
     spots: [],
@@ -228,7 +233,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
       set({ error: null })
     },
     startJourney: async (roleId, mode, profile) => {
-      await action('/journeys/start', { story_id: 'suzhou-pingjiang', role_id: roleId, mode, ...profile })
+      await action('/journeys/start', { story_id: profile?.story_id ?? get().storyId ?? 'suzhou-pingjiang', role_id: roleId, mode, ...profile })
     },
     setProfile: async (audience_mode, difficulty) => {
       await action('/journeys/profile', { audience_mode, difficulty })
@@ -364,11 +369,12 @@ export function selectCompletedSpotCount(s: Pick<JourneyStore, 'spotStatus'>): n
   return Object.values(s.spotStatus).filter((status) => status === 'completed').length
 }
 export function canEnterFinale(
-  s: Pick<JourneyStore, 'state' | 'spotStatus' | 'endingId'>,
+  s: Pick<JourneyStore, 'state' | 'spotStatus' | 'endingId' | 'routeInfo'>,
 ): boolean {
+  const finaleLocationId = s.routeInfo?.finale_location_id ?? 'subo'
   return (
     s.state !== 'COMPLETED' &&
-    (s.spotStatus.subo === 'current' || s.spotStatus.subo === 'completed') &&
+    (s.spotStatus[finaleLocationId] === 'current' || s.spotStatus[finaleLocationId] === 'completed') &&
     !s.endingId
   )
 }

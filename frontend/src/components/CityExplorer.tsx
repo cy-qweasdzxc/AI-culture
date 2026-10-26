@@ -7,9 +7,9 @@ import { safeSourceUrl } from '@/utils/sourceUrl'
 type Status = 'open' | 'demo' | 'building' | 'planned'
 interface City { id: string; name: string; status: Status; theme: string }
 interface Place { id: string; name: string; status: Status; intro?: string; note?: string; source_url?: string; coordinate_status?: string; source_checked_at?: string }
-interface Route { id: string; name: string; status: Status; playable: boolean; note?: string; stops: {id:string}[] }
+interface Route { id: string; name: string; city_id: string; story_id: string; status: Status; playable: boolean; onsite_ready?: boolean; note?: string; stops: {id:string}[] }
 interface Recommendation { route_id:string; name:string; preview_only:boolean; reasons:string[]; estimated_visit_minutes:number|null; walking_distance_m:number|null; stop_ids:string[] }
-const statusLabels:Record<Status,string> = {open:'已开放', demo:'片段预览', building:'建设中', planned:'规划中'}
+const statusLabels:Record<Status,string> = {open:'在线可玩', demo:'片段预览', building:'建设中', planned:'规划中'}
 
 export default function CityExplorer() {
   const [cities, setCities] = useState<City[]>([])
@@ -63,7 +63,7 @@ export default function CityExplorer() {
         <span className="block font-semibold">{c.name} · {statusLabels[c.status]}</span><span className="mt-2 block text-xs leading-5 text-bluegray">{c.theme}</span>
       </button>)}
     </div>
-    {city && <p className="mt-4 text-sm leading-7">{city.name} · {statusLabels[city.status]}。{city.status === 'open' ? '经典主线已开放；可选支线建设中。' : '仅提供地点与来源预览，尚未开放完整剧情、任务及结局。'}</p>}
+    {city && <p className="mt-4 text-sm leading-7">{city.name} · {statusLabels[city.status]}。{city.status === 'open' ? '已开放路线可在线完整体验；现场入口与步行顺序会单独标明核验状态。' : '仅提供地点与来源预览，尚未开放完整剧情、任务及结局。'}</p>}
     {loading && <p role="status" className="mt-3 text-sm">正在读取路线…</p>}
     {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
     {routes.length > 0 && <>
@@ -71,14 +71,14 @@ export default function CityExplorer() {
         {routes.map((route) => <article key={route.id} className={`rounded-lg border bg-surface p-4 ${route.id === selectedRouteId ? 'border-cinnabar ring-1 ring-cinnabar/30' : 'border-line'}`}>
           <button type="button" aria-pressed={route.id === selectedRouteId} disabled={loading} onClick={() => setSelectedRouteId(route.id)} className="min-h-11 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar">
             <span className="block font-semibold">{route.name}</span>
-            <span className="mt-2 block text-xs text-bluegray">{statusLabels[route.status]}{route.playable ? ' · 可开始旅程' : ' · 暂不可开始旅程'}</span>
+            <span className="mt-2 block text-xs text-bluegray">{statusLabels[route.status]}{route.playable ? ` · ${route.onsite_ready ? '可开始旅程' : '仅虚拟游览'}` : ' · 暂不可开始旅程'}</span>
           </button>
           <p className="mt-2 text-sm leading-7">{route.note ?? '五站按序解锁，保留全部主线任务与结局。'}</p>
           {route.stops.length > 0 && <details className="mt-2 text-sm"><summary className="min-h-11 cursor-pointer leading-[44px]">查看路线点位</summary><ol className="list-inside list-decimal leading-7">{route.stops.map((stop) => <li key={stop.id}>{places.find((p) => p.id === stop.id)?.name ?? stop.id}</li>)}</ol>{!route.playable && <p className="mt-2 text-xs leading-6 text-bluegray">片段路线仅供预览，完整结局仍需完成经典主线。</p>}</details>}
         </article>)}
       </div>
       {selectedRoute?.playable
-        ? <Link className="btn-primary mt-4 inline-flex" to={`/role?route=${encodeURIComponent(selectedRoute.id)}`}>使用「{selectedRoute.name}」开始体验</Link>
+        ? <Link className="btn-primary mt-4 inline-flex" to={`/role?city=${encodeURIComponent(selected)}&story=${encodeURIComponent(selectedRoute.story_id)}&route=${encodeURIComponent(selectedRoute.id)}`}>使用「{selectedRoute.name}」开始体验</Link>
         : selectedRoute && <p className="mt-4 rounded-md bg-paper-deep px-4 py-3 text-sm leading-6 text-ink-soft" role="status">已选择「{selectedRoute.name}」。这条路线目前仅供预览，尚未开放旅程。</p>}
     </>}
     {!loading && routes.length === 0 && <p className="mt-4 rounded-md bg-paper-deep px-4 py-3 text-sm leading-6 text-ink-soft">该城市还没有可选择的路线；可以先浏览下方地点资料。</p>}

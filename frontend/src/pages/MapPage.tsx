@@ -33,16 +33,19 @@ export default function MapPage() {
   const busy = useJourney((s) => s.busy)
   const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
   const journeyId = useJourney((s) => s.journeyId)
+  const theme = useJourney((s) => s.themes.find((item) => item.id === s.storyId) ?? s.themes[0])
+  const routeInfo = useJourney((s) => s.routeInfo)
+  const onsiteReady = Boolean(routeInfo?.onsite_ready)
   const [walking, setWalking] = useState<WalkingRoute | null>(null)
   const visibleIds = spots.map((spot) => spot.id).join(',')
   useEffect(() => {
     let active = true
     setWalking(null)
-    if (journeyId) api.post<WalkingRoute>('/navigation/walking', {
+    if (journeyId && onsiteReady) api.post<WalkingRoute>('/navigation/walking', {
       journey_id: journeyId, stop_ids: visibleIds ? visibleIds.split(',') : [],
     }).then((route) => { if (active) setWalking(route) }).catch(() => { if (active) setWalking(null) })
     return () => { active = false }
-  }, [journeyId, visibleIds])
+  }, [journeyId, visibleIds, onsiteReady])
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -110,10 +113,10 @@ export default function MapPage() {
       <header className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            平江寻梦 · 路线
+            {routeInfo?.name ?? `${theme?.name ?? '文化路线'} · 路线`}
           </h1>
           <p className="mt-3 text-sm leading-6 text-ink-soft">
-            沿着水巷与园林前行，完成一站，打开下一段故事。
+            完成当前点位的任务后，按路线顺序解锁下一站。现场核验状态会在此处明确标出。
           </p>
         </div>
         <div
@@ -121,7 +124,7 @@ export default function MapPage() {
           role="group"
           aria-label="体验模式切换"
         >
-          {(
+        {(
             [
               { key: 'virtual', label: '虚拟游览' },
               { key: 'onsite', label: '实地探索' },
@@ -130,7 +133,7 @@ export default function MapPage() {
             <button
               key={item.key}
               type="button"
-              disabled={busy}
+              disabled={busy || (item.key === 'onsite' && !onsiteReady)}
               onClick={() =>
                 void setMode(item.key).catch((error: unknown) =>
                   setFeedback(error instanceof Error ? error.message : '模式切换失败。'),
@@ -154,7 +157,7 @@ export default function MapPage() {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
-        <p className="font-medium text-ink">苏州 · 平江历史街区</p>
+        <p className="font-medium text-ink">{theme?.city ?? '当前城市'} · {theme?.district ?? '当前路线'}</p>
         <p className="text-bluegray">
           已完成{' '}
           <span className="font-semibold tabular-nums text-ink">
@@ -178,7 +181,7 @@ export default function MapPage() {
                   reason={mapError}
                   onSpotClick={selectSpot}
                 />
-              ) : (
+              ) : onsiteReady ? (
                 <MapView
                   spots={spots}
                   spotStatus={spotStatus}
@@ -186,6 +189,8 @@ export default function MapPage() {
                   onSpotClick={selectSpot}
                   onUnavailable={setMapError}
                 />
+              ) : (
+                <SchematicMap spots={spots} spotStatus={spotStatus} reason="现场点位入口与路线顺序尚未核验；地图仅表示虚拟游览的站点顺序。" onSpotClick={selectSpot} />
               )}
             </div>
 

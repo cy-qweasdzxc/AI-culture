@@ -81,7 +81,9 @@ def places(city_id: str, db: Session = Depends(get_db)):
     # PostgreSQL JSON has no equality operator: avoid DISTINCT over full model rows.
     location_ids = select(RouteStop.location_id).join(Route).where(Route.city_id == city_id)
     locations = db.scalars(select(CulturalLocation).where(CulturalLocation.id.in_(location_ids)).order_by(CulturalLocation.route_order)).all()
-    return {"items": [{"id": p.id, "name": p.name, "status": "open", "coordinate_system": "gcj02", "coordinate_status": "verified" if p.coordinates_verified else "approximate_demo", "lat": p.lat, "lng": p.lng, "entrance_verified": False, "opening_status": "unknown", "source_checked_at": None} for p in locations] + city.data.get("preview_places", [])}
+    known_ids = {p.id for p in locations}
+    previews = [p for p in city.data.get("preview_places", []) if p.get("id") not in known_ids]
+    return {"items": [{"id": p.id, "name": p.name, "status": "open", "intro": p.data.get("intro", ""), "note": p.data.get("note", ""), "source_url": p.data.get("source_url") or p.data.get("sourceUrl", ""), "coordinate_system": "gcj02", "coordinate_status": "verified" if p.coordinates_verified else "approximate_demo", "lat": p.lat, "lng": p.lng, "entrance_verified": False, "opening_status": "unknown", "source_checked_at": p.data.get("source_checked_at") or p.data.get("sourceCheckedAt")} for p in locations] + previews}
 
 
 @router.get("/places/{location_id}/media")
@@ -158,6 +160,8 @@ def navigation(body: WalkingBody, db: Session = Depends(get_db), user: User = De
     route = db.get(Route, route_id) if route_id else db.scalar(select(Route).where(Route.story_id == journey.story_id, Route.status == "open").order_by(Route.id))
     if route is None or route.story_id != journey.story_id or route.status not in {"open", "demo"}:
         raise DomainError("ROUTE_UNAVAILABLE", "路线未开放或不属于当前城市。", 409)
+    if not route.data.get("onsite_ready", False):
+        raise DomainError("ONSITE_UNAVAILABLE", "该路线的点位入口和步行顺序尚未核验，暂不提供现场导航。", 409)
     stops = list(db.scalars(select(RouteStop).where(RouteStop.route_id == route.id).order_by(RouteStop.position)))
     allowed = [s.location_id for s in stops]
     ids = body.stop_ids if body.stop_ids is not None else allowed

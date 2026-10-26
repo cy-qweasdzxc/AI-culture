@@ -16,8 +16,11 @@ from app.core.errors import DomainError
 from app.models import (
     ActionReceipt,
     Character,
+    CulturalLocation,
     DialogueLog,
     Item,
+    Route,
+    RouteStop,
     Story,
     StoryEdge,
     StoryNode,
@@ -51,6 +54,31 @@ def owned_journey(db: Session, user: User, journey_id: str | None = None) -> Use
 
 def current_journey(db: Session, user: User) -> UserStoryState | None:
     return db.scalar(select(UserStoryState).where(UserStoryState.user_id == user.id).order_by(UserStoryState.started_at.desc()).limit(1))
+
+
+def journey_route(db: Session, journey: UserStoryState) -> Route | None:
+    route_id = journey.state_data.get("route_id")
+    return db.get(Route, route_id) if route_id else None
+
+
+def journey_locations(db: Session, journey: UserStoryState) -> list:
+    route = journey_route(db, journey)
+    if route is None:
+        return catalog.locations(db, journey.story_id)
+    rows = db.execute(
+        select(RouteStop, CulturalLocation)
+        .join(CulturalLocation, CulturalLocation.id == RouteStop.location_id)
+        .where(RouteStop.route_id == route.id, CulturalLocation.story_id == journey.story_id)
+        .order_by(RouteStop.position)
+    ).all()
+    return [location for _, location in rows]
+
+
+def journey_tasks(db: Session, journey: UserStoryState) -> list[Task]:
+    location_ids = [spot.id for spot in journey_locations(db, journey)]
+    if not location_ids:
+        return []
+    return list(db.scalars(select(Task).where(Task.story_id == journey.story_id, Task.location_id.in_(location_ids)).order_by(Task.id)))
 
 
 def add_event(journey: UserStoryState, kind: str, text: str) -> None:
@@ -88,6 +116,7 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     return {
         "sessionId": journey.user_id,
         "journeyId": journey.id,
+        "storyId": journey.story_id,
         "stateVersion": journey.state_version,
         "roleId": journey.role_id,
         "storyRoleId": journey.role_id,
@@ -214,7 +243,7 @@ def require_edge(db: Session, journey: UserStoryState, source: str, destination:
 
 
 def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: str, audience_mode: str = "adult", difficulty: str | None = None, route_id: str | None = None) -> UserStoryState:
-    from app.models import City, Route
+    from app.models import City
     selected = validate_profile(audience_mode, difficulty)
     story = db.get(Story, story_id)
     role = db.get(Character, role_id)
@@ -226,12 +255,19 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
     city = db.get(City, route.city_id) if route else None
     if route is None or route.story_id != story_id or route.status != "open" or not route.data.get("completes_story") or city is None or city.status != "open":
         raise DomainError("ROUTE_UNAVAILABLE", "请选择已开放且包含完整任务的路线。", 409)
+    if mode == "onsite" and not route.data.get("onsite_ready", False):
+        raise DomainError("ONSITE_UNAVAILABLE", "该路线的入口与现场步行顺序尚未核验，目前只开放虚拟游览。", 409)
     if current_journey(db, user):
         raise DomainError("JOURNEY_EXISTS", "已有保存的旅程，请恢复或先重置。", 409)
-    spots = catalog.locations(db, story_id)
+    route_stops = list(db.scalars(select(RouteStop).where(RouteStop.route_id == route.id).order_by(RouteStop.position)))
+    spots = [db.get(CulturalLocation, stop.location_id) for stop in route_stops]
+    spots = [spot for spot in spots if spot is not None and spot.story_id == story_id]
     if not spots:
         raise DomainError("ROUTE_UNAVAILABLE", "主题没有可用路线。", 409)
-    journey = UserStoryState(id=str(uuid4()), user_id=user.id, story_id=story_id, role_id=role_id, mode=mode, state="EXPLORING", current_node_id="journey-start", state_version=1, state_data={"spotStatus": {spot.id: "discovered" if i == 0 else "undiscovered" for i, spot in enumerate(spots)}, "flags": {}, "events": []})
+    if len(spots) != len(route_stops):
+        raise DomainError("ROUTE_UNAVAILABLE", "路线包含未配置的点位。", 409)
+    start_node = route.data.get("start_node_id") or story.data.get("start_node_id", "journey-start")
+    journey = UserStoryState(id=str(uuid4()), user_id=user.id, story_id=story_id, role_id=role_id, mode=mode, state="EXPLORING", current_node_id=start_node, state_version=1, state_data={"spotStatus": {spot.id: "discovered" if i == 0 else "undiscovered" for i, spot in enumerate(spots)}, "flags": {}, "events": []})
     db.add(journey)
     journey.state_data = {**journey.state_data, "profile": selected, "route_id": route.id}
     try:
@@ -241,7 +277,10 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
         if current_journey(db, user):
             raise DomainError("JOURNEY_EXISTS", "另一请求已经创建旅程，请恢复已有进度。", 409) from error
         raise
+    route_location_ids = {spot.id for spot in spots}
     for task in catalog.tasks(db, story_id):
+        if task.location_id not in route_location_ids:
+            continue
         db.add(UserTaskState(journey_id=journey.id, task_id=task.id, status="locked", attempts=0, score=0))
     grant_item(db, journey, role.data["startClueId"], "role")
     add_event(journey, "journey", f"以「{role.name}」出发，模式：{'虚拟游览' if mode == 'virtual' else '实地探索'}（演示路线）")
@@ -251,7 +290,7 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
 
 
 def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> dict[str, Any]:
-    spots = catalog.locations(db, journey.story_id)
+    spots = journey_locations(db, journey)
     spot = next((candidate for candidate in spots if candidate.id == location_id), None)
     if spot is None:
         raise DomainError("LOCATION_INVALID", "点位不属于当前主题。", 404)
@@ -262,7 +301,10 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
         raise DomainError("TRANSITION_INVALID", "当前状态不能触发点位。", 409)
     target = f"spot-{location_id}"
     if status == "discovered":
-        source = "journey-start" if spot.route_order == 1 else f"spot-{spots[spot.route_order - 2].id}"
+        position = next(index for index, candidate in enumerate(spots) if candidate.id == location_id)
+        story = db.get(Story, journey.story_id)
+        route = journey_route(db, journey)
+        source = (route.data.get("start_node_id") if route else None) or story.data.get("start_node_id", "journey-start") if position == 0 else f"spot-{spots[position - 1].id}"
         require_edge(db, journey, source, target)
     elif status != "completed" and journey.current_node_id != target:
         raise DomainError("TRANSITION_INVALID", "当前剧情节点与请求点位不匹配。", 409)
@@ -272,9 +314,11 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
     journey.state_data = data
     journey.current_location_id = location_id
     journey.current_node_id = target
-    journey.chapter = spot.route_order
+    journey.chapter = next(index for index, candidate in enumerate(spots) if candidate.id == location_id) + 1
     journey.state = "AT_SPOT"
-    for task in db.scalars(select(Task).where(Task.location_id == location_id, Task.story_id == journey.story_id)):
+    for task in journey_tasks(db, journey):
+        if task.location_id != location_id:
+            continue
         progress = db.get(UserTaskState, (journey.id, task.id))
         if progress and progress.status == "locked":
             progress.status = "available"
@@ -286,6 +330,8 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
     task = db.get(Task, task_id)
     if task is None or task.story_id != journey.story_id:
         raise DomainError("TASK_NOT_FOUND", "任务不存在。", 404)
+    if task not in journey_tasks(db, journey):
+        raise DomainError("TASK_NOT_FOUND", "任务不属于当前路线。", 404)
     progress = db.get(UserTaskState, (journey.id, task_id))
     if progress is None or progress.status == "locked" or journey.current_location_id != task.location_id:
         raise DomainError("TASK_UNAVAILABLE", "请先到达任务所在点位。", 409)
@@ -326,7 +372,7 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
     if all(state.status == "completed" for state in at_spot):
         data = copy.deepcopy(journey.state_data)
         data["spotStatus"][task.location_id] = "completed"
-        spots = catalog.locations(db, journey.story_id)
+        spots = journey_locations(db, journey)
         position = next(index for index, spot in enumerate(spots) if spot.id == task.location_id)
         if position + 1 < len(spots):
             following = spots[position + 1]
@@ -341,11 +387,17 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
 
 
 def enter_finale(db: Session, journey: UserStoryState, choice_key: str) -> dict[str, Any]:
-    if journey.current_location_id != "subo" or journey.state not in {"AT_SPOT", "DIALOGUE", "TASK_ACTIVE", "ENDING_READY"}:
+    route = journey_route(db, journey)
+    spots = journey_locations(db, journey)
+    story = db.get(Story, journey.story_id)
+    finale_location_id = (route.data.get("finale_location_id") if route else None) or story.data.get("finale_location_id", "subo")
+    finale_node_id = (route.data.get("finale_node_id") if route else None) or story.data.get("finale_node_id", "finale")
+    final_codex_id = route.data.get("final_codex_id") if route and "final_codex_id" in route.data else story.data.get("final_codex_id", "codex-shouyuandeng")
+    if not spots or journey.current_location_id != spots[-1].id or journey.current_location_id != finale_location_id or journey.state not in {"AT_SPOT", "DIALOGUE", "TASK_ACTIVE", "ENDING_READY"}:
         raise DomainError("ENDING_NOT_READY", "请先到达路线尾声点位。", 409)
-    require_edge(db, journey, "spot-subo", "finale")
+    require_edge(db, journey, f"spot-{finale_location_id}", finale_node_id)
     all_done = all(state.status == "completed" for state in db.scalars(select(UserTaskState).where(UserTaskState.journey_id == journey.id)))
-    edges = list(db.scalars(select(StoryEdge).where(StoryEdge.story_id == journey.story_id, StoryEdge.from_node_id == "finale", StoryEdge.choice_key == choice_key).order_by(StoryEdge.priority.desc(), StoryEdge.id)))
+    edges = list(db.scalars(select(StoryEdge).where(StoryEdge.story_id == journey.story_id, StoryEdge.from_node_id == finale_node_id, StoryEdge.choice_key == choice_key).order_by(StoryEdge.priority.desc(), StoryEdge.id)))
     edge = next((candidate for candidate in edges if candidate.conditions.get("all_tasks_complete") is all_done), None)
     if edge is None:
         raise DomainError("TRANSITION_INVALID", "尾声选择没有合法结局。", 409)
@@ -361,7 +413,8 @@ def enter_finale(db: Session, journey: UserStoryState, choice_key: str) -> dict[
     journey.finished_at = utcnow()
     add_event(journey, "choice", f"尾声选择：{'把灯挂上长廊' if choice_key == 'hang' else '把灯收进行囊'}")
     add_event(journey, "ending", f"达成结局：{ending.data['name']}")
-    unlock_codex(db, journey, "codex-shouyuandeng", "ending")
+    if final_codex_id and db.get(Item, final_codex_id):
+        unlock_codex(db, journey, final_codex_id, "ending")
     journey.ending_snapshot = {"endingId": ending.id, "choiceKey": choice_key, "allTasksComplete": all_done, "knowledgeScore": sum(state.score for state in db.scalars(select(UserTaskState).where(UserTaskState.journey_id == journey.id))), "ruleVersion": "frontend-demo-v1"}
     return {"ending": ending.data}
 
@@ -376,8 +429,8 @@ def reset_journey(db: Session, journey: UserStoryState, expected_version: int) -
 
 def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
     state = snapshot(db, journey)
-    tasks = catalog.tasks(db, journey.story_id)
-    spots = catalog.locations(db, journey.story_id)
+    tasks = journey_tasks(db, journey)
+    spots = journey_locations(db, journey)
     progress = state["taskStates"]
     by_spot = [{"spotId": spot.id, "completed": sum(progress[t.id]["status"] == "completed" for t in tasks if t.location_id == spot.id), "total": sum(t.location_id == spot.id for t in tasks), "score": sum(progress[t.id]["score"] for t in tasks if t.location_id == spot.id)} for spot in spots]
     codex_total = len(list(db.scalars(select(Item).where(Item.story_id == journey.story_id, Item.kind == "codex"))))
