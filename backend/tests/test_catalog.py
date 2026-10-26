@@ -1,6 +1,6 @@
 def test_catalog_preserves_playability_boundaries(client):
     cities = client.get("/api/cities").json()["items"]
-    assert len(cities) == 4
+    assert len(cities) == 6
     assert {c["id"] for c in cities if c["status"] == "open"} == {"suzhou"}
     routes = client.get("/api/cities/suzhou/routes").json()["items"]
     classic = next(r for r in routes if r["id"] == "suzhou-classic")

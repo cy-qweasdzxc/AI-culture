@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import { useJourney } from '@/engine/journeyStore'
 import type { AudienceMode, DifficultyLevel, JourneyMode } from '@/types'
@@ -7,6 +7,8 @@ import { cn } from '@/utils/cn'
 
 export default function RolePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const routeId = searchParams.get('route') || 'suzhou-classic'
   const state = useJourney((s) => s.state)
   const startJourney = useJourney((s) => s.startJourney)
   const resetJourney = useJourney((s) => s.resetJourney)
@@ -42,7 +44,7 @@ export default function RolePage() {
     try {
       setError(null)
       if (hasJourney) await resetJourney()
-      await startJourney(roleId, mode, { audience_mode: audience, difficulty, route_id: 'suzhou-classic' })
+      await startJourney(roleId, mode, { audience_mode: audience, difficulty, route_id: routeId })
       navigate('/map')
     } catch (err) {
       setError(err instanceof Error ? err.message : '创建旅程失败。')

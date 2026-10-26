@@ -6,7 +6,7 @@ def test_rules_whitelist_unknown_distances_and_short_preview(client, started):
     assert result.status_code == 200
     data = result.json()
     assert data['provider'] == 'rules' and data['model_calls'] == 0
-    assert {r['route_id'] for r in data['items']} == {'suzhou-classic', 'suzhou-short'}
+    assert {r['route_id'] for r in data['items']} == {'suzhou-classic', 'suzhou-short', 'suzhou-garden-stones'}
     assert data['items'][0]['route_id'] == 'suzhou-short' and data['items'][0]['preview_only']
     for row in data['items']:
         assert row['walking_distance_m'] is None and row['walking_duration_minutes'] is None

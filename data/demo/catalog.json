@@ -19,11 +19,20 @@
       {"id":"chengdu-wuhou","name":"成都武侯祠博物馆","status":"building","intro":"博物馆文化主题预览，原始介绍见馆方网站。","source_url":"https://www.wuhouci.net.cn/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-23"},
       {"id":"chengdu-dufu","name":"成都杜甫草堂博物馆","status":"building","intro":"诗文文化主题预览，参观资料见馆方网站。","source_url":"https://www.cddfct.cn/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-23"},
       {"id":"chengdu-jinsha","name":"成都金沙遗址博物馆","status":"building","intro":"遗址与博物馆主题预览，展览资料见馆方网站。","source_url":"https://jinshasitemuseum.hicdac.cn/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-23"}
+    ]},
+    {"id":"hangzhou","name":"杭州","status":"building","theme":"湖山与古刹地点预览","preview_places":[
+      {"id":"hangzhou-westlake","name":"杭州西湖风景名胜区","status":"building","intro":"湖山与园林主题预览；地点开放与游览安排以官方公告为准。","source_url":"https://westlake.hangzhou.gov.cn/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-26"},
+      {"id":"hangzhou-lingyin","name":"灵隐寺","status":"building","intro":"古刹文化主题预览；开放信息以寺院官方发布为准。","source_url":"https://lingyinsi.org/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-26"}
+    ]},
+    {"id":"nanjing","name":"南京","status":"building","theme":"六朝历史与博物馆地点预览","preview_places":[
+      {"id":"nanjing-museum","name":"南京博物院","status":"building","intro":"博物馆文化主题预览；展览与预约信息以院方公告为准。","source_url":"https://www.njmuseum.org.cn/zh/visitIndex","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-26"},
+      {"id":"nanjing-zhongshan","name":"中山陵园风景区","status":"building","intro":"历史文化地点预览；开放信息以景区官方发布为准。","source_url":"https://zschina.nanjing.gov.cn/fjms/","coordinates":null,"opening_status":"unknown","source_checked_at":"2026-10-26"}
     ]}
   ],
   "routes": [
     {"id":"suzhou-classic","city_id":"suzhou","story_id":"suzhou-pingjiang","name":"平江寻梦 · 经典五站","status":"open","stop_ids":["pingjiang","ouyuan","shizilin","zhuozhengyuan","subo"],"completes_story":true,"estimated_visit_minutes":null,"walking_distance_m":null},
     {"id":"suzhou-short","city_id":"suzhou","story_id":"suzhou-pingjiang","name":"水巷与耦园 · 片段预览","status":"demo","stop_ids":["pingjiang","ouyuan"],"completes_story":false,"estimated_visit_minutes":null,"walking_distance_m":null,"note":"仅为主线前两站的预览，不能跳过后续任务直接获得完整结局。"},
-    {"id":"suzhou-branches","city_id":"suzhou","story_id":"suzhou-pingjiang","name":"昆曲与评弹 · 可选文化支线","status":"building","stop_ids":[],"completes_story":false,"estimated_visit_minutes":null,"walking_distance_m":null,"note":"两个博物馆点位待入口与内容核验，尚未开放任务。"}
+    {"id":"suzhou-branches","city_id":"suzhou","story_id":"suzhou-pingjiang","name":"昆曲与评弹 · 可选文化支线","status":"building","stop_ids":[],"completes_story":false,"estimated_visit_minutes":null,"walking_distance_m":null,"note":"中国昆曲博物馆与中国苏州评弹博物馆的文化支线预览；点位入口、路线、剧情与任务待核验，暂不可开始旅程。"},
+    {"id":"suzhou-garden-stones","city_id":"suzhou","story_id":"suzhou-pingjiang","name":"园林寻石 · 三站片段预览","status":"demo","stop_ids":["ouyuan","shizilin","zhuozhengyuan"],"completes_story":false,"estimated_visit_minutes":null,"walking_distance_m":null,"note":"聚焦耦园、狮子林与拙政园的园林片段预览；不可替代经典主线，也不能单独解锁完整结局。"}
   ]
 }
