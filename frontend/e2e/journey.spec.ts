@@ -47,6 +47,27 @@ async function openChat(page: Page, name: string, npcId: string): Promise<void> 
   await expect(page).toHaveURL(new RegExp(`/chat/${npcId}$`))
 }
 
+/**
+ * 把排序题按给定文本顺序排好。
+ *
+ * 初始顺序由服务端打乱（旧后端则由前端倒序兜底），因此不能依赖固定点击次数。
+ * 这里按每一项目前的实际位置点击“上移”，直到它落到目标位置；既能覆盖新后端的
+ * initialOrder，也能覆盖旧后端的倒序兜底。
+ */
+async function arrangeSorting(page: Page, orderedTexts: string[]): Promise<void> {
+  const rows = page.getByRole('list', { name: /排序列表/ }).getByRole('listitem')
+  for (const [target, text] of orderedTexts.entries()) {
+    for (;;) {
+      const current = (await rows.allTextContents()).findIndex((row) => row.includes(text))
+      if (current === -1) throw new Error(`排序列表缺少条目：${text}`)
+      if (current < target) throw new Error(`条目「${text}」无法从第 ${current + 1} 项移到第 ${target + 1} 项`)
+      if (current === target) break
+      await page.getByRole('button', { name: `上移第 ${current + 1} 项` }).click()
+      await expect(rows.nth(current - 1)).toContainText(text)
+    }
+  }
+}
+
 test('管理端未登录和错误凭据不会开放后台', async ({ page }) => {
   await gotoApp(page, '/admin', () => page.getByRole('heading', { level: 1, name: '管理后台登录' }))
   await page.getByLabel('账号', { exact: true }).fill('invalid-admin')
@@ -150,6 +171,10 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await quiz('task-shizi-dynasty', 'B.元代')
   await arrive('拙政园', 'zhuozhengyuan')
   await gotoApp(page, '/task/task-zhuozheng-timeline', () => page.getByRole('button', { name: '提交答案' }))
+  await arrangeSorting(page, ['明正德年间', '文徵明为园作图咏', '太平天国时期', '作为苏州古典园林代表'])
+  const timelineRows = page.getByRole('list', { name: /排序列表/ }).getByRole('listitem')
+  await expect(timelineRows.nth(0)).toContainText('明正德年间')
+  await expect(timelineRows.nth(3)).toContainText('作为苏州古典园林代表')
   await page.getByRole('button', { name: '提交答案' }).click()
   await expect(page.getByText(/^任务已完成/)).toBeVisible()
   await arrive('苏州博物馆', 'subo')

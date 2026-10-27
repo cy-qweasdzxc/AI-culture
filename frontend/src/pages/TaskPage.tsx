@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import DemoDataNotice from '@/components/DemoDataNotice'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
+import { initialSortingOrder } from '@/utils/sortingOrder'
 
 export default function TaskPage() {
   const { taskId } = useParams<{ taskId: string }>()
@@ -21,10 +22,13 @@ export default function TaskPage() {
   const [multiSelected, setMultiSelected] = useState<string[]>([])
   const [matchingAnswers, setMatchingAnswers] = useState<Record<string, string>>({})
   const [password, setPassword] = useState('')
-  const [order, setOrder] = useState<number[]>(task?.sortingItems?.map((_, i) => i) ?? [])
+  const [order, setOrder] = useState<number[]>(() =>
+    initialSortingOrder(task?.sortingItems?.length ?? 0, task?.initialOrder),
+  )
   const [result, setResult] = useState<{ ok: boolean; feedback: string } | null>(null)
   const [reward, setReward] = useState(0)
   const sortingItemsSignature = JSON.stringify(task?.sortingItems ?? [])
+  const sortingInitialOrderSignature = JSON.stringify(task?.initialOrder ?? null)
   useEffect(() => {
     setSelected(null)
     setMultiSelected([])
@@ -33,8 +37,9 @@ export default function TaskPage() {
     setResult(null)
     setReward(0)
     const items: string[] = JSON.parse(sortingItemsSignature)
-    setOrder(items.map((_, i) => i))
-  }, [taskId, sortingItemsSignature])
+    const serverOrder: number[] | null = JSON.parse(sortingInitialOrderSignature)
+    setOrder(initialSortingOrder(items.length, serverOrder))
+  }, [taskId, sortingItemsSignature, sortingInitialOrderSignature])
 
   if (!task) {
     return (

@@ -149,6 +149,8 @@ export interface Task {
   passwordHint?: string
   /** sorting */
   sortingItems?: string[]
+  /** Server-provided safe display order; PublicTask exposes it in place of the answer. */
+  initialOrder?: number[]
   sortingAnswer?: number[]
   /** combine：需要的线索 id 组合 */
   requiredClues?: string[]

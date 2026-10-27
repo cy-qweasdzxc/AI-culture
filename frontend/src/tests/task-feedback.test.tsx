@@ -40,10 +40,32 @@ async function submitWrongOrder() {
 it('排序答错后目录刷新仍保留排列与错误反馈', async () => {
   mount()
   await submitWrongOrder()
-  expect(verify).toHaveBeenCalledWith('sorting', [1, 0, 2])
+  expect(verify).toHaveBeenCalledWith('sorting', [1, 2, 0])
   const rows = within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')
   expect(rows[0]).toHaveTextContent('乙')
-  expect(rows[1]).toHaveTextContent('甲')
+  expect(rows[1]).toHaveTextContent('丙')
+  expect(rows[2]).toHaveTextContent('甲')
+})
+
+it('倒序兜底时可以从下往上还原为原始索引并提交', async () => {
+  mount()
+  const rows = () => within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')
+  expect(rows().map((row) => row.textContent)).toEqual([
+    expect.stringContaining('丙'),
+    expect.stringContaining('乙'),
+    expect.stringContaining('甲'),
+  ])
+  fireEvent.click(screen.getByRole('button', { name: '上移第 3 项' }))
+  fireEvent.click(screen.getByRole('button', { name: '上移第 2 项' }))
+  fireEvent.click(screen.getByRole('button', { name: '上移第 3 项' }))
+  expect(rows().map((row) => row.textContent)).toEqual([
+    expect.stringContaining('甲'),
+    expect.stringContaining('乙'),
+    expect.stringContaining('丙'),
+  ])
+  fireEvent.click(screen.getByRole('button', { name: '提交答案' }))
+  await screen.findByRole('alert')
+  expect(verify).toHaveBeenCalledWith('sorting', [0, 1, 2])
 })
 
 it('切换题目会重置上题答案与反馈', async () => {
@@ -51,7 +73,7 @@ it('切换题目会重置上题答案与反馈', async () => {
   await submitWrongOrder()
   await act(() => router.navigate('/task/second'))
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-  expect(within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')[0]).toHaveTextContent('甲')
+  expect(within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')[0]).toHaveTextContent('丙')
 })
 
 it('同题选项实际变化时初始化新题内容', async () => {
@@ -61,7 +83,16 @@ it('同题选项实际变化时初始化新题内容', async () => {
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   const rows = within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')
   expect(rows).toHaveLength(2)
-  expect(rows[0]).toHaveTextContent('丁')
+  expect(rows[0]).toHaveTextContent('戊')
+})
+
+it('优先使用服务端给出的排序初始顺序', () => {
+  useJourney.setState({ tasks: [{ ...task, initialOrder: [1, 2, 0] }] })
+  mount()
+  const rows = within(screen.getByRole('list', { name: /排序列表/ })).getAllByRole('listitem')
+  expect(rows[0]).toHaveTextContent('乙')
+  expect(rows[1]).toHaveTextContent('丙')
+  expect(rows[2]).toHaveTextContent('甲')
 })
 
 it('多选挑战提交选中集合，完成旅程后不再显示提交入口', async () => {

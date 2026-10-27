@@ -25,6 +25,7 @@ from app.services.journey import (
     arrive_location,
     current_journey,
     enter_finale,
+    initial_sorting_order,
     journey_locations,
     journey_tasks,
     mutate_journey,
@@ -179,8 +180,11 @@ def tasks(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
         unlocked = task.location_id == journey.current_location_id or state["spotStatus"].get(task.location_id) in {"current", "completed"} or progress["status"] != "locked"
         if not unlocked:
             continue
-        definition, _ = task_definition(task, journey)
+        definition, rule = task_definition(task, journey)
         public = {key: value for key, value in definition.items() if key not in {"answerKey", "answerKeys", "matchingAnswer", "matchingPairs", "password", "sortingAnswer", "explanation"}}
+        if definition.get("type") == "sorting":
+            # The browser needs a scrambled starting order, never the answer itself.
+            public["initialOrder"] = initial_sorting_order(len(definition.get("sortingItems", [])), rule.get("sortingAnswer"))
         if progress["status"] == "completed":
             public["explanation"] = task.data.get("explanation", "")
         public["isDemo"] = True
