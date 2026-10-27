@@ -71,7 +71,7 @@ const CHOICE_POOLS: Record<string, Choice[]> = {
   ],
   'xiao-shen': [
     { text: '片石假山妙在哪里？', kind: 'task', taskId: 'task-pianshi', priority: true },
-    { text: '“以壁为纸，以石为画”是什么意思？', kind: 'task', taskId: 'task-pianshi' },
+    { text: '“以壁为纸，以石为绘”是什么意思？', kind: 'task', taskId: 'task-pianshi' },
     { text: '贝聿铭是怎么设计新馆的？', kind: 'culture' },
     { text: '新馆为什么用白墙灰瓦？', kind: 'culture' },
     { text: '苏博和忠王府是什么关系？', kind: 'culture' },
