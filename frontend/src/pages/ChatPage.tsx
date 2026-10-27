@@ -436,8 +436,11 @@ export default function ChatPage() {
             <div className="chat-scene-veil absolute inset-0" aria-hidden />
             <div
               ref={listRef}
-              className="relative z-10 h-full space-y-6 overflow-y-auto overscroll-contain px-3 py-5 sm:px-6"
+              className="relative z-10 h-full space-y-6 overflow-y-auto overscroll-contain px-3 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cinnabar sm:px-6"
+              role="log"
+              aria-label="对话消息"
               aria-live="polite"
+              tabIndex={0}
             >
               {spot ? (
                 <div className="flex justify-center" aria-hidden>
