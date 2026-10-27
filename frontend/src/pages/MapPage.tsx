@@ -7,7 +7,8 @@ import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import type { SpotStatus } from '@/types'
 import { cn } from '@/utils/cn'
-import { api } from '@/services/api'
+import { ApiError, api } from '@/services/api'
+import { MAX_ACCURACY_M, formatAccuracy, isUsableReading } from '@/utils/locationReading'
 
 interface WalkingRoute {
   status: 'walking' | 'schematic'
@@ -24,6 +25,16 @@ const statusMeta: Record<SpotStatus, { icon: string; label: string; cls: string 
   completed: { icon: '✓', label: '已完成', cls: 'border-inkgreen bg-inkgreen text-white' },
 }
 
+function locateErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 422 || error.code === 'VALIDATION_ERROR') {
+      return '定位数据超出允许范围，请重试或切换虚拟游览模式。'
+    }
+    return error.message
+  }
+  return error instanceof Error ? error.message : '定位触发失败。'
+}
+
 export default function MapPage() {
   const navigate = useNavigate()
   const spotStatus = useJourney((s) => s.spotStatus)
@@ -36,6 +47,7 @@ export default function MapPage() {
   const busy = useJourney((s) => s.busy)
   const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
   const journeyId = useJourney((s) => s.journeyId)
+  const clearError = useJourney((s) => s.clearError)
   const [walking, setWalking] = useState<WalkingRoute | null>(null)
   const visibleIds = spots.map((spot) => spot.id).join(',')
   useEffect(() => {
@@ -89,18 +101,38 @@ export default function MapPage() {
     }
     setLocating(true)
     setFeedback(null)
+    clearError()
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        const reading = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy_m: pos.coords.accuracy,
+        }
+        if (!isUsableReading(reading)) {
+          const coarse =
+            Number.isFinite(reading.accuracy_m) && reading.accuracy_m > MAX_ACCURACY_M
+          clearError()
+          setFeedback(
+            coarse
+              ? `当前定位精度不足（约 ${formatAccuracy(reading.accuracy_m)}），请到开阔处重试，或切换虚拟游览模式。`
+              : '当前定位数据异常，请到开阔处重试，或切换虚拟游览模式。',
+          )
+          setLocating(false)
+          return
+        }
         try {
           await arriveSpot(selected.id, {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy_m: pos.coords.accuracy,
+            ...reading,
             coordinate_system: 'wgs84',
           })
           navigate(`/spot/${selected.id}`)
         } catch (error) {
-          setFeedback(error instanceof Error ? error.message : '定位触发失败。')
+          // The store mirrors every action failure into the global banner. The
+          // location-specific message below is friendlier and actionable, so
+          // clear the raw "请求字段无效。" copy instead of showing both.
+          clearError()
+          setFeedback(locateErrorMessage(error))
         } finally {
           setLocating(false)
         }
