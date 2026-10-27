@@ -116,7 +116,7 @@ export default function SpotPage() {
         <span aria-current="page">{spot.name}</span>
       </nav>
 
-      <header className="mt-5 grid items-center gap-7 md:grid-cols-[1fr_0.9fr] md:gap-10">
+      <header className="mt-5 grid items-center gap-7 md:grid-cols-[1fr_0.9fr] md:items-start md:gap-10">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3 text-sm text-bluegray">
             <span>第 {spot.order} 站</span>
