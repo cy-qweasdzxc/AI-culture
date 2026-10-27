@@ -78,6 +78,7 @@ test('合并版三类进度、挑战与探索、回访及结局只读共同生�
   await action('/location/trigger', { spot_id: 'ouyuan' })
   await page.goto('/spot/pingjiang')
   await page.getByRole('button', { name: '回到此点继续探索', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '这里的谜题', exact: true })).toBeVisible()
   await refresh()
   expect(state.currentSpotId).toBe('pingjiang')
   expect(state.spotStatus.ouyuan).toBe('current')

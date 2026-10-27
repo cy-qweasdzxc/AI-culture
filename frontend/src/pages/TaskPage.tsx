@@ -195,7 +195,7 @@ export default function TaskPage() {
           <>
             {journeyComplete ? (
               <div className="mb-5 rounded-lg border border-line bg-paper-deep/50 p-4 text-sm leading-6 text-bluegray" role="status">
-                本段旅程已结束，未完成的任务无法继续提交。你可以查看题目；如需尝试，请返回角色页开启新旅程。
+                本次旅程已结束，未完成的任务无法继续提交。你可以查看题目；如需尝试，请返回角色页开启新旅程。
                 <Link to="/role" className="ml-1 font-medium text-inkgreen underline">开启新旅程</Link>
               </div>
             ) : null}
