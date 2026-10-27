@@ -186,7 +186,7 @@ export const SUZHOU_QUESTION_BANK: SuggestedQuestion[] = [
   { spotId: 'subo', topic: '街巷生活', text: '现有资料能确认忠王府旧址有哪些保存价值吗？' },
   { spotId: 'subo', topic: '园林营造', text: '创意山水园由哪些水景、石景和园林构件组成？' },
   { spotId: 'subo', topic: '园林营造', text: '片石假山妙在哪里？', priority: true },
-  { spotId: 'subo', topic: '园林营造', text: '“以壁为纸，以石为画”具体描述了怎样的叠石效果？' },
+  { spotId: 'subo', topic: '园林营造', text: '“以壁为纸，以石为绘”具体描述了怎样的叠石效果？' },
   {
     spotId: 'subo',
     topic: '历史人物',
