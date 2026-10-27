@@ -50,9 +50,9 @@ async function openChat(page: Page, name: string, npcId: string): Promise<void> 
 /**
  * 把排序题按给定文本顺序排好。
  *
- * 初始顺序由服务端打乱（旧后端则由前端倒序兜底），因此不能依赖固定点击次数。
+ * 初始顺序由服务端打乱（旧后端则由前端旋转兜底），因此不能依赖固定点击次数。
  * 这里按每一项目前的实际位置点击“上移”，直到它落到目标位置；既能覆盖新后端的
- * initialOrder，也能覆盖旧后端的倒序兜底。
+ * initialOrder，也能覆盖旧后端的旋转兜底。
  */
 async function arrangeSorting(page: Page, orderedTexts: string[]): Promise<void> {
   const rows = page.getByRole('list', { name: /排序列表/ }).getByRole('listitem')
