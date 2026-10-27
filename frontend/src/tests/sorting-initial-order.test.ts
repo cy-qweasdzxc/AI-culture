@@ -11,17 +11,23 @@ describe('initialSortingOrder', () => {
     expect(order).not.toBe(serverOrder)
   })
 
-  it('falls back to a deterministic reversed order when the server omits it', () => {
+  it('falls back to a deterministic single rotation when the server omits it', () => {
     for (let count = 2; count <= 8; count += 1) {
       const order = initialSortingOrder(count)
-      expect(order).toEqual(range(count).reverse())
+      expect(order).toEqual([...range(count).slice(1), 0])
       expect(order).not.toEqual(range(count))
       expect(initialSortingOrder(count)).toEqual(order)
     }
   })
 
+  it('legacy fallback avoids the normal and advanced demo answers', () => {
+    expect(initialSortingOrder(4)).toEqual([1, 2, 3, 0])
+    expect(initialSortingOrder(4)).not.toEqual([0, 1, 2, 3])
+    expect(initialSortingOrder(4)).not.toEqual([3, 2, 1, 0])
+  })
+
   it('rejects stale server orders that are not a permutation of the current items', () => {
-    const fallback = [3, 2, 1, 0]
+    const fallback = [1, 2, 3, 0]
     const invalidOrders = [
       [0, 1, 2],
       [0, 1, 2, 3, 4],
