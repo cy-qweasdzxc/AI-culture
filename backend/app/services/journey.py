@@ -43,6 +43,20 @@ def timestamp_ms(value: datetime | None) -> int | None:
     return int(value.replace(tzinfo=UTC).timestamp() * 1000) if value else None
 
 
+def initial_sorting_order(item_count: int, answer: list[int] | None = None) -> list[int]:
+    """Return a deterministic opening order that does not reveal the answer.
+
+    Sorting tasks must not be solvable without any interaction. The reverse
+    order is the public fallback; when that happens to be the configured answer
+    it is rotated once, which is always different for two or more items. With
+    fewer than two items no non-identity permutation exists.
+    """
+    order = list(range(item_count - 1, -1, -1))
+    if item_count > 1 and order == answer:
+        order = order[1:] + order[:1]
+    return order
+
+
 def owned_journey(db: Session, user: User, journey_id: str | None = None) -> UserStoryState:
     query = select(UserStoryState).where(UserStoryState.user_id == user.id)
     if journey_id:
