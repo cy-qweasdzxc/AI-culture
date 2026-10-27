@@ -22,16 +22,3 @@ test('building cities show sourced previews and cannot start a fabricated journe
   expect(await screen.findByText('该城市暂无可用游玩路线，可先浏览地点资料。')).toBeInTheDocument()
   expect(post.mock.calls[0][1]).toMatchObject({city_id:'beijing'})
 })
-
-test('playable city route carries its city, story, and route into role selection', async () => {
-  vi.spyOn(api,'get').mockImplementation(async (path:string) => {
-    if (path === '/cities') return {items:[{id:'suzhou',name:'苏州',status:'open',theme:'园林'}, {id:'hangzhou',name:'杭州',status:'open',theme:'湖山'}]} as never
-    if (path.endsWith('/routes')) return {items:[{id:'hangzhou-xihu-classic',city_id:'hangzhou',story_id:'hangzhou-xihu',name:'西湖听景 · 三站虚拟路线',status:'open',playable:true,onsite_ready:false,note:'虚拟游览',stops:[{id:'westlake'}]}]} as never
-    return {items:[]} as never
-  })
-  render(<MemoryRouter><CityExplorer /></MemoryRouter>)
-  fireEvent.click(await screen.findByRole('button',{name:/杭州 · 在线可玩/}))
-  const link = await screen.findByRole('link',{name:/使用「西湖听景/})
-  expect(link).toHaveAttribute('href','/role?city=hangzhou&story=hangzhou-xihu&route=hangzhou-xihu-classic')
-  expect(screen.getByText(/仅虚拟游览/)).toBeInTheDocument()
-})

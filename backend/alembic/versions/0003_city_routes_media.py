@@ -1,5 +1,6 @@
 """Add city, route and rights-aware media catalog without altering existing tables."""
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "0003"

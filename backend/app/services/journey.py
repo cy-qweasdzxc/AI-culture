@@ -16,6 +16,7 @@ from app.core.errors import DomainError
 from app.models import (
     ActionReceipt,
     Character,
+    CulturalKnowledge,
     CulturalLocation,
     DialogueLog,
     Item,
@@ -33,7 +34,9 @@ from app.models import (
     utcnow,
 )
 from app.repositories import catalog
+from app.services.catalog import publication_scope
 from app.services.experience import profile, task_definition, text_answer, validate_profile
+from app.services.knowledge import current_citation, refresh_response
 
 
 def timestamp_ms(value: datetime | None) -> int | None:
@@ -56,28 +59,25 @@ def current_journey(db: Session, user: User) -> UserStoryState | None:
     return db.scalar(select(UserStoryState).where(UserStoryState.user_id == user.id).order_by(UserStoryState.started_at.desc()).limit(1))
 
 
+
 def journey_route(db: Session, journey: UserStoryState) -> Route | None:
     route_id = journey.state_data.get("route_id")
     return db.get(Route, route_id) if route_id else None
 
 
-def journey_locations(db: Session, journey: UserStoryState) -> list:
+def journey_locations(db: Session, journey: UserStoryState) -> list[CulturalLocation]:
     route = journey_route(db, journey)
     if route is None:
         return catalog.locations(db, journey.story_id)
-    rows = db.execute(
-        select(RouteStop, CulturalLocation)
-        .join(CulturalLocation, CulturalLocation.id == RouteStop.location_id)
+    return list(db.scalars(
+        select(CulturalLocation).join(RouteStop, RouteStop.location_id == CulturalLocation.id)
         .where(RouteStop.route_id == route.id, CulturalLocation.story_id == journey.story_id)
         .order_by(RouteStop.position)
-    ).all()
-    return [location for _, location in rows]
+    ))
 
 
 def journey_tasks(db: Session, journey: UserStoryState) -> list[Task]:
     location_ids = [spot.id for spot in journey_locations(db, journey)]
-    if not location_ids:
-        return []
     return list(db.scalars(select(Task).where(Task.story_id == journey.story_id, Task.location_id.in_(location_ids)).order_by(Task.id)))
 
 
@@ -91,32 +91,45 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     db.flush()
     task_states = list(db.scalars(select(UserTaskState).where(UserTaskState.journey_id == journey.id)))
     task_state_by_id = {state.task_id: state for state in task_states}
+    # Old saves do not contain challenges added after the journey started. Reads
+    # expose their initial state without writing or changing the journey version.
     for task in journey_tasks(db, journey):
         if task.id not in task_state_by_id:
-            spot_status = journey.state_data.get("spotStatus", {}).get(task.location_id)
-            status = "available" if task.location_id == journey.current_location_id or spot_status == "completed" else "locked"
-            task_state_by_id[task.id] = UserTaskState(journey_id=journey.id, task_id=task.id, status=status, attempts=0, score=0)
+            task_state_by_id[task.id] = initial_task_state(journey, task)
     inventory = list(db.scalars(select(UserInventory.item_id).where(UserInventory.journey_id == journey.id).order_by(UserInventory.acquired_at, UserInventory.item_id)))
     collections = list(db.scalars(select(UserCollection.item_id).where(UserCollection.journey_id == journey.id).order_by(UserCollection.acquired_at, UserCollection.item_id)))
     messages: dict[str, list[dict[str, Any]]] = {}
     audit = []
     evidence: dict[str, dict[str, Any]] = {}
+    knowledge_cache: dict[str, CulturalKnowledge | None] = {}
+
+    def refresh(entries):
+        result = []
+        for entry in entries:
+            if entry["id"] not in knowledge_cache:
+                knowledge_cache[entry["id"]] = db.get(CulturalKnowledge, entry["id"])
+            result.append(current_citation(entry, knowledge_cache[entry["id"]]))
+        return result
+
     for log in db.scalars(select(DialogueLog).where(DialogueLog.journey_id == journey.id).order_by(DialogueLog.created_at, DialogueLog.id)):
         at = timestamp_ms(log.created_at)
         if log.feedback:
             audit.append({"at": at, "npcId": log.npc_id, "messageId": f"{log.id}-npc", "reason": log.feedback})
-        for entry in log.response.get("evidence", []):
+        cited = refresh(log.response.get("evidence", []))
+        for entry in cited:
             evidence[entry["id"]] = entry
         if log.response.get("scene_hidden"):
             continue
         thread = messages.setdefault(log.response.get("scene_anchor", log.npc_id), [])
         if log.response.get("scene_envelope"):
             thread.append(log.response["scene_user_message"])
-            thread.extend(log.response.get("scene_messages", []))
+            thread.extend({**message, "evidence": refresh(message["evidence"])}
+                          if "evidence" in message else dict(message)
+                          for message in log.response.get("scene_messages", []))
             continue
         thread.extend([
             {"id": f"{log.id}-user", "from": "user", "text": log.user_input, "at": at},
-            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": log.response.get("evidence", []), "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
+            {"id": f"{log.id}-npc", "from": "npc", "text": log.response.get("dialogue", ""), "evidenceIds": log.evidence_ids, "evidence": cited, "at": at, "provider": log.provider, "mock": log.response.get("mock", log.provider == "mock"), "dataScope": log.response.get("data_scope", "reviewed_only"), "data_scope": log.response.get("data_scope", "reviewed_only"), "reason": log.response.get("reason", ""), "safetyFlag": log.response.get("safety_flag", "ok")},
         ])
     data = journey.state_data
     return {
@@ -134,6 +147,7 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
         "state": journey.state,
         "currentSpotId": journey.current_location_id,
         "spotStatus": data.get("spotStatus", {}),
+        "activityStates": copy.deepcopy(data.get("activities", {})),
         "taskStates": {t.task_id: {"status": t.status, "attempts": t.attempts, "score": t.score} for t in task_state_by_id.values()},
         "inventory": inventory,
         "unlockedCodex": collections,
@@ -149,6 +163,13 @@ def snapshot(db: Session, journey: UserStoryState) -> dict[str, Any]:
     }
 
 
+def initial_task_state(journey: UserStoryState, task: Task) -> UserTaskState:
+    visited = journey.state_data.get("spotStatus", {}).get(task.location_id)
+    unlocked = task.location_id == journey.current_location_id or visited in {"current", "completed"}
+    return UserTaskState(journey_id=journey.id, task_id=task.id,
+                         status="available" if unlocked else "locked", attempts=0, score=0)
+
+
 def validate_journey_action(
     db: Session, journey: UserStoryState, expected_version: int, request_id: str | None,
     action_key: str, payload: dict[str, Any], allow_completed: bool = False,
@@ -162,7 +183,7 @@ def validate_journey_action(
                 raise DomainError("IDEMPOTENCY_CONFLICT", "同一 request_id 不能用于不同的操作。", 409)
             # Return the recorded result, but refresh state so delayed retries cannot rewind the client.
             db.refresh(journey)
-            return {**receipt.response, "snapshot": snapshot(db, journey), "replayed": True}
+            return {**refresh_response(db, receipt.response), "snapshot": snapshot(db, journey), "replayed": True}
     if journey.state == "COMPLETED" and not allow_completed:
         raise DomainError("JOURNEY_COMPLETED", "旅程已经结束，请查看结局或重置旅程。", 409)
     if journey.state_version != expected_version:
@@ -253,27 +274,20 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
     selected = validate_profile(audience_mode, difficulty)
     story = db.get(Story, story_id)
     role = db.get(Character, role_id)
-    if story is None or story.status != "published":
+    if story is None or story.status != "published" or story_id not in publication_scope()["stories"]:
         raise DomainError("STORY_INVALID", "主题不存在或尚未发布。", 404)
     if role is None or role.kind != "player" or role.story_id != story_id:
         raise DomainError("ROLE_INVALID", "该角色不能进入当前主题。")
-    route = db.get(Route, route_id) if route_id else db.scalar(select(Route).where(Route.story_id == story_id, Route.status == "open").order_by(Route.id))
+    route = db.get(Route, route_id) if route_id else db.scalar(select(Route).where(Route.story_id == story_id, Route.status == "open", Route.id.in_(publication_scope()["routes"])).order_by(Route.id))
     city = db.get(City, route.city_id) if route else None
-    if route is None or route.story_id != story_id or route.status != "open" or not route.data.get("completes_story") or city is None or city.status != "open":
+    if route is None or route.id not in publication_scope()["routes"] or route.story_id != story_id or route.status != "open" or not route.data.get("completes_story") or city is None or city.status != "open":
         raise DomainError("ROUTE_UNAVAILABLE", "请选择已开放且包含完整任务的路线。", 409)
-    if mode == "onsite" and not route.data.get("onsite_ready", False):
-        raise DomainError("ONSITE_UNAVAILABLE", "该路线的入口与现场步行顺序尚未核验，目前只开放虚拟游览。", 409)
     if current_journey(db, user):
         raise DomainError("JOURNEY_EXISTS", "已有保存的旅程，请恢复或先重置。", 409)
-    route_stops = list(db.scalars(select(RouteStop).where(RouteStop.route_id == route.id).order_by(RouteStop.position)))
-    spots = [db.get(CulturalLocation, stop.location_id) for stop in route_stops]
-    spots = [spot for spot in spots if spot is not None and spot.story_id == story_id]
+    spots = catalog.locations(db, story_id)
     if not spots:
         raise DomainError("ROUTE_UNAVAILABLE", "主题没有可用路线。", 409)
-    if len(spots) != len(route_stops):
-        raise DomainError("ROUTE_UNAVAILABLE", "路线包含未配置的点位。", 409)
-    start_node = route.data.get("start_node_id") or story.data.get("start_node_id", "journey-start")
-    journey = UserStoryState(id=str(uuid4()), user_id=user.id, story_id=story_id, role_id=role_id, mode=mode, state="EXPLORING", current_node_id=start_node, state_version=1, state_data={"spotStatus": {spot.id: "discovered" if i == 0 else "undiscovered" for i, spot in enumerate(spots)}, "flags": {}, "events": []})
+    journey = UserStoryState(id=str(uuid4()), user_id=user.id, story_id=story_id, role_id=role_id, mode=mode, state="EXPLORING", current_node_id="journey-start", state_version=1, state_data={"spotStatus": {spot.id: "discovered" if i == 0 else "undiscovered" for i, spot in enumerate(spots)}, "flags": {}, "events": []})
     db.add(journey)
     journey.state_data = {**journey.state_data, "profile": selected, "route_id": route.id}
     try:
@@ -283,10 +297,7 @@ def start_journey(db: Session, user: User, story_id: str, role_id: str, mode: st
         if current_journey(db, user):
             raise DomainError("JOURNEY_EXISTS", "另一请求已经创建旅程，请恢复已有进度。", 409) from error
         raise
-    route_location_ids = {spot.id for spot in spots}
     for task in catalog.tasks(db, story_id):
-        if task.location_id not in route_location_ids:
-            continue
         db.add(UserTaskState(journey_id=journey.id, task_id=task.id, status="locked", attempts=0, score=0))
     grant_item(db, journey, role.data["startClueId"], "role")
     add_event(journey, "journey", f"以「{role.name}」出发，模式：{'虚拟游览' if mode == 'virtual' else '实地探索'}（演示路线）")
@@ -308,11 +319,13 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
     target = f"spot-{location_id}"
     if status == "discovered":
         position = next(index for index, candidate in enumerate(spots) if candidate.id == location_id)
-        story = db.get(Story, journey.story_id)
         route = journey_route(db, journey)
-        source = (route.data.get("start_node_id") if route else None) or story.data.get("start_node_id", "journey-start") if position == 0 else f"spot-{spots[position - 1].id}"
+        story = db.get(Story, journey.story_id)
+        start_node = (route.data.get("start_node_id") if route else None) or story.data.get("start_node_id", "journey-start")
+        source = start_node if position == 0 else f"spot-{spots[position - 1].id}"
         require_edge(db, journey, source, target)
-    elif status != "completed" and journey.current_node_id != target:
+    # A visited unfinished stop can be revisited after exploring a completed stop.
+    elif status not in {"current", "completed"} and journey.current_node_id != target:
         raise DomainError("TRANSITION_INVALID", "当前剧情节点与请求点位不匹配。", 409)
     data = copy.deepcopy(journey.state_data)
     if status != "completed":
@@ -320,11 +333,9 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
     journey.state_data = data
     journey.current_location_id = location_id
     journey.current_node_id = target
-    journey.chapter = next(index for index, candidate in enumerate(spots) if candidate.id == location_id) + 1
+    journey.chapter = max(journey.chapter, next(index for index, candidate in enumerate(spots) if candidate.id == location_id) + 1)
     journey.state = "AT_SPOT"
-    for task in journey_tasks(db, journey):
-        if task.location_id != location_id:
-            continue
+    for task in db.scalars(select(Task).where(Task.location_id == location_id, Task.story_id == journey.story_id)):
         progress = db.get(UserTaskState, (journey.id, task.id))
         if progress and progress.status == "locked":
             progress.status = "available"
@@ -334,15 +345,11 @@ def arrive_location(db: Session, journey: UserStoryState, location_id: str) -> d
 
 def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any) -> dict[str, Any]:
     task = db.get(Task, task_id)
-    if task is None or task.story_id != journey.story_id:
+    if task is None or task.story_id != journey.story_id or task not in journey_tasks(db, journey):
         raise DomainError("TASK_NOT_FOUND", "任务不存在。", 404)
-    if task not in journey_tasks(db, journey):
-        raise DomainError("TASK_NOT_FOUND", "任务不属于当前路线。", 404)
     progress = db.get(UserTaskState, (journey.id, task_id))
     if progress is None:
-        spot_status = journey.state_data.get("spotStatus", {}).get(task.location_id)
-        status = "available" if task.location_id == journey.current_location_id or spot_status == "completed" else "locked"
-        progress = UserTaskState(journey_id=journey.id, task_id=task.id, status=status, attempts=0, score=0)
+        progress = initial_task_state(journey, task)
         db.add(progress)
         db.flush()
     if progress is None or progress.status == "locked" or journey.current_location_id != task.location_id:
@@ -355,7 +362,6 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
     preserve_chapter_state = (
         task.data.get("optional", False)
         and journey.state_data.get("spotStatus", {}).get(task.location_id) == "completed"
-        and journey.state in {"CHAPTER_COMPLETE", "ENDING_READY"}
     )
     definition, rule = task_definition(task, journey)
     task_type = definition.get("type", task.type)
@@ -376,15 +382,11 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
         )
     elif task_type == "matching":
         expected = rule.get("matchingAnswer", {})
-        expected_left = set(expected)
-        expected_right = set(expected.values())
         correct = (
             isinstance(answer, dict)
             and all(isinstance(left, str) and isinstance(right, str) for left, right in answer.items())
-            and set(answer) == expected_left
-            and len(answer) == len(expected_left)
+            and set(answer) == set(expected)
             and len(set(answer.values())) == len(answer)
-            and set(answer.values()) == expected_right
             and answer == expected
         )
     elif task_type == "password":
@@ -408,10 +410,11 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
     for item_id in task.rewards.get("rewardCodexIds", []):
         unlock_codex(db, journey, item_id, f"task:{task.id}")
     db.flush()
-    at_spot = list(db.execute(select(Task, UserTaskState).join(UserTaskState, Task.id == UserTaskState.task_id).where(UserTaskState.journey_id == journey.id, Task.location_id == task.location_id)))
-    required_at_spot = [state for candidate, state in at_spot if not candidate.data.get("optional", False)]
-    current_spot_status = journey.state_data.get("spotStatus", {}).get(task.location_id)
-    if all(state.status == "completed" for state in required_at_spot) and current_spot_status != "completed":
+    at_spot = list(db.scalars(select(Task).where(Task.story_id == journey.story_id, Task.location_id == task.location_id)))
+    required_at_spot = [candidate for candidate in at_spot if not candidate.data.get("optional", False)]
+    states = {state.task_id: state for state in db.scalars(select(UserTaskState).where(UserTaskState.journey_id == journey.id))}
+    required_complete = all(candidate.id in states and states[candidate.id].status == "completed" for candidate in required_at_spot)
+    if required_complete and journey.state_data.get("spotStatus", {}).get(task.location_id) != "completed":
         data = copy.deepcopy(journey.state_data)
         data["spotStatus"][task.location_id] = "completed"
         spots = journey_locations(db, journey)
@@ -419,7 +422,8 @@ def verify_task(db: Session, journey: UserStoryState, task_id: str, answer: Any)
         if position + 1 < len(spots):
             following = spots[position + 1]
             require_edge(db, journey, f"spot-{task.location_id}", f"spot-{following.id}")
-            data["spotStatus"][following.id] = "discovered"
+            if data["spotStatus"].get(following.id) == "undiscovered":
+                data["spotStatus"][following.id] = "discovered"
         journey.state_data = data
         journey.state = "CHAPTER_COMPLETE" if position + 1 < len(spots) else "ENDING_READY"
         add_event(journey, "spot", f"点位完成：{spots[position].name}")
@@ -438,12 +442,9 @@ def enter_finale(db: Session, journey: UserStoryState, choice_key: str) -> dict[
     if not spots or journey.current_location_id != spots[-1].id or journey.current_location_id != finale_location_id or journey.state not in {"AT_SPOT", "DIALOGUE", "TASK_ACTIVE", "ENDING_READY"}:
         raise DomainError("ENDING_NOT_READY", "请先到达路线尾声点位。", 409)
     require_edge(db, journey, f"spot-{finale_location_id}", finale_node_id)
-    required_states = db.execute(
-        select(Task, UserTaskState)
-        .join(UserTaskState, Task.id == UserTaskState.task_id)
-        .where(UserTaskState.journey_id == journey.id)
-    ).all()
-    all_done = all(state.status == "completed" for task, state in required_states if not task.data.get("optional", False))
+    states = {state.task_id: state for state in db.scalars(select(UserTaskState).where(UserTaskState.journey_id == journey.id))}
+    all_done = all(task.id in states and states[task.id].status == "completed"
+                   for task in journey_tasks(db, journey) if not task.data.get("optional", False))
     edges = list(db.scalars(select(StoryEdge).where(StoryEdge.story_id == journey.story_id, StoryEdge.from_node_id == finale_node_id, StoryEdge.choice_key == choice_key).order_by(StoryEdge.priority.desc(), StoryEdge.id)))
     edge = next((candidate for candidate in edges if candidate.conditions.get("all_tasks_complete") is all_done), None)
     if edge is None:
@@ -475,6 +476,7 @@ def reset_journey(db: Session, journey: UserStoryState, expected_version: int) -
 
 
 def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
+    from app.services.activities import activity_report
     state = snapshot(db, journey)
     tasks = journey_tasks(db, journey)
     spots = journey_locations(db, journey)
@@ -484,6 +486,52 @@ def report(db: Session, journey: UserStoryState) -> dict[str, Any]:
     end = state["finishedAt"] or timestamp_ms(utcnow())
     required_tasks = [task for task in tasks if not task.data.get("optional", False)]
     optional_tasks = [task for task in tasks if task.data.get("optional", False)]
+
     def completed(group: list[Task]) -> int:
         return sum(progress[task.id]["status"] == "completed" for task in group)
-    return {"knowledgeScore": sum(t["score"] for t in progress.values()), "audienceMode": state["audienceMode"], "difficulty": state["difficulty"], "routeId": state["routeId"], "storyRoleId": journey.role_id, "visitMode": journey.mode, "maxScore": sum(task_definition(t, journey)[0]["knowledgeScore"] for t in tasks), "completedTaskCount": sum(t["status"] == "completed" for t in progress.values()), "totalTaskCount": len(tasks), "requiredTaskCount": len(required_tasks), "optionalTaskCount": len(optional_tasks), "completedRequiredTaskCount": completed(required_tasks), "completedOptionalTaskCount": completed(optional_tasks), "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()), "totalSpotCount": len(spots), "unlockedCodexCount": len(state["unlockedCodex"]), "totalCodexCount": codex_total, "startedAt": state["startedAt"], "finishedAt": state["finishedAt"], "durationMinutes": round((end - state["startedAt"]) / 60000, 1), "roleId": journey.role_id, "endingId": journey.ending_id, "events": state["events"], "bySpot": by_spot, "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]} for t in tasks if progress[t.id]["attempts"] > 1], "isDemo": True, "metricSource": "persisted_journey"}
+
+    def score(group: list[Task]) -> int:
+        return sum(progress[task.id]["score"] for task in group)
+
+    def max_score(group: list[Task]) -> int:
+        return sum(task_definition(task, journey)[0]["knowledgeScore"] for task in group)
+
+    activities = activity_report(journey, {spot.id for spot in spots})
+    knowledge_score, maximum = score(tasks), max_score(tasks)
+    return {
+        **activities,
+        "totalScore": knowledge_score + activities["optionalScore"],
+        "totalMaxScore": maximum + activities["optionalMaxScore"],
+        "knowledgeScore": knowledge_score,
+        "maxScore": maximum,
+        "requiredTaskScore": score(required_tasks),
+        "requiredTaskMaxScore": max_score(required_tasks),
+        "optionalTaskScore": score(optional_tasks),
+        "optionalTaskMaxScore": max_score(optional_tasks),
+        "audienceMode": state["audienceMode"],
+        "difficulty": state["difficulty"],
+        "routeId": state["routeId"],
+        "storyRoleId": journey.role_id,
+        "visitMode": journey.mode,
+        "completedTaskCount": completed(tasks),
+        "totalTaskCount": len(tasks),
+        "requiredTaskCount": len(required_tasks),
+        "optionalTaskCount": len(optional_tasks),
+        "completedRequiredTaskCount": completed(required_tasks),
+        "completedOptionalTaskCount": completed(optional_tasks),
+        "completedSpotCount": sum(s == "completed" for s in state["spotStatus"].values()),
+        "totalSpotCount": len(spots),
+        "unlockedCodexCount": len(state["unlockedCodex"]),
+        "totalCodexCount": codex_total,
+        "startedAt": state["startedAt"],
+        "finishedAt": state["finishedAt"],
+        "durationMinutes": round((end - state["startedAt"]) / 60000, 1),
+        "roleId": journey.role_id,
+        "endingId": journey.ending_id,
+        "events": state["events"],
+        "bySpot": by_spot,
+        "weakPoints": [{"taskId": t.id, "title": t.title, "attempts": progress[t.id]["attempts"]}
+                       for t in tasks if progress[t.id]["attempts"] > 1],
+        "isDemo": True,
+        "metricSource": "persisted_journey",
+    }

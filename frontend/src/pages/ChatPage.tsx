@@ -6,9 +6,8 @@ import SceneDirectorPanel from '@/components/SceneDirectorPanel'
 import SceneParticipants from '@/components/SceneParticipants'
 import TypeTag from '@/components/TypeTag'
 import SourceStatus from '@/components/SourceStatus'
-import { suggestedChoices } from '@/data/chatChoices'
+import { suggestedChoices, type ChoiceTopic } from '@/data/chatChoices'
 import { topicsForSpot } from '@/data/suzhouQuestionBank'
-import type { ChoiceTopic } from '@/data/chatChoices'
 import { sceneVisual } from '@/data/sceneVisuals'
 import { useJourney } from '@/engine/journeyStore'
 import type { ChatMessage, SceneDirection, SceneStreamEvent } from '@/types'
@@ -28,6 +27,7 @@ export default function ChatPage() {
   const spots = useJourney((s) => s.spots)
   const tasks = useJourney((s) => s.tasks)
   const busy = useJourney((s) => s.busy)
+  const journeyComplete = useJourney((s) => s.state === 'COMPLETED')
   const npc = npcs.find((item) => item.id === npcId)
 
   const allMessages = useJourney((s) => s.messages)
@@ -38,6 +38,8 @@ export default function ChatPage() {
   const reportIssue = useJourney((s) => s.reportIssue)
   const inventory = useJourney((s) => s.inventory)
   const taskStates = useJourney((s) => s.taskStates)
+  const activities = useJourney((s) => s.activities)
+  const difficulty = useJourney((s) => s.difficulty)
   const spotStatus = useJourney((s) => s.spotStatus)
 
   const [input, setInput] = useState('')
@@ -49,7 +51,7 @@ export default function ChatPage() {
   const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([])
   const [liveDirection, setLiveDirection] = useState<SceneDirection | null>(null)
   const [phase, setPhase] = useState('')
-  const [evidenceId, setEvidenceId] = useState<string | null>(null)
+  const [evidenceSelection, setEvidenceSelection] = useState<{ messageId: string; id: string } | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [contextOpen, setContextOpen] = useState(false)
   const [reportingId, setReportingId] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export default function ChatPage() {
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choiceOffset, setChoiceOffset] = useState(0)
-  const [questionTopic, setQuestionTopic] = useState<ChoiceTopic>('全部主题')
+  const [choiceTopic, setChoiceTopic] = useState<ChoiceTopic>('全部主题')
   const listRef = useRef<HTMLDivElement>(null)
   const reportRequestRef = useRef(0)
   const turnRequestRef = useRef(0)
@@ -96,19 +98,24 @@ export default function ChatPage() {
     )
     .map((item) => item.id)
   const evidence = displayedMessages
-    .flatMap((message) => message.evidence ?? [])
-    .find((item) => item.id === evidenceId)
+    .find((message) => message.id === evidenceSelection?.messageId)
+    ?.evidence?.find((item) => item.id === evidenceSelection?.id)
   const asked = messages.filter((message) => message.from === 'user').map((message) => message.text)
-  const choices = npc
+  const availableTopics = topicsForSpot(spot?.id)
+  const effectiveTopic = choiceTopic === '全部主题' || availableTopics.includes(choiceTopic) ? choiceTopic : '全部主题'
+  const choices = npc && !journeyComplete
     ? suggestedChoices(npc.id, {
-        spotId: currentSpotId,
+        spotId: spot?.id ?? currentSpotId,
         roleId,
         turn: asked.length,
         offset: choiceOffset,
         asked,
-        topic: questionTopic,
+        topic: effectiveTopic,
+        inventory, difficulty,
+        completedTaskIds: Object.entries(taskStates).filter(([, state]) => state.status === 'completed').map(([id]) => id),
       })
     : []
+  const activityQuestions = journeyComplete ? [] : activities.filter((a) => a.spotId === currentSpotId && a.npcId === npcId && a.hintQuestion && !a.npcHintObtained && a.progress.status !== 'completed').map((a) => a.hintQuestion!).filter((text) => !asked.includes(text))
   const hasChoices = choices.length > 0
 
   useEffect(() => {
@@ -117,17 +124,14 @@ export default function ChatPage() {
     setLiveMessages([])
     setLiveDirection(null)
     setSelectedParticipantIds(null)
+    setChoiceTopic('全部主题')
+    setChoiceOffset(0)
     setError(null)
     return () => {
       turnRequestRef.current += 1
       abortRef.current?.abort()
     }
   }, [npcId])
-
-  useEffect(() => {
-    setQuestionTopic('全部主题')
-    setChoiceOffset(0)
-  }, [currentSpotId])
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -150,7 +154,7 @@ export default function ChatPage() {
 
   const send = async (text: string) => {
     const trimmed = text.trim()
-    if (!trimmed || thinking || busy) return
+    if (!trimmed || thinking || busy || journeyComplete) return
     const request = ++turnRequestRef.current
     const controller = new AbortController()
     abortRef.current = controller
@@ -225,7 +229,7 @@ export default function ChatPage() {
       npcs={participants}
       anchorId={npc.id}
       selectedIds={participantIds}
-      disabled={thinking || busy}
+      disabled={thinking || busy || journeyComplete}
       onChange={(id, selected) =>
         setSelectedParticipantIds(
           selected ? [...participantIds, id] : participantIds.filter((item) => item !== id),
@@ -234,14 +238,14 @@ export default function ChatPage() {
     />
   )
 
-  const directorPanel = (
+  const directorPanel = !journeyComplete ? (
     <SceneDirectorPanel
       direction={direction}
       npcs={npcs}
       running={thinking || busy}
       onContinue={() => send('请根据刚才的对话和当前旅程进度继续剧情，安排合适的角色接话。')}
     />
-  )
+  ) : <p className="text-sm leading-7 text-bluegray">旅程已结束，当前对话与证据仅供只读回顾。</p>
 
   const closeReport = () => {
     reportRequestRef.current += 1
@@ -384,7 +388,7 @@ export default function ChatPage() {
                   key={mode.label}
                   type="button"
                   aria-pressed={multiAgent === mode.enabled}
-                  disabled={thinking || busy}
+                  disabled={thinking || busy || journeyComplete}
                   onClick={() => setMultiAgent(mode.enabled)}
                   className={cn(
                     'min-h-11 rounded px-3 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar disabled:opacity-50',
@@ -537,7 +541,7 @@ export default function ChatPage() {
                               <button
                                 key={eid}
                                 type="button"
-                                onClick={() => setEvidenceId(eid)}
+                                onClick={() => setEvidenceSelection({ messageId: m.id, id: eid })}
                                 className="min-h-11 rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-5 text-inkgreen transition-colors hover:border-inkgreen focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar"
                               >
                                 证据 · {ev.title}
@@ -546,7 +550,7 @@ export default function ChatPage() {
                           })}
                         </div>
                       ) : null}
-                      {!isUser && !isTemporary ? (
+                      {!isUser && !isTemporary && !journeyComplete ? (
                         <button
                           type="button"
                           onClick={() => {
@@ -594,37 +598,21 @@ export default function ChatPage() {
           {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
           <div className="shrink-0 border-t border-line bg-surface p-3 sm:p-4">
             <div className="flex flex-col gap-2">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <label
-                  htmlFor="question-topic"
-                  className="shrink-0 text-xs font-medium text-ink-soft"
-                >
-                  推荐主题
+              {journeyComplete ? <p role="status" className="text-sm leading-7 text-bluegray">旅程已结束，可只读回顾对话与证据；开启新旅程后可继续提问。</p> : availableTopics.length > 0 ? (
+                <label className="flex min-h-11 items-center gap-3 text-xs text-bluegray">
+                  推荐问题主题
+                  <select aria-label="推荐问题主题" className="input min-h-11 min-w-0 flex-1 py-2 text-sm" value={effectiveTopic}
+                    disabled={thinking || busy} onChange={(event) => { setChoiceTopic(event.target.value as ChoiceTopic); setChoiceOffset(0) }}>
+                    {(['全部主题', ...availableTopics] as ChoiceTopic[]).map((topic) => <option key={topic} value={topic}>{topic}</option>)}
+                  </select>
                 </label>
-                <select
-                  id="question-topic"
-                  aria-label="按主题筛选推荐问题"
-                  value={questionTopic}
-                  onChange={(event) => {
-                    setQuestionTopic(event.target.value as ChoiceTopic)
-                    setChoiceOffset(0)
-                  }}
-                  disabled={thinking || busy}
-                  className="input min-h-11 min-w-0 flex-1 py-2 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar"
-                >
-                  <option value="全部主题">全部主题</option>
-                  {topicsForSpot(currentSpotId).map((topic) => (
-                    <option key={topic} value={topic}>
-                      {topic}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              ) : null}
+              {activityQuestions.map((question) => <button key={question} type="button" disabled={thinking || busy} className="chat-quick-question min-h-11 rounded-md border border-inkgreen p-3 text-left text-sm leading-7" onClick={() => void send(question)}>可选探索：{question}</button>)}
               {choices.map((c) => (
                 <button
                   key={c}
                   type="button"
-                  disabled={thinking || busy}
+                  disabled={thinking || busy || journeyComplete}
                   onClick={() => send(c)}
                   className="chat-quick-question min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-left text-xs leading-relaxed text-ink-soft transition-colors hover:border-inkgreen hover:bg-paper-deep hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cinnabar disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -648,7 +636,7 @@ export default function ChatPage() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={`问${npc.name}…`}
                   maxLength={200}
-                  disabled={thinking || busy}
+                  disabled={thinking || busy || journeyComplete}
                 />
                 {hasChoices ? (
                   <button
@@ -665,7 +653,7 @@ export default function ChatPage() {
                 <button
                   type="submit"
                   className="btn-primary shrink-0 max-sm:px-3"
-                  disabled={thinking || busy || !input.trim()}
+                  disabled={thinking || busy || journeyComplete || !input.trim()}
                 >
                   发送
                 </button>
@@ -703,7 +691,7 @@ export default function ChatPage() {
       {/* 证据详情抽屉 */}
       <Drawer
         open={!!evidence}
-        onClose={() => setEvidenceId(null)}
+        onClose={() => setEvidenceSelection(null)}
         title={evidence ? '证据来源' : ''}
       >
         {evidence ? (
@@ -716,12 +704,7 @@ export default function ChatPage() {
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
               <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
-              <SourceStatus
-                trustLevel={evidence.trust_level}
-                reviewStatus={evidence.review_status ?? evidence.reviewStatus}
-                sourceUrl={evidence.source_url ?? evidence.sourceUrl}
-                license={evidence.license}
-              />
+              <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} isDemo={evidence.is_demo} isFictional={evidence.is_fictional ?? evidence.type === 'fiction'} citationCurrent={evidence.citation_current} humanReviewVerified={evidence.human_review_verified} />
               <p className="mt-2 text-xs text-bluegray">
                 审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
               </p>
@@ -731,7 +714,7 @@ export default function ChatPage() {
       </Drawer>
 
       {/* 纠错反馈 */}
-      <Drawer open={!!reportingId} onClose={closeReport} title="纠错反馈">
+      <Drawer open={!!reportingId && !journeyComplete} onClose={closeReport} title="纠错反馈">
         <p className="text-sm leading-relaxed text-ink-soft">
           指出 AI 回答中可能不准确的地方，会写入反馈记录，帮助后续更新资料与提示。
         </p>

@@ -1,5 +1,6 @@
+import ResilientImage from '@/components/ResilientImage'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import MapView from '@/components/MapView'
 import SchematicMap from '@/components/SchematicMap'
 import { sceneVisual } from '@/data/sceneVisuals'
@@ -30,24 +31,21 @@ export default function MapPage() {
   const setMode = useJourney((s) => s.setMode)
   const arriveSpot = useJourney((s) => s.arriveSpot)
   const currentSpotId = useJourney((s) => s.currentSpotId)
-  const journeyState = useJourney((s) => s.state)
+  const journeyComplete = useJourney((s) => s.state === 'COMPLETED')
   const spots = useJourney((s) => s.spots)
   const busy = useJourney((s) => s.busy)
   const totalSpots = useJourney((s) => s.report?.totalSpotCount ?? 5)
   const journeyId = useJourney((s) => s.journeyId)
-  const theme = useJourney((s) => s.themes.find((item) => item.id === s.storyId) ?? s.themes[0])
-  const routeInfo = useJourney((s) => s.routeInfo)
-  const onsiteReady = Boolean(routeInfo?.onsite_ready)
   const [walking, setWalking] = useState<WalkingRoute | null>(null)
   const visibleIds = spots.map((spot) => spot.id).join(',')
   useEffect(() => {
     let active = true
     setWalking(null)
-    if (journeyId && onsiteReady) api.post<WalkingRoute>('/navigation/walking', {
+    if (journeyId) api.post<WalkingRoute>('/navigation/walking', {
       journey_id: journeyId, stop_ids: visibleIds ? visibleIds.split(',') : [],
     }).then((route) => { if (active) setWalking(route) }).catch(() => { if (active) setWalking(null) })
     return () => { active = false }
-  }, [journeyId, visibleIds, onsiteReady])
+  }, [journeyId, visibleIds])
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -69,6 +67,7 @@ export default function MapPage() {
   }
 
   const doArriveVirtual = async (spotId: string) => {
+    if (journeyComplete) return
     try {
       await arriveSpot(spotId)
       setFeedback(null)
@@ -78,18 +77,12 @@ export default function MapPage() {
     }
   }
 
-  const doReenterSpot = async (spotId: string) => {
-    try {
-      await arriveSpot(spotId)
-      setFeedback(null)
-      navigate(`/spot/${spotId}`)
-    } catch (error) {
-      setFeedback(error instanceof Error ? error.message : '返回点位失败。')
-    }
-  }
-
   const doLocate = () => {
-    if (!selected) return
+    if (!selected || journeyComplete) return
+    if (!window.isSecureContext) {
+      setFeedback('实地定位需要 HTTPS 安全连接。可以切换为虚拟游览继续体验。')
+      return
+    }
     if (!navigator.geolocation) {
       setFeedback('当前浏览器不支持定位，可切换为虚拟游览模式。')
       return
@@ -125,10 +118,10 @@ export default function MapPage() {
       <header className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            {routeInfo?.name ?? `${theme?.name ?? '文化路线'} · 路线`}
+            平江寻梦 · 路线
           </h1>
           <p className="mt-3 text-sm leading-6 text-ink-soft">
-            完成当前点位的任务后，按路线顺序解锁下一站。现场核验状态会在此处明确标出。
+            沿着水巷与园林前行，完成一站，打开下一段故事。
           </p>
         </div>
         <div
@@ -136,7 +129,7 @@ export default function MapPage() {
           role="group"
           aria-label="体验模式切换"
         >
-        {(
+          {(
             [
               { key: 'virtual', label: '虚拟游览' },
               { key: 'onsite', label: '实地探索' },
@@ -145,7 +138,7 @@ export default function MapPage() {
             <button
               key={item.key}
               type="button"
-              disabled={busy || (item.key === 'onsite' && !onsiteReady)}
+              disabled={busy || journeyComplete}
               onClick={() =>
                 void setMode(item.key).catch((error: unknown) =>
                   setFeedback(error instanceof Error ? error.message : '模式切换失败。'),
@@ -169,7 +162,7 @@ export default function MapPage() {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
-        <p className="font-medium text-ink">{theme?.city ?? '当前城市'} · {theme?.district ?? '当前路线'}</p>
+        <p className="font-medium text-ink">苏州 · 平江历史街区</p>
         <p className="text-bluegray">
           已完成{' '}
           <span className="font-semibold tabular-nums text-ink">
@@ -187,13 +180,12 @@ export default function MapPage() {
           >
             <div className="order-2 h-[360px] border-t border-line sm:order-1 sm:h-[440px] sm:border-b sm:border-t-0 lg:h-[420px]">
               {mapError ? (
-                <SchematicMap
-                  spots={spots}
-                  spotStatus={spotStatus}
-                  reason={mapError}
-                  onSpotClick={selectSpot}
-                />
-              ) : onsiteReady ? (
+                <div className="flex h-full flex-col">
+                  <div className="min-h-0 flex-1"><SchematicMap spots={spots} spotStatus={spotStatus} reason={mapError} onSpotClick={selectSpot} /></div>
+                  {mapError !== '未配置地图密钥' && <button type="button" className="min-h-11 shrink-0 border-t border-line bg-surface px-3 text-xs text-inkgreen"
+                    onClick={() => setMapError(null)}>重新加载在线地图</button>}
+                </div>
+              ) : (
                 <MapView
                   spots={spots}
                   spotStatus={spotStatus}
@@ -201,8 +193,6 @@ export default function MapPage() {
                   onSpotClick={selectSpot}
                   onUnavailable={setMapError}
                 />
-              ) : (
-                <SchematicMap spots={spots} spotStatus={spotStatus} reason="现场点位入口与路线顺序尚未核验；地图仅表示虚拟游览的站点顺序。" onSpotClick={selectSpot} />
               )}
             </div>
 
@@ -211,7 +201,7 @@ export default function MapPage() {
                 <div key={selected.id}>
                   <div className="flex items-start gap-4">
                     {selectedScene ? (
-                      <img
+                      <ResilientImage
                         src={selectedScene.src}
                         alt={`${selected.name}艺术化示意`}
                         className="h-20 w-20 shrink-0 rounded-md object-cover sm:h-24 sm:w-28"
@@ -229,7 +219,7 @@ export default function MapPage() {
                     </div>
                   </div>
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    {selectedStatus === 'discovered' && mode === 'virtual' ? (
+                    {!journeyComplete && selectedStatus === 'discovered' && mode === 'virtual' ? (
                       <button
                         type="button"
                         className="btn-primary"
@@ -239,7 +229,7 @@ export default function MapPage() {
                         到达此点（虚拟游览）
                       </button>
                     ) : null}
-                    {selectedStatus === 'discovered' && mode === 'onsite' ? (
+                    {!journeyComplete && selectedStatus === 'discovered' && mode === 'onsite' ? (
                       <button
                         type="button"
                         className="btn-primary"
@@ -251,25 +241,21 @@ export default function MapPage() {
                     ) : null}
                     {selectedStatus === 'current' || selectedStatus === 'completed' ? (
                       <>
-                        {selectedStatus === 'completed' && currentSpotId !== selected.id && journeyState !== 'COMPLETED' ? (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={busy}
-                            onClick={() => doReenterSpot(selected.id)}
-                          >
-                            {busy ? '正在返回点位…' : '回到此点继续探索'}
+                        {journeyComplete ? <Link to={`/spot/${selected.id}`} className="btn-primary">只读回顾点位</Link> : currentSpotId !== selected.id ? (
+                          <button type="button" className="btn-primary" disabled={busy || locating} onClick={() => mode === 'onsite' ? doLocate() : void doArriveVirtual(selected.id)}>
+                            回到此点继续探索
                           </button>
                         ) : (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            onClick={() => navigate(`/spot/${selected.id}`)}
-                          >
-                            进入点位剧情
-                          </button>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => navigate(`/spot/${selected.id}`)}
+                        >
+                          进入点位剧情
+                        </button>
                         )}
-                        {selected.npcId ? (
+                        {selected.npcId && (currentSpotId === selected.id || journeyComplete) ? (
+                          journeyComplete ? <Link to={`/chat/${selected.npcId}`} className="btn-secondary">只读回顾对话</Link> :
                           <button
                             type="button"
                             className="btn-secondary"
@@ -289,7 +275,7 @@ export default function MapPage() {
                       {feedback}
                     </p>
                   ) : null}
-                  {selectedStatus === 'discovered' ? (
+                    {!journeyComplete && selectedStatus === 'discovered' ? (
                     <p className="mt-3 text-xs leading-5 text-bluegray">
                       {mode === 'virtual'
                         ? '虚拟模式：点击上方按钮即可到达。'

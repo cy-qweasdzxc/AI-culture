@@ -11,6 +11,7 @@ from app.ai.llm.providers import ChatProvider, Generation
 from app.ai.rag.index import rebuild_knowledge
 from app.ai.settings import AISettings
 from app.models import CulturalKnowledge, DialogueLog
+from app.models.entities import utcnow
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def prepared_chat(client, started, db):
         id="fixture-slow-bridge", story_id="suzhou-pingjiang", location_id="pingjiang",
         title="星桥", content="星桥是合成测试中的虚构桥梁。", content_type="fiction",
         source="自有合成夹具", source_url="https://example.invalid/bridge", license="合成测试",
-        review_status="reviewed", trust_level="human_reviewed", reviewer="合成审核", is_demo=False,
+        review_status="reviewed", trust_level="human_reviewed", reviewer="合成审核", reviewed_at=utcnow(), is_demo=False,
     )
     db.add(knowledge)
     db.flush()

@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from app.ai.rag.index import approved_records, rebuild_knowledge
 from app.ai.settings import AISettings
-from app.models import CulturalKnowledge, KnowledgeChunk
+from app.models import CulturalKnowledge, KnowledgeChunk, utcnow
 from app.services.seed import seed_database
 
 
@@ -46,6 +46,7 @@ def test_automatic_publication_is_not_human_review(db):
     db.commit()
     assert approved_records(db, "suzhou-pingjiang") == []
     item.trust_level = "human_reviewed"
+    item.reviewed_at = utcnow()
     item.reviewer = "Synthetic fixture auditor, not cultural review"
     db.commit()
     assert approved_records(db, "suzhou-pingjiang")[0].trust_level == "human_reviewed"

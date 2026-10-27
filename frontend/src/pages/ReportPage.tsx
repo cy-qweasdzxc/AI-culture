@@ -48,10 +48,17 @@ export default function ReportPage() {
       </div>
     )
   const report = s.report
-  const doneTasks = report.completedTaskCount
+  const requiredCount = report.requiredTaskCount ?? report.totalTaskCount
+  const doneRequired = report.completedRequiredTaskCount ?? report.completedTaskCount
+  const optionalCount = report.optionalTaskCount ?? 0
+  const doneOptional = report.completedOptionalTaskCount ?? 0
   const doneSpots = report.completedSpotCount
   const score = report.knowledgeScore
   const maxScore = report.maxScore
+  const requiredScore = report.requiredTaskScore ?? score
+  const requiredMaxScore = report.requiredTaskMaxScore ?? maxScore
+  const optionalScore = report.optionalTaskScore ?? 0
+  const optionalMaxScore = report.optionalTaskMaxScore ?? 0
   const unlocked = s.codexEntries
   const typeCounts = unlocked.reduce<Record<string, number>>((acc, e) => {
     acc[e.type] = (acc[e.type] ?? 0) + 1
@@ -60,21 +67,18 @@ export default function ReportPage() {
   const minutes = report.durationMinutes
 
   const suggestions: string[] = []
-  const requiredTaskCount = report.requiredTaskCount ?? s.tasks.filter((task) => !task.optional).length
-  const optionalTaskCount = report.optionalTaskCount ?? s.tasks.filter((task) => task.optional).length
-  const completedRequiredTaskCount =
-    report.completedRequiredTaskCount ??
-    s.tasks.filter((task) => !task.optional && s.taskStates[task.id]?.status === 'completed').length
-  const completedOptionalTaskCount =
-    report.completedOptionalTaskCount ??
-    s.tasks.filter((task) => task.optional && s.taskStates[task.id]?.status === 'completed').length
-  const remainingRequired = Math.max(0, requiredTaskCount - completedRequiredTaskCount)
-  const remainingOptional = Math.max(0, optionalTaskCount - completedOptionalTaskCount)
-  if (!s.endingId && remainingRequired > 0) {
-    suggestions.push(`还有 ${remainingRequired} 道主线任务未完成，继续沿路线探索。`)
+  const undoneCount = requiredCount - doneRequired
+  if (s.state === 'COMPLETED') {
+    suggestions.push('旅程已结束，地图、对话和任务记录可只读回顾。想尝试未完成的挑战与探索，可开启新旅程。')
+  } else {
+  if (undoneCount > 0) {
+    suggestions.push(`还有 ${undoneCount} 个主线任务未完成，继续沿路线探索。`)
   }
-  if (!s.endingId && remainingOptional > 0) {
-    suggestions.push(`还有 ${remainingOptional} 道自选挑战可尝试，完成后可累积更多知识分。`)
+  if (optionalCount > doneOptional) {
+    suggestions.push(`还有 ${optionalCount - doneOptional} 个自选挑战可尝试；可回访已到达的点位，不影响主线结局。`)
+  }
+  if ((report.optionalTotalCount ?? 0) > (report.optionalCompletedCount ?? 0)) {
+    suggestions.push(`另有 ${(report.optionalTotalCount ?? 0) - (report.optionalCompletedCount ?? 0)} 项可选探索可体验，也可询问 NPC 获取剧情提示。`)
   }
   if (report.totalCodexCount > report.unlockedCodexCount) {
     suggestions.push(
@@ -82,17 +86,14 @@ export default function ReportPage() {
     )
   }
   if (s.endingId === 'wei-jin') {
-    suggestions.push('你抵达的是「未尽之约」结局。可重置旅程再次出发，体验尚未完成的主线与挑战。')
+    suggestions.push('你抵达的是「未尽之约」结局。可开启新旅程再次出发，尝试完成全部主线任务。')
   }
-  if (remainingRequired === 0 && !s.endingId) {
-    suggestions.push(
-      remainingOptional > 0
-        ? '主线任务已完成，可前往苏州博物馆进入尾声，也可以先继续自选挑战。'
-        : '主线任务已完成，前往苏州博物馆进入尾声，做出你的最终选择。',
-    )
+  if (undoneCount === 0 && !s.endingId) {
+    suggestions.push('主线任务已全部完成，前往苏州博物馆进入尾声，做出你的最终选择。')
   }
   if (suggestions.length === 0) {
     suggestions.push('这条路线你已经走完了。可以换一位角色重新出发：不同的身份会听到不同的话。')
+  }
   }
 
   return (
@@ -131,21 +132,11 @@ export default function ReportPage() {
             label={`点位 ${doneSpots}/${report.totalSpotCount}`}
           />
           <ProgressBar
-            value={doneTasks}
-            max={report.totalTaskCount}
-            label={`全部任务 ${doneTasks}/${report.totalTaskCount}`}
+            value={doneRequired}
+            max={requiredCount}
+            label={`主线任务 ${doneRequired}/${requiredCount}`}
           />
-          <ProgressBar
-            value={completedRequiredTaskCount}
-            max={requiredTaskCount}
-            label={`主线任务 ${completedRequiredTaskCount}/${requiredTaskCount}`}
-          />
-          <ProgressBar
-            value={completedOptionalTaskCount}
-            max={optionalTaskCount}
-            label={`自选挑战 ${completedOptionalTaskCount}/${optionalTaskCount}`}
-          />
-          <ProgressBar value={score} max={maxScore} label={`知识分 ${score}/${maxScore}`} />
+          <ProgressBar value={requiredScore} max={requiredMaxScore} label={`主线知识分 ${requiredScore}/${requiredMaxScore}`} />
           <ProgressBar
             value={report.unlockedCodexCount}
             max={report.totalCodexCount}
@@ -154,6 +145,20 @@ export default function ReportPage() {
         </div>
       </section>
 
+      <section className="mt-6 rounded-xl border border-line bg-surface p-5 sm:p-7" aria-labelledby="optional-challenges-report-title">
+        <h2 id="optional-challenges-report-title" className="text-lg font-semibold">自选挑战记录</h2>
+        <p className="mt-2 text-sm leading-7">每站三道观察、多选或配对挑战，可跳过，不影响主线结局。</p>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          <ProgressBar value={doneOptional} max={optionalCount} label={`自选挑战 ${doneOptional}/${optionalCount}`} />
+          <ProgressBar value={optionalScore} max={optionalMaxScore} label={`挑战积分 ${optionalScore}/${optionalMaxScore}`} />
+        </div>
+      </section>
+      <section className="mt-6 rounded-xl border border-line bg-surface p-5 sm:p-7" aria-labelledby="exploration-report-title">
+        <h2 id="exploration-report-title" className="text-lg font-semibold">可选探索记录</h2>
+        <p className="mt-2 text-sm leading-7">可选探索 {report.optionalCompletedCount ?? 0}/{report.optionalTotalCount ?? 0} · 不影响主线结局</p>
+        <ProgressBar value={report.optionalScore ?? 0} max={report.optionalMaxScore ?? 0} label={`探索积分 ${report.optionalScore ?? 0}/${report.optionalMaxScore ?? 0}`} />
+        <p className="mt-3 text-sm leading-7">体验总分 {report.totalScore ?? score}/{report.totalMaxScore ?? maxScore}（主线知识分、挑战积分与探索积分合计，不代表已核验的学习成效）</p>
+      </section>
       <div className="mt-9 grid gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
         {/* 知识得分与图鉴 */}
         <section>
@@ -199,7 +204,7 @@ export default function ReportPage() {
           </ul>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/map" className="btn-secondary">
-              回到路线
+              {s.state === 'COMPLETED' ? '只读回顾路线' : '回到路线'}
             </Link>
             <Link to="/codex" className="btn-ghost">
               翻看文化图鉴

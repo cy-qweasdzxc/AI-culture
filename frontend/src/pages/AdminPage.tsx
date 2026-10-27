@@ -22,6 +22,9 @@ interface KnowledgeForm {
 interface Knowledge extends Omit<KnowledgeForm, 'min_chapter'> {
   review_status: string
   trust_level: string
+  reviewer: string | null
+  reviewed_at: string | null
+  human_review_verified: boolean
   version: number
   is_demo: boolean
   metadata: { min_chapter?: number }
@@ -584,7 +587,7 @@ export default function AdminPage() {
                       {k.review_status} · v{k.version}
                       {k.is_demo ? ' · 演示资料' : ''}
                     </span>
-                    <span className="chip">{k.trust_level === 'human_reviewed' ? '人工审核' : k.trust_level === 'auto_published' ? '自动发布，待人工审核' : '未经核验'}</span>
+                    <span className="chip">{k.human_review_verified ? '人工审核' : k.trust_level === 'auto_published' ? '自动发布，待人工审核' : '未经核验'}</span>
                   </div>
                   <p className="mt-4 max-w-prose whitespace-pre-wrap break-words text-sm leading-7 text-ink-soft">
                     {k.content}
@@ -633,7 +636,7 @@ export default function AdminPage() {
                     </button>
                     <button
                       className="btn-secondary"
-                      disabled={busy || k.review_status !== 'reviewed' || k.trust_level !== 'human_reviewed' || k.is_demo}
+                      disabled={busy || !k.human_review_verified}
                       onClick={() => {
                         void run(
                           () => api.post(`/admin/knowledge/${k.id}/publish`),

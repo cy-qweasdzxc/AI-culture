@@ -2,10 +2,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Character, CulturalLocation, Story, Task
+from app.services.catalog import publication_scope
 
 
 def published_stories(db: Session) -> list[Story]:
-    return list(db.scalars(select(Story).where(Story.status == "published").order_by(Story.id)))
+    return list(db.scalars(select(Story).where(Story.status == "published", Story.id.in_(publication_scope()["stories"])).order_by(Story.id)))
 
 
 def locations(db: Session, story_id: str) -> list[CulturalLocation]:

@@ -128,6 +128,7 @@ export default function TaskPage() {
               }[task.type]
             }
           </span>
+          <span className="chip text-inkgreen">{task.optional ? '自选挑战 · 可跳过' : '主线任务'}</span>
           <span className="text-xs font-medium tabular-nums text-bluegray">
             完成可得 {task.knowledgeScore} 分
           </span>
@@ -374,9 +375,9 @@ export default function TaskPage() {
             ) : null}
 
             <div className="mt-7 flex flex-wrap items-center gap-4 border-t border-line pt-6">
-              <button type="button" className="btn-primary" disabled={!canSubmit} onClick={submit}>
+              {!journeyComplete && <button type="button" className="btn-primary" disabled={!canSubmit} onClick={submit}>
                 提交答案
-              </button>
+              </button>}
               <span className="text-xs text-bluegray">已尝试 {st?.attempts ?? 0} 次</span>
             </div>
           </>

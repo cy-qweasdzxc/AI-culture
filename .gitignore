@@ -55,3 +55,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Pytest temporary roots are not source or Docker build inputs.
+pytest-of-*/

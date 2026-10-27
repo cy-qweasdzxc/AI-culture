@@ -3,6 +3,7 @@ import { createRequestId } from '@/utils/requestId'
 import { api, ApiError, streamSceneChat, type SceneChatRequest } from '@/services/api'
 import type {
   ChatReply,
+  ExplorationActivity,
   AudienceMode,
   DifficultyLevel,
   Clue,
@@ -28,7 +29,6 @@ export interface VerifyResult {
   missingClues?: string[]
 }
 const emptyJourney = {
-  storyId: 'suzhou-pingjiang',
   journeyId: null as string | null,
   stateVersion: 0,
   roleId: null as string | null,
@@ -36,10 +36,12 @@ const emptyJourney = {
   audienceMode: 'adult' as AudienceMode,
   difficulty: 'normal' as DifficultyLevel,
   routeId: null as string | null,
+  storyId: null as string | null,
   state: 'CREATED' as JourneySnapshot['state'],
   currentSpotId: null as string | null,
   spotStatus: {},
   taskStates: {},
+  activityStates: {},
   inventory: [],
   unlockedCodex: [],
   flags: {},
@@ -59,11 +61,11 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   busy: boolean
   error: string | null
   themes: Theme[]
-  routeInfo: { id: string; name: string; finale_location_id: string; finale_choices: { key: 'hang' | 'keep'; label: string; detail: string }[]; onsite_ready?: boolean } | null
   roles: Role[]
   npcs: Npc[]
   spots: Spot[]
   tasks: PublicTask[]
+  activities: ExplorationActivity[]
   clues: Clue[]
   codexEntries: CodexEntry[]
   codexTotal: number
@@ -72,11 +74,12 @@ interface JourneyStore extends Omit<JourneySnapshot, 'sessionId' | 'journeyId'> 
   sceneDirections: Record<string, SceneDirection>
   restore: () => Promise<void>
   refresh: () => Promise<void>
-  startJourney: (roleId: string, mode: JourneyMode, profile?: { audience_mode: AudienceMode; difficulty: DifficultyLevel; route_id?: string; story_id?: string }) => Promise<void>
+  startJourney: (roleId: string, mode: JourneyMode, profile?: { audience_mode: AudienceMode; difficulty: DifficultyLevel; route_id?: string }) => Promise<void>
   setProfile: (audience_mode: AudienceMode, difficulty?: DifficultyLevel) => Promise<void>
   setMode: (mode: JourneyMode) => Promise<void>
   arriveSpot: (spotId: string, location?: LocationReading) => Promise<boolean>
   verifyTask: (taskId: string, answer: unknown) => Promise<VerifyResult>
+  verifyActivity: (activityId: string, answer: unknown) => Promise<VerifyResult & { awardedScore: number; awardedClues: string[]; unlockedCodex: string[] }>
   sendChat: (npcId: string, text: string) => Promise<ChatReply>
   sendSceneChat: (
     npcId: string,
@@ -102,12 +105,13 @@ export const useJourney = create<JourneyStore>((set, get) => {
     if (snapshot && snapshot.journeyId === get().journeyId && snapshot.stateVersion < get().stateVersion)
       return
     latestSnapshot = snapshot
-    if (snapshot) set({ ...snapshot, sceneDirections: snapshot.sceneDirections ?? {} })
+    if (snapshot) set({ ...snapshot, storyId: snapshot.storyId ?? 'suzhou-pingjiang', taskStates: snapshot.taskStates ?? {}, activityStates: snapshot.activityStates ?? {}, sceneDirections: snapshot.sceneDirections ?? {} })
     else
       set({
         ...emptyJourney,
         spots: [],
         tasks: [],
+        activities: [],
         clues: [],
         codexEntries: [],
         codexTotal: 0,
@@ -117,29 +121,32 @@ export const useJourney = create<JourneyStore>((set, get) => {
   }
   async function catalogs() {
     const storyId = get().storyId || 'suzhou-pingjiang'
+    const roleJourney = get().journeyId
+    const roleQuery = `?story_id=${encodeURIComponent(storyId)}${roleJourney ? `&journey_id=${encodeURIComponent(roleJourney)}` : ''}`
     const [themes, roles] = await Promise.all([
       api.get<{ items: Theme[] }>('/themes'),
-      api.get<{ items: Role[] }>(`/roles?story_id=${encodeURIComponent(storyId)}`),
+      api.get<{ items: Role[] }>(`/roles${roleQuery}`),
     ])
     set({ themes: themes.items, roles: roles.items })
     if (!get().journeyId) return
     const catalogJourney = get().journeyId!
     const catalogVersion = get().stateVersion
     const query = `?journey_id=${encodeURIComponent(catalogJourney)}`
-    const [route, tasks, clues, codex, ending, report] = await Promise.all([
-      api.get<{ spots: Spot[]; npcs: Npc[]; route: NonNullable<JourneyStore['routeInfo']> }>(`/routes/${encodeURIComponent(storyId)}${query}`),
+    const [route, tasks, clues, codex, ending, report, activities] = await Promise.all([
+      api.get<{ spots: Spot[]; npcs: Npc[] }>(`/routes/${encodeURIComponent(storyId)}${query}`),
       api.get<{ items: PublicTask[] }>(`/tasks${query}`),
       api.get<{ items: Clue[] }>(`/clues${query}`),
       api.get<{ items: CodexEntry[]; total: number }>(`/codex${query}`),
       api.get<{ ending: Ending | null }>(`/ending${query}`),
       api.get<JourneyReport>(`/report${query}`),
+      api.get<{ items: ExplorationActivity[] }>(`/activities${query}`),
     ])
     if (get().journeyId !== catalogJourney || get().stateVersion !== catalogVersion) return
     set({
       spots: route.spots,
-      routeInfo: route.route,
       npcs: route.npcs,
       tasks: tasks.items,
+      activities: activities.items,
       clues: clues.items,
       codexEntries: codex.items,
       codexTotal: codex.total,
@@ -191,11 +198,11 @@ export const useJourney = create<JourneyStore>((set, get) => {
     busy: false,
     error: null,
     themes: [],
-    routeInfo: null,
     roles: [],
     npcs: [],
     spots: [],
     tasks: [],
+    activities: [],
     clues: [],
     codexEntries: [],
     codexTotal: 0,
@@ -233,7 +240,7 @@ export const useJourney = create<JourneyStore>((set, get) => {
       set({ error: null })
     },
     startJourney: async (roleId, mode, profile) => {
-      await action('/journeys/start', { story_id: profile?.story_id ?? get().storyId ?? 'suzhou-pingjiang', role_id: roleId, mode, ...profile })
+      await action('/journeys/start', { story_id: 'suzhou-pingjiang', role_id: roleId, mode, ...profile })
     },
     setProfile: async (audience_mode, difficulty) => {
       await action('/journeys/profile', { audience_mode, difficulty })
@@ -249,6 +256,10 @@ export const useJourney = create<JourneyStore>((set, get) => {
       action<ActionResponse & VerifyResult>(`/tasks/${encodeURIComponent(taskId)}/verify`, {
         answer,
       }),
+    verifyActivity: async (activityId, answer) =>
+      action<ActionResponse & VerifyResult & { awardedScore: number; awardedClues: string[]; unlockedCodex: string[] }>(
+        `/activities/${encodeURIComponent(activityId)}/verify`, { answer },
+      ),
     sendChat: async (npcId, text) =>
       action<ChatReply>('/chat/message', { npc_id: npcId, message: text }),
     sendSceneChat: async (npcId, text, participantIds, onEvent, signal) => {
@@ -369,12 +380,11 @@ export function selectCompletedSpotCount(s: Pick<JourneyStore, 'spotStatus'>): n
   return Object.values(s.spotStatus).filter((status) => status === 'completed').length
 }
 export function canEnterFinale(
-  s: Pick<JourneyStore, 'state' | 'spotStatus' | 'endingId' | 'routeInfo'>,
+  s: Pick<JourneyStore, 'state' | 'spotStatus' | 'endingId'>,
 ): boolean {
-  const finaleLocationId = s.routeInfo?.finale_location_id ?? 'subo'
   return (
     s.state !== 'COMPLETED' &&
-    (s.spotStatus[finaleLocationId] === 'current' || s.spotStatus[finaleLocationId] === 'completed') &&
+    (s.spotStatus.subo === 'current' || s.spotStatus.subo === 'completed') &&
     !s.endingId
   )
 }

@@ -98,7 +98,7 @@ test('苏州主线后继续观察、多选、配对挑战，刷新保留进度',
   expect(restored.currentSpotId).toBe('pingjiang')
   expect(restored.spotStatus.ouyuan).toBe('current')
   await page.getByRole('link', { name: '与周伯对话', exact: true }).click()
-  await page.getByRole('combobox', { name: '按主题筛选推荐问题' }).selectOption('史实辨析')
+  await page.getByRole('combobox', { name: '推荐问题主题', exact: true }).selectOption('史实辨析')
   await expect(page.locator('#chat-input')).toBeVisible()
   await expect(page.locator('.chat-quick-question')).toHaveCount(2)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)

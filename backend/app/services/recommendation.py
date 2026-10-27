@@ -3,11 +3,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import City, CulturalLocation, Route, RouteStop
+from app.services.catalog import publication_scope
 
 
 def recommend_routes(db: Session, city: City, audience: str, difficulty: str, budget: int | None, interests: list[str], completed: set[str]) -> dict:
     results, unavailable = [], []
-    for route in db.scalars(select(Route).where(Route.city_id == city.id).order_by(Route.id)):
+    for route in db.scalars(select(Route).where(Route.city_id == city.id, Route.id.in_(publication_scope()["routes"])).order_by(Route.id)):
         if city.status not in {"open", "demo"} or route.status not in {"open", "demo"}:
             unavailable.append({"route_id": route.id, "status": route.status, "reason": "点位或内容仍在建设，尚未开放"})
             continue

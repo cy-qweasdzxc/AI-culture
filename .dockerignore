@@ -27,3 +27,6 @@ AI-culture_GPT审查包_*.zip
 AIC-city-story-source.zip
 AIC-city-story-full.zip
 docs/competition/artifacts
+
+# Pytest temporary roots are not source or Docker build inputs.
+**/pytest-of-*

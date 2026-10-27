@@ -1,13 +1,11 @@
 def test_catalog_preserves_playability_boundaries(client):
     cities = client.get("/api/cities").json()["items"]
-    assert len(cities) == 6
-    assert {c["id"] for c in cities if c["status"] == "open"} == {"suzhou", "hangzhou", "nanjing"}
+    assert len(cities) == 4
+    assert {c["id"] for c in cities if c["status"] == "open"} == {"suzhou"}
     routes = client.get("/api/cities/suzhou/routes").json()["items"]
     classic = next(r for r in routes if r["id"] == "suzhou-classic")
     assert classic["playable"] and len(classic["stops"]) == 5
-    garden = next(r for r in routes if r["id"] == "suzhou-garden-stones")
-    assert garden["playable"] and [s["id"] for s in garden["stops"]] == ["ouyuan", "shizilin", "zhuozhengyuan"]
-    assert all(not r["playable"] for r in routes if r["id"] not in {"suzhou-classic", "suzhou-garden-stones"})
+    assert all(not r["playable"] for r in routes if r["id"] != "suzhou-classic")
     assert client.get("/api/cities/missing").status_code == 404
     for city in ["beijing", "xian", "chengdu"]:
         previews = client.get(f"/api/cities/{city}/places").json()["items"]
@@ -34,16 +32,6 @@ def test_five_stations_have_honest_media_status(client, monkeypatch):
         get_settings.cache_clear()
 
 
-def test_new_city_routes_are_virtual_playable_and_source_review_is_pending(client):
-    for city_id, route_id, story_id, stop_count in (
-        ("hangzhou", "hangzhou-xihu-classic", "hangzhou-xihu", 3),
-        ("nanjing", "nanjing-zhongshan-classic", "nanjing-zhongshan", 3),
-    ):
-        route = next(r for r in client.get(f"/api/cities/{city_id}/routes").json()["items"] if r["id"] == route_id)
-        assert route["playable"] and route["story_id"] == story_id and route["onsite_ready"] is False
-        assert len(route["stops"]) == stop_count
-        assert all(p["id"] for p in client.get(f"/api/cities/{city_id}/places").json()["items"])
-        assert client.get(f"/api/roles?story_id={story_id}").json()["items"]
 def test_media_publication_requires_complete_rights_and_city(client, monkeypatch):
     from app.core.config import get_settings
     monkeypatch.setenv("ADMIN_PASSWORD", "synthetic-private-password")
@@ -84,3 +72,17 @@ def test_catalog_seed_retains_staff_edits_and_verified_media_hashes(db):
             assert hashlib.sha256(image.read_bytes()).hexdigest() == asset['sha256']
         assert asset['license_url'].startswith('https://creativecommons.org/')
         assert asset['author'] and asset['source_url'].startswith('https://commons.wikimedia.org/')
+
+
+def test_place_availability_tracks_city_and_route_status(client, db):
+    from app.models import City, Route
+    city = db.get(City, "suzhou")
+    city.status = "planned"
+    db.commit()
+    rows = client.get("/api/cities/suzhou/places").json()["items"]
+    assert all(row["status"] != "open" for row in rows)
+    city.status = "open"
+    db.get(Route, "suzhou-classic").status = "building"
+    db.commit()
+    rows = client.get("/api/cities/suzhou/places").json()["items"]
+    assert all(not row["playable"] for row in rows)

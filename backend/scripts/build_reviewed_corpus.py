@@ -224,30 +224,60 @@ def _canonical_time(value) -> str | None:
     return parsed.astimezone(UTC).isoformat()
 
 
+def _semantic_metadata(value) -> str:
+    if isinstance(value, str):
+        value = json.loads(value)
+    # Admin computes this from the body. Its presence/absence is not a new fact,
+    # source, scope or licence, and cannot revoke an otherwise unchanged review.
+    return _canonical_json({key: item for key, item in (value or {}).items() if key != "sha256"})
+
+
+def _semantic_content(value):
+    from app.ai.rag.retrieval import clean_text
+
+    return clean_text(value) if isinstance(value, str) else value
+
+
 def content_signature(item: dict) -> tuple:
     """Everything that, when changed, invalidates the published index for this entry."""
-    return tuple(_canonical_json(item.get(field)) if field == "metadata_json" else item.get(field)
+    return tuple(_semantic_metadata(item.get(field)) if field == "metadata_json"
+                 else _semantic_content(item.get(field)) if field == "content" else item.get(field)
                  for field in CONTENT_FIELDS)
 
 
 def row_signature(row) -> tuple:
-    return tuple(_canonical_json(row.metadata_json) if field == "metadata_json" else getattr(row, field)
+    return tuple(_semantic_metadata(row.metadata_json) if field == "metadata_json"
+                 else _semantic_content(row.content) if field == "content" else getattr(row, field)
                  for field in CONTENT_FIELDS)
 
 
+def _validate_import_content(item: dict) -> None:
+    from app.ai.rag.retrieval import fingerprint
+
+    limits = {"location_id": 100, "title": 200, "content": 30000, "content_type": 16,
+              "source": 1000, "source_url": 2000, "license": 1000}
+    if any(not isinstance(item.get(field), str) or not item[field].strip() or len(item[field]) > limit
+           for field, limit in limits.items()):
+        raise ValueError("IMPORT_CONTENT_INVALID")
+    if item["content_type"] not in {"fact", "disputed", "legend", "fiction"}:
+        raise ValueError("IMPORT_CONTENT_TYPE_INVALID")
+    metadata = item.get("metadata_json")
+    if not isinstance(metadata, dict):
+        raise ValueError("IMPORT_METADATA_INVALID")
+    chapter = metadata.get("min_chapter", 1)
+    if isinstance(chapter, bool) or not isinstance(chapter, int) or not 1 <= chapter <= 100:
+        raise ValueError("IMPORT_CHAPTER_INVALID")
+    json.dumps(metadata, allow_nan=False)  # Reject non-JSON values before any write or provider call.
+    if "sha256" in metadata and metadata["sha256"] != fingerprint(item["content"]):
+        raise ValueError("IMPORT_DIGEST_INVALID")
+
+
 def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
-    """Import technical content; only independently approved, unchanged rows may reindex.
+    """Validate the complete input, then commit content and indexes as one batch.
 
-    Three properties this function must keep:
-
-    * **Idempotent.** Re-running it with unchanged input and unchanged embedding configuration must
-      not bump ``version`` or spend an embedding call. Every bump revokes the old index and rebuilds
-      it, so an unconditional bump would keep inflating versions and paying for embeddings.
-    * **Index-consistent.** A change of embedding provider, model or dimension must rebuild the
-      index even when the text is unchanged; otherwise retrieval silently keeps vectors produced by
-      a different model and the configured similarity threshold stops meaning anything.
-    * **Atomic per entry.** The row change and the index rebuild share one transaction: a rebuild
-      failure must not leave an entry marked reviewed with a missing or partial index.
+    Input review claims never authorize publication. Unchanged independent approval
+    and content versions survive import, and paid embeddings are only rebuilt when
+    a valid human-reviewed index actually needs a configuration/version repair.
     """
     items = corpus.get("included") if isinstance(corpus, dict) else None
     if not isinstance(items, list):
@@ -271,11 +301,30 @@ def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
     settings = AISettings.configured()
     created = updated = skipped = chunks = 0
     index_reasons: dict[str, int] = {}
-    failures: list[dict] = []
-    with SessionLocal() as db:
+    identity = (None, 0)
+
+    def result(failures=None):
+        failed = bool(failures)
+        return {"created": 0 if failed else created, "updated": 0 if failed else updated,
+                "skipped": 0 if failed else skipped, "chunks": 0 if failed else chunks,
+                "failures": failures or [], "reindex_reasons": {} if failed else index_reasons,
+                "rolled_back": failed, "embedding_provider": settings.embedding_provider,
+                "embedding_model": settings.embedding_model,
+                "embedding_dimension": settings.embedding_dimension}
+
+    # Pure structure/content validation happens before a Session or provider is used.
+    try:
         for item in items:
-            identity = (item.get("id"), 0)
-            try:
+            identity = (item["id"], 0)
+            _validate_import_content(item)
+    except (TypeError, ValueError) as error:
+        return result([{"id": identity[0], "previous_version": identity[1], "error": type(error).__name__}])
+
+    with SessionLocal() as db:
+        try:
+            existing = {}
+            # Validate every DB reference before mutating the first row.
+            for item in items:
                 row = db.scalar(select(CulturalKnowledge).where(
                     CulturalKnowledge.id == item["id"]).with_for_update())
                 identity = (row.id, row.version) if row is not None else (item["id"], 0)
@@ -283,14 +332,10 @@ def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
                 if (location is None or location.story_id != "suzhou-pingjiang"
                         or (row is not None and row.story_id != location.story_id)):
                     raise ValueError("IMPORT_LOCATION_INVALID")
-                if any(not isinstance(item.get(field), str) or not item[field].strip()
-                       for field in CONTENT_FIELDS if field != "metadata_json"):
-                    raise ValueError("IMPORT_CONTENT_INVALID")
-                if not isinstance(item.get("metadata_json"), dict):
-                    raise ValueError("IMPORT_METADATA_INVALID")
-                chapter = item["metadata_json"].get("min_chapter", 1)
-                if isinstance(chapter, bool) or not isinstance(chapter, int) or not 1 <= chapter <= 100:
-                    raise ValueError("IMPORT_CHAPTER_INVALID")
+                existing[item["id"]] = row
+            for item in items:
+                row = existing[item["id"]]
+                identity = (row.id, row.version) if row is not None else (item["id"], 0)
                 is_new = row is None
                 changed = is_new or row_signature(row) != content_signature(item)
                 stored = list(db.scalars(select(KnowledgeChunk).where(KnowledgeChunk.knowledge_id == item["id"])))
@@ -315,7 +360,6 @@ def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
                     reason = "unreviewed_index_removed"
                 if reason is None:
                     skipped += 1
-                    db.rollback()
                     continue
                 if is_new:
                     row = CulturalKnowledge(id=item["id"], story_id="suzhou-pingjiang")
@@ -337,25 +381,19 @@ def apply_to_database(corpus: dict, *, force_reindex: bool = False) -> dict:
                     row.reviewer = row.reviewed_at = None
                 if is_new:
                     row.version = 1
-                # Never pay for or publish pending/rejected candidates. Unchanged human
-                # approval survives a technical reimport; content edits require a new review.
                 written_chunks = rebuild_knowledge(db, row, settings) if approved else 0
                 if not approved:
                     db.execute(delete(KnowledgeChunk).where(KnowledgeChunk.knowledge_id == row.id))
-                db.commit()
+                db.flush()
                 created += int(is_new)
                 updated += int(not is_new)
                 chunks += written_chunks
                 index_reasons[reason] = index_reasons.get(reason, 0) + 1
-            except Exception as error:  # noqa: BLE001 - report every failing entry, keep going
-                db.rollback()
-                failures.append({"id": identity[0], "previous_version": identity[1],
-                                 "error": type(error).__name__})
-        return {"created": created, "updated": updated, "skipped": skipped,
-                "chunks": chunks, "failures": failures, "reindex_reasons": index_reasons,
-                "embedding_provider": settings.embedding_provider,
-                "embedding_model": settings.embedding_model,
-                "embedding_dimension": settings.embedding_dimension}
+            db.commit()
+        except Exception as error:  # noqa: BLE001 - the entire transaction must be rolled back.
+            db.rollback()
+            return result([{"id": identity[0], "previous_version": identity[1], "error": type(error).__name__}])
+    return result()
 
 
 def main() -> int:
@@ -403,7 +441,7 @@ def main() -> int:
                           "hint": "--apply 仅导入待审核资料；人工审核和正式发布需通过管理端另行完成"}, ensure_ascii=False))
         return 0
     result = apply_to_database(corpus, force_reindex=args.force_reindex)
-    print(json.dumps({"applied": True, **result}, ensure_ascii=False))
+    print(json.dumps({"applied": not result["failures"], **result}, ensure_ascii=False))
     # 任一条目写入或索引失败都必须让调用方看到非零退出码，避免把部分成功当成成功。
     if result["failures"]:
         return 1

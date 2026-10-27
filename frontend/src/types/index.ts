@@ -23,14 +23,7 @@ export type DifficultyLevel = 'easy' | 'normal' | 'advanced'
 export type KnowledgeType = 'fact' | 'disputed' | 'legend' | 'fiction'
 
 /** 任务类型 */
-export type TaskType =
-  | 'quiz'
-  | 'password'
-  | 'sorting'
-  | 'combine'
-  | 'observation'
-  | 'multi_select'
-  | 'matching'
+export type TaskType = 'quiz' | 'password' | 'sorting' | 'combine' | 'observation' | 'multi_select' | 'matching'
 
 export interface Theme {
   id: string
@@ -39,11 +32,8 @@ export interface Theme {
   city: string
   district: string
   description: string
-  durationMinutes: number | null
-  distanceKm: number | null
-  onsiteReady?: boolean
-  sourceReviewStatus?: string
-  storyDisclosure?: string
+  durationMinutes: number
+  distanceKm: number
 }
 
 export interface Spot {
@@ -94,6 +84,12 @@ export interface Npc {
 
 /** 证据条目（RAG 检索单元的 Mock；阶段三起由后端审核库提供） */
 export interface KnowledgeEvidence {
+  human_review_verified?: boolean
+  is_demo?: boolean
+  is_fictional?: boolean
+  version?: number
+  reviewed_at?: string | null
+  citation_current?: boolean
   trust_level?: string
   license?: string
   id: string
@@ -109,6 +105,8 @@ export interface KnowledgeEvidence {
 }
 
 export interface CodexEntry {
+  humanReviewVerified?: boolean
+  isFictional?: boolean
   trustLevel?: string
   license?: string
   id: string
@@ -140,11 +138,11 @@ export interface Task {
   /** quiz / observation */
   options?: QuizOption[]
   answerKey?: string
-  /** 多选题的答案仅由服务端保存，不属于 PublicTask。 */
+  /** Private answer fields are excluded from PublicTask. */
   answerKeys?: string[]
-  /** 配对题选项；matchingPairs 是服务端私有答案，不属于 PublicTask。 */
   matchingLeft?: { id: string; text: string }[]
   matchingRight?: { id: string; text: string }[]
+  matchingAnswer?: Record<string, string>
   matchingPairs?: Record<string, string>
   /** password */
   password?: string
@@ -240,15 +238,29 @@ export type SceneStreamEvent =
   | { type: 'done'; data: SceneChatReply }
 
 /** 服务端公开任务，答案不会发送到浏览器；解释在完成后返回。 */
-export type PublicTask = Omit<
-  Task,
-  'answerKey' | 'answerKeys' | 'password' | 'sortingAnswer' | 'matchingPairs' | 'explanation'
-> & {
+export type PublicTask = Omit<Task, 'answerKey' | 'answerKeys' | 'matchingAnswer' | 'matchingPairs' | 'password' | 'sortingAnswer' | 'explanation'> & {
   explanation?: string
 }
 
+export interface ExplorationCard { id: string; label: string }
+export interface ActivityProgress {
+  status: 'available' | 'completed'
+  attempts: number
+  score: number
+  answer?: string[] | Record<string, string> | { selected: string[]; supports: Record<string, string> }
+}
+export interface ExplorationActivity {
+  id: string; spotId: string; title: string; mechanism: 'ordering' | 'matching' | 'evidence'
+  contentKind: 'fiction' | 'synthetic' | 'image_observation'; publication: 'demo'
+  version: number; briefing: string; readingGuide: string; sourceLabel: string
+  difficulty: DifficultyLevel; audienceMode: AudienceMode; score: number
+  items: ExplorationCard[]; targets: ExplorationCard[]; evidence: ExplorationCard[]; statements: ExplorationCard[]
+  hint: string; photo: boolean; needsEvidenceLinks: boolean; needsNpcHint: boolean; npcHintObtained: boolean
+  npcId?: string; hintQuestion?: string; progress: ActivityProgress; explanation?: string
+}
+
 export interface JourneySnapshot {
-  storyId?: string
+  storyId?: string | null
   audienceMode?: AudienceMode
   difficulty?: DifficultyLevel
   routeId?: string | null
@@ -262,6 +274,7 @@ export interface JourneySnapshot {
   state: JourneyState
   currentSpotId: string | null
   spotStatus: Record<string, SpotStatus>
+  activityStates?: Record<string, ActivityProgress>
   taskStates: Record<string, TaskState>
   inventory: string[]
   unlockedCodex: string[]
@@ -276,12 +289,22 @@ export interface JourneySnapshot {
 }
 
 export interface JourneyReport {
+  requiredTaskCount?: number
+  completedRequiredTaskCount?: number
+  optionalTaskCount?: number
+  completedOptionalTaskCount?: number
+  requiredTaskScore?: number
+  requiredTaskMaxScore?: number
+  optionalTaskScore?: number
+  optionalTaskMaxScore?: number
+  optionalScore?: number
+  optionalMaxScore?: number
+  optionalCompletedCount?: number
+  optionalTotalCount?: number
+  totalScore?: number
+  totalMaxScore?: number
   completedTaskCount: number
   totalTaskCount: number
-  requiredTaskCount?: number
-  optionalTaskCount?: number
-  completedRequiredTaskCount?: number
-  completedOptionalTaskCount?: number
   completedSpotCount: number
   totalSpotCount: number
   knowledgeScore: number

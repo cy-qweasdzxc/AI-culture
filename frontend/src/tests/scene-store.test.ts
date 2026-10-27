@@ -148,6 +148,41 @@ beforeEach(async () => {
 })
 
 describe('多人场景的客户端权威状态', () => {
+  it.each([
+    ['hangzhou-xihu', 'hangzhou-xihu-classic'],
+    ['nanjing-zhongshan', 'nanjing-zhongshan-classic'],
+    ['suzhou-pingjiang', 'suzhou-garden-stones'],
+  ])('恢复既存档 %s/%s 时请求其故事角色与路线，并保留旅程范围', async (storyId, routeId) => {
+    serverSnapshot = { ...original, storyId, routeId }
+    get.mockClear()
+    await useJourney.getState().restore()
+    const query = `?journey_id=${encodeURIComponent(original.journeyId)}`
+    expect(get).toHaveBeenCalledWith(`/roles?story_id=${encodeURIComponent(storyId)}&journey_id=${encodeURIComponent(original.journeyId)}`)
+    expect(get).toHaveBeenCalledWith(`/routes/${encodeURIComponent(storyId)}${query}`)
+    expect(get).toHaveBeenCalledWith(`/tasks${query}`)
+    expect(get).toHaveBeenCalledWith(`/activities${query}`)
+    expect(useJourney.getState().storyId).toBe(storyId)
+    expect(useJourney.getState().routeId).toBe(routeId)
+  })
+
+  it('没有 storyId 的早期存档仍按苏州恢复角色与路线', async () => {
+    serverSnapshot = { ...original }
+    useJourney.setState({ storyId: 'hangzhou-xihu' })
+    get.mockClear()
+    await useJourney.getState().restore()
+    expect(get).toHaveBeenCalledWith(`/roles?story_id=suzhou-pingjiang&journey_id=${encodeURIComponent(original.journeyId)}`)
+    expect(get).toHaveBeenCalledWith(`/routes/suzhou-pingjiang?journey_id=${encodeURIComponent(original.journeyId)}`)
+    expect(useJourney.getState().storyId).toBe('suzhou-pingjiang')
+  })
+
+  it('没有既存旅程时仅请求公开角色，不带旧旅程标识', async () => {
+    serverSnapshot = null
+    get.mockClear()
+    await useJourney.getState().restore()
+    expect(get).toHaveBeenCalledWith('/roles?story_id=suzhou-pingjiang')
+    expect(get.mock.calls.map(([path]) => path).some((path) => path.startsWith('/routes/') || path.includes('journey_id='))).toBe(false)
+  })
+
   it('保存新回合后到达的旧刷新响应不能回退消息、版本和奖励', async () => {
     const slow = deferred<{ snapshot: JourneySnapshot }>()
     get.mockImplementationOnce(() => slow.promise)

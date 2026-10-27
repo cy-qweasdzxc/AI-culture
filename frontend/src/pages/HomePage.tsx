@@ -1,3 +1,4 @@
+import ResilientImage from '@/components/ResilientImage'
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import PersonaAvatar from '@/components/PersonaAvatar'
@@ -66,7 +67,7 @@ export default function HomePage() {
             把沿途的文化，留在你的旅程里。
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link to={inJourney ? '/map' : '/theme#city-catalog'} className="btn-primary gap-5 px-6">
+            <Link to={inJourney ? '/map' : '/role'} className="btn-primary gap-5 px-6">
               {inJourney ? '继续旅程' : '开始体验'}
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
@@ -75,10 +76,10 @@ export default function HomePage() {
               <Icon name="chevron" className="h-4 w-4" />
             </Link>
           </div>
-          <p className="mt-5 text-xs text-bluegray">无需注册 · 先选城市与路线，在线完整体验</p>
+          <p className="mt-5 text-xs text-bluegray">无需注册 · 支持线上游览与实地探索</p>
         </div>
         <Link to="/theme" className="home-hero-scene group" aria-label="了解平江寻梦文化路线">
-          <img
+          <ResilientImage
             src="/assets/scenes/pingjiang.webp"
             alt="平江水巷的石桥、柳影与临河茶馆艺术化示意，非实景摄影"
             {...{ fetchpriority: 'high' }}
@@ -143,7 +144,7 @@ export default function HomePage() {
             <li key={place.id}>
               <Link to={`/theme#${place.id}`} className="destination-link group">
                 <div className="destination-image">
-                  <img
+                  <ResilientImage
                     src={`/assets/scenes/${place.id}.webp`}
                     alt={`${publicRouteStops[index]}艺术化示意`}
                     loading="lazy"

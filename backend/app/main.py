@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.api.routes.activities import router as activities_router
 from app.api.routes.admin import router as admin_router
 from app.api.routes.ai import router as ai_router
 from app.api.routes.catalog import router as catalog_router
@@ -63,6 +64,7 @@ async def unexpected_error_handler(_request: Request, error: Exception):
 
 
 app.include_router(public_router)
+app.include_router(activities_router)
 app.include_router(ai_router)
 app.include_router(scene_router)
 app.include_router(admin_router)

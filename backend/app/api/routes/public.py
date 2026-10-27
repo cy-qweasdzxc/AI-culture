@@ -18,6 +18,7 @@ from app.schemas.journey import (
     ProfileAction,
     TaskAnswer,
 )
+from app.services.catalog import publication_scope
 from app.services.experience import task_definition, update_profile
 from app.services.journey import (
     add_event,
@@ -25,7 +26,6 @@ from app.services.journey import (
     current_journey,
     enter_finale,
     journey_locations,
-    journey_route,
     journey_tasks,
     mutate_journey,
     owned_journey,
@@ -35,6 +35,7 @@ from app.services.journey import (
     start_journey,
     verify_task,
 )
+from app.services.knowledge import provenance
 from app.services.location import check_location
 from app.services.session import create_or_restore_session, get_current_user
 
@@ -72,10 +73,16 @@ def themes(db: Session = Depends(get_db)) -> dict[str, Any]:
 
 
 @router.get("/roles")
-def roles(story_id: str = "suzhou-pingjiang", db: Session = Depends(get_db)) -> dict[str, Any]:
+def roles(request: Request, story_id: str = "suzhou-pingjiang", journey_id: str | None = None, db: Session = Depends(get_db)) -> dict[str, Any]:
     story = db.get(Story, story_id)
     if story is None or story.status != "published":
         raise DomainError("STORY_INVALID", "主题不存在或尚未发布。", 404)
+    if story_id not in publication_scope()["stories"]:
+        if journey_id is None:
+            raise DomainError("STORY_INVALID", "主题不存在或尚未发布。", 404)
+        journey = owned_journey(db, get_current_user(request, db), journey_id)
+        if journey.story_id != story_id:
+            raise DomainError("STORY_INVALID", "主题不属于当前旅程。", 404)
     return {"items": [role.data for role in catalog.characters(db, story_id, "player")]}
 
 
@@ -103,10 +110,6 @@ def mode(body: ModeAction, db: Session = Depends(get_db), user: User = Depends(g
     journey = owned_journey(db, user, body.journey_id)
 
     def operation(current):
-        if body.mode == "onsite":
-            route = journey_route(db, current)
-            if route is None or not route.data.get("onsite_ready", False):
-                raise DomainError("ONSITE_UNAVAILABLE", "该路线的现场入口与步行顺序尚未核验，目前只开放虚拟游览。", 409)
         current.mode = body.mode
         add_event(current, "mode", f"切换为{'虚拟游览' if body.mode == 'virtual' else '实地探索'}模式")
         return {}
@@ -131,14 +134,8 @@ def route(story_id: str, journey_id: str | None = None, db: Session = Depends(ge
     journey = owned_journey(db, user, journey_id)
     if journey.story_id != story_id:
         raise DomainError("ROUTE_INVALID", "路线不属于当前旅程。", 404)
-    route_record = journey_route(db, journey)
-    ordered = journey_locations(db, journey)
-    visible = [(index, spot) for index, spot in enumerate(ordered) if journey.state_data.get("spotStatus", {}).get(spot.id) != "undiscovered"]
-    route_data = {**(route_record.data if route_record else {}), "id": route_record.id if route_record else journey.state_data.get("route_id"), "story_id": story_id, "finale_location_id": (route_record.data.get("finale_location_id") if route_record else None) or db.get(Story, story_id).data.get("finale_location_id", "subo"), "finale_choices": (route_record.data.get("finale_choices") if route_record else None) or db.get(Story, story_id).data.get("finale_choices", [{"key":"hang","label":"把灯挂上长廊","detail":"让故事继续被更多人讲述。"},{"key":"keep","label":"把灯收进行囊","detail":"把一路的故事留作自己的回忆。"}])}
-    task_ids_by_spot: dict[str, list[str]] = {}
-    for task in journey_tasks(db, journey):
-        task_ids_by_spot.setdefault(task.location_id, []).append(task.id)
-    return {"id": story_id, "route": route_data, "spots": [{**spot.data, "taskIds": task_ids_by_spot.get(spot.id, []), "shortName": spot.data.get("shortName") or spot.data.get("short") or spot.name, "triggerRadiusM": spot.trigger_radius_m, "order": index + 1, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for index, spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for _, spot in visible)], "snapshot": snapshot(db, journey)}
+    visible = [spot for spot in journey_locations(db, journey) if journey.state_data.get("spotStatus", {}).get(spot.id) != "undiscovered"]
+    return {"id": story_id, "spots": [{**spot.data, "coordinateStatus": "verified" if spot.coordinates_verified else "approximate_demo"} for spot in visible], "npcs": [npc.data for npc in catalog.characters(db, story_id, "npc") if any(spot.id in npc.data.get("locationIds", []) for spot in visible)], "snapshot": snapshot(db, journey)}
 
 
 def requested_location(db: Session, journey, spot_id: str) -> CulturalLocation:
@@ -177,10 +174,9 @@ def tasks(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
     journey = owned_journey(db, user, journey_id)
     state = snapshot(db, journey)
     result = []
-    spot_status = state["spotStatus"]
     for task in journey_tasks(db, journey):
         progress = state["taskStates"][task.id]
-        unlocked = task.location_id == journey.current_location_id or spot_status.get(task.location_id) in {"current", "completed"} or progress["status"] != "locked"
+        unlocked = task.location_id == journey.current_location_id or state["spotStatus"].get(task.location_id) in {"current", "completed"} or progress["status"] != "locked"
         if not unlocked:
             continue
         definition, _ = task_definition(task, journey)
@@ -214,10 +210,17 @@ def codex(journey_id: str | None = None, db: Session = Depends(get_db), user: Us
     for entry in db.scalars(select(Item).where(Item.id.in_(state["unlockedCodex"]), Item.kind == "codex")):
         knowledge = db.get(CulturalKnowledge, entry.knowledge_id) if entry.knowledge_id else None
         data = dict(entry.data)
-        if knowledge and knowledge.review_status == "reviewed":
-            # A newly approved version must never label the old demonstration copy as reviewed.
+        if knowledge:
+            # Body and provenance always describe the same stored version, including withdrawal.
             data.update(content=knowledge.content, source=knowledge.source, type=knowledge.content_type, title=knowledge.title, summary=knowledge.content[:120])
-        result.append({**data, "reviewStatus": knowledge.review_status if knowledge else "pending", "isDemo": knowledge.is_demo if knowledge else True, "sourceUrl": knowledge.source_url if knowledge else "", "license": knowledge.license if knowledge else "【待补充】", "trustLevel": knowledge.trust_level if knowledge else "unverified"})
+        meta = provenance(knowledge) if knowledge else {
+            "review_status": "pending", "trust_level": "unverified", "is_demo": True,
+            "is_fictional": data.get("type") == "fiction", "source_url": "", "license": "【待补充】",
+            "version": None, "reviewed_at": None, "human_review_verified": False,
+        }
+        result.append({**data, **meta, "reviewStatus": meta["review_status"], "isDemo": meta["is_demo"],
+                       "sourceUrl": meta["source_url"], "trustLevel": meta["trust_level"],
+                       "isFictional": meta["is_fictional"], "humanReviewVerified": meta["human_review_verified"]})
     total = len(list(db.scalars(select(Item.id).where(Item.story_id == journey.story_id, Item.kind == "codex"))))
     return {"items": result, "total": total}
 

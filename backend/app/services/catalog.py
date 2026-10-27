@@ -1,9 +1,20 @@
 import json
+from functools import lru_cache
 
 from sqlalchemy.orm import Session
 
 from app.core.config import PROJECT_ROOT
-from app.models import City, CulturalLocation, MediaAsset, Route, RouteStop, Story
+from app.models import City, CulturalLocation, MediaAsset, Route, RouteStop
+
+
+@lru_cache(maxsize=1)
+def publication_scope() -> dict[str, frozenset[str]]:
+    """Release IDs constrain new choices without deleting historical saved rows."""
+    raw = json.loads((PROJECT_ROOT / "data/demo/catalog.json").read_text(encoding="utf-8"))
+    seed = json.loads((PROJECT_ROOT / "data/demo/seed.json").read_text(encoding="utf-8"))
+    return {"cities": frozenset(city["id"] for city in raw["cities"]),
+            "routes": frozenset(route["id"] for route in raw["routes"]),
+            "stories": frozenset({seed["theme"]["id"]})}
 
 
 def seed_catalog(db: Session) -> None:
@@ -19,28 +30,12 @@ def seed_catalog(db: Session) -> None:
             additions = [p for p in item.get("preview_places", []) if p["id"] not in known]
             if additions:
                 existing.data = {**existing.data, "preview_places": [*saved, *additions]}
-            # These catalog promotions are an explicit, reviewed seed release. Keep every
-            # other staff-managed status untouched.
-            if item["id"] in {"hangzhou", "nanjing"} and existing.status == "building" and item["status"] == "open":
-                existing.status = "open"
-                existing.data = {**existing.data, "theme": item.get("theme", existing.data.get("theme", "")), "source_checked_at": raw["source_checked_at"]}
-    db.flush()
-    for item in raw["routes"]:
-        if item.get("story_id") and db.get(Story, item["story_id"]) is None:
-            # Story packs may be seeded after the city catalog in this same startup pass.
-            continue
-        existing = db.get(Route, item["id"])
-        if existing is None:
-            db.add(Route(id=item["id"], city_id=item["city_id"], story_id=item.get("story_id"), name=item["name"], status=item["status"], data=item))
-        elif item["id"] in {"suzhou-garden-stones", "hangzhou-xihu-classic", "nanjing-zhongshan-classic"} and existing.status in {"demo", "building"} and item["status"] == "open":
-            existing.name = item["name"]
-            existing.status = "open"
-            existing.story_id = item.get("story_id")
-            existing.data = {**existing.data, **item}
     db.flush()
     for item in raw["routes"]:
         if db.get(Route, item["id"]) is None:
-            continue
+            db.add(Route(id=item["id"], city_id=item["city_id"], story_id=item.get("story_id"), name=item["name"], status=item["status"], data=item))
+    db.flush()
+    for item in raw["routes"]:
         for position, location_id in enumerate(item["stop_ids"], 1):
             if db.get(CulturalLocation, location_id) and db.get(RouteStop, (item["id"], location_id)) is None:
                 db.add(RouteStop(route_id=item["id"], location_id=location_id, position=position, required=True))

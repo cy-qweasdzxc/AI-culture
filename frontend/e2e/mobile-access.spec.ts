@@ -11,7 +11,7 @@ test('同源代理会话与四种窄屏聊天、抽屉和输入区域', async ({
       request_id: crypto.randomUUID(), spot_id: 'pingjiang',
     } })
     expect(arrived.ok()).toBeTruthy()
-    for (const width of [375, 390, 412, 768]) {
+    for (const width of [320, 375, 390, 412, 768]) {
       await page.setViewportSize({ width, height: 812 })
       await page.goto('/chat/zhou-bo')
       const input = page.locator('#chat-input')

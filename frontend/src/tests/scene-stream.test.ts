@@ -70,6 +70,12 @@ function response(text: string, sizes = [text.length * 4]) {
     { headers: { 'Content-Type': 'text/event-stream; charset=utf-8' } },
   )
 }
+function bufferedResponse(text: string) {
+  const result = new Response(text, { headers: { 'Content-Type': 'text/event-stream' } })
+  Object.defineProperty(result, 'body', { value: null })
+  return result
+}
+
 afterEach(() => vi.unstubAllGlobals())
 
 describe('实时同场对话传输', () => {
@@ -96,6 +102,24 @@ describe('实时同场对话传输', () => {
         headers: expect.objectContaining({ Accept: 'text/event-stream' }),
       }),
     )
+  })
+  it('accepts buffered SSE without a response stream using one POST', async () => {
+    const fetch = vi.fn().mockResolvedValue(bufferedResponse(event('message', message) + event('done', reply)))
+    vi.stubGlobal('fetch', fetch)
+    const received: SceneStreamEvent[] = []
+    expect((await streamSceneChat(body, (entry) => received.push(entry))).director.turnId).toBe('turn-1')
+    expect(received.map((entry) => entry.type)).toEqual(['message', 'done'])
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+  it('requires a saved done event in buffered mode', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(bufferedResponse(event('message', message))))
+    await expect(streamSceneChat(body, () => undefined)).rejects.toMatchObject({
+      code: 'STREAM_INTERRUPTED',
+    })
+  })
+  it('rejects an invalid buffered done event', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(bufferedResponse(event('done', { ...reply, director: { ...director, turnId: 'other' } }))))
+    await expect(streamSceneChat(body, () => undefined)).rejects.toMatchObject({ code: 'STREAM_INVALID' })
   })
   it('does not consider an utterance without a done event a saved turn', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(event('message', message))))

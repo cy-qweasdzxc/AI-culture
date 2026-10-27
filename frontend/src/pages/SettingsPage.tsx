@@ -15,7 +15,7 @@ export default function SettingsPage() {
   const busy = useJourney((s) => s.busy)
   const audience = useJourney((s) => s.audienceMode ?? 'adult')
   const difficulty = useJourney((s) => s.difficulty ?? 'normal')
-  const difficultyLocked = useJourney((s) => Object.values(s.taskStates).some((task) => task.attempts > 0))
+  const difficultyLocked = useJourney((s) => Object.values(s.taskStates).some((task) => task.attempts > 0) || Object.values(s.activityStates ?? {}).some((activity) => activity.attempts > 0))
   const setProfile = useJourney((s) => s.setProfile)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)

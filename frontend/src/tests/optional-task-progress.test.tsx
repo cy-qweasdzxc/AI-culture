@@ -31,10 +31,13 @@ beforeEach(() => {
     taskStates: { 'required-1': { status: 'completed', attempts: 1, score: 10 } },
     codexEntries: [],
     unlockedCodex: [],
-    routeInfo: { id: 'route', name: '路线', finale_location_id: 'subo', finale_choices: [] },
     report: {
       completedTaskCount: 1, totalTaskCount: 21, requiredTaskCount: 6, optionalTaskCount: 15,
       completedRequiredTaskCount: 1, completedOptionalTaskCount: 0,
+      requiredTaskScore: 10, requiredTaskMaxScore: 140,
+      optionalTaskScore: 0, optionalTaskMaxScore: 120,
+      optionalTotalCount: 8, optionalCompletedCount: 2, optionalScore: 16, optionalMaxScore: 64,
+      totalScore: 26, totalMaxScore: 324,
       completedSpotCount: 0, totalSpotCount: 5, knowledgeScore: 10, maxScore: 210,
       unlockedCodexCount: 0, totalCodexCount: 14, durationMinutes: 1, events: [], weakPoints: [], bySpot: [],
     },
@@ -43,7 +46,7 @@ beforeEach(() => {
     roleId: null,
   })
 })
-afterEach(() => { cleanup(); useJourney.setState(original, true) })
+afterEach(() => { cleanup(); useJourney.setState(original, true); vi.unstubAllGlobals() })
 
 function mount(path: string, element: ReactNode, routePath = path) {
   const router = createMemoryRouter([{ path: routePath, element }], { initialEntries: [path] })
@@ -100,4 +103,46 @@ it('报告按服务端数据分别展示主线与挑战进度', () => {
   expect(screen.getByText('主线任务 1/6')).toBeInTheDocument()
   expect(screen.getByText('自选挑战 0/15')).toBeInTheDocument()
   expect(screen.getByText(/自选挑战可尝试/)).toBeInTheDocument()
+  expect(screen.getByText('主线知识分 10/140')).toBeInTheDocument()
+  expect(screen.getByText('挑战积分 0/120')).toBeInTheDocument()
+  expect(screen.getByText(/可选探索 2\/8/)).toBeInTheDocument()
+  expect(screen.getByText(/体验总分 26\/324/)).toBeInTheDocument()
+})
+
+it('旅程结束后旧点位只读浏览，不再调用到达或引导补交任务', () => {
+  const arriveSpot = vi.fn(async () => true)
+  useJourney.setState({ state: 'COMPLETED', currentSpotId: 'subo', spotStatus: { pingjiang: 'completed' }, arriveSpot })
+  mount('/spot/pingjiang', <SpotPage />, '/spot/:spotId')
+  expect(screen.queryByRole('button', { name: '回到此点继续探索' })).not.toBeInTheDocument()
+  expect(screen.getByText(/旅程已结束/)).toBeInTheDocument()
+  expect(arriveSpot).not.toHaveBeenCalled()
+})
+
+it('结束后的报告保留三类进度但只建议回顾和重新体验', () => {
+  useJourney.setState({ state: 'COMPLETED', endingId: 'wei-jin' })
+  mount('/report', <ReportPage />)
+  expect(screen.getByText('自选挑战 0/15')).toBeInTheDocument()
+  expect(screen.queryByText(/继续完成任务|前往苏州博物馆进入尾声|继续沿路线探索/)).not.toBeInTheDocument()
+  expect(screen.getByText(/旅程已结束，地图/)).toBeInTheDocument()
+})
+
+it('结束后的地图以链接只读进入旧点位，不调用到达', () => {
+  const arriveSpot = vi.fn(async () => true)
+  useJourney.setState({ state: 'COMPLETED', currentSpotId: 'subo', spotStatus: { pingjiang: 'completed' }, arriveSpot })
+  mount('/map', <MapPage />)
+  expect(screen.getByRole('link', { name: '只读回顾点位' })).toHaveAttribute('href', '/spot/pingjiang')
+  expect(screen.queryByRole('button', { name: '回到此点继续探索' })).not.toBeInTheDocument()
+  expect(arriveSpot).not.toHaveBeenCalled()
+})
+
+it('实地模式回访旧点位仍需采集坐标并交服务端校验', async () => {
+  const arriveSpot = vi.fn(async () => true)
+  const getCurrentPosition = vi.fn((onSuccess: PositionCallback) => onSuccess({ coords: { latitude: 31.3, longitude: 120.6, accuracy: 12 } } as GeolocationPosition))
+  vi.stubGlobal('isSecureContext', true)
+  vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } })
+  useJourney.setState({ mode: 'onsite', currentSpotId: 'subo', spotStatus: { pingjiang: 'completed' }, arriveSpot })
+  mount('/map', <MapPage />)
+  fireEvent.click(screen.getByRole('button', { name: '回到此点继续探索' }))
+  expect(getCurrentPosition).toHaveBeenCalled()
+  expect(arriveSpot).toHaveBeenCalledWith('pingjiang', { lat: 31.3, lng: 120.6, accuracy_m: 12, coordinate_system: 'wgs84' })
 })

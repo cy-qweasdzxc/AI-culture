@@ -21,6 +21,14 @@ def decode_polyline(values: list) -> list[dict[str, float]]:
     return [{"lat": decoded[i], "lng": decoded[i + 1]} for i in range(0, len(decoded), 2)]
 
 
+def separation_m(a: dict, b: dict) -> float:
+    lat1, lat2 = math.radians(a["lat"]), math.radians(b["lat"])
+    delta_lat = lat2 - lat1
+    delta_lng = math.radians(b["lng"] - a["lng"])
+    angle = math.sin(delta_lat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(delta_lng / 2) ** 2
+    return 12_742_000 * math.asin(min(1.0, math.sqrt(angle)))
+
+
 def walking_route(points: list[dict], key: str, timeout: float = 3) -> dict:
     fallback = {"status": "schematic", "coordinate_system": "gcj02", "polyline": points,
                 "distance_m": None, "duration_minutes": None, "steps": [],
@@ -52,6 +60,15 @@ def walking_route(points: list[dict], key: str, timeout: float = 3) -> dict:
             if not (math.isfinite(leg_distance) and math.isfinite(leg_duration) and 0 <= leg_distance <= 300000 and 0 <= leg_duration <= 1440):
                 raise ValueError("Invalid walking metrics")
             leg = decode_polyline(route["polyline"])
+            # Allow provider snapping around approximate anchors, but never show a
+            # different city's geometry or connect disconnected legs as a real route.
+            if separation_m(leg[0], start) > 500 or separation_m(leg[-1], end) > 500:
+                raise ValueError("Walking geometry does not match requested endpoints")
+            if geometry and separation_m(geometry[-1], leg[0]) > 100:
+                raise ValueError("Disconnected walking legs")
+            length = sum(separation_m(a, b) for a, b in zip(leg, leg[1:], strict=False))
+            if length > leg_distance * 1.25 + 100:
+                raise ValueError("Walking geometry does not match distance")
             geometry.extend(leg[1:] if geometry and geometry[-1] == leg[0] else leg)
             instructions = route.get("steps", [])
             if not isinstance(instructions, list) or any(not isinstance(step, dict)

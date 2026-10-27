@@ -83,7 +83,7 @@ def test_original_normal_route_and_ending_remain_legal(client, started):
 
 
 @pytest.mark.parametrize('difficulty', ['easy', 'advanced'])
-def test_all_task_variants_complete_route_and_match_max_score(client, db, difficulty):
+def test_all_six_task_variants_complete_mainline_and_match_max_score(client, db, difficulty):
     from app.repositories.catalog import locations, tasks
     client.post('/api/session')
     state = client.post('/api/journeys/start', json={'role_id':'scholar','audience_mode':'student','difficulty':difficulty}).json()['snapshot']
@@ -95,19 +95,18 @@ def test_all_task_variants_complete_route_and_match_max_score(client, db, diffic
         if place.id == 'subo':
             state = grant_dialogue_clue(client, state, 'xiao-shen', '片石白墙')
         for task in tasks(db, 'suzhou-pingjiang'):
-            if task.location_id != place.id:
+            if task.location_id != place.id or task.data.get("optional"):
                 continue
             definition, rule = task_definition(task, db.get(UserStoryState, state['journeyId']))
-            answer = rule.get('password') if definition['type'] == 'password' else rule.get('sortingAnswer') if definition['type'] == 'sorting' else rule.get('answerKeys') if definition['type'] == 'multi_select' else rule.get('matchingAnswer') if definition['type'] == 'matching' else rule.get('answerKey')
+            answer = rule.get('password') if definition['type'] == 'password' else rule.get('sortingAnswer') if definition['type'] == 'sorting' else rule.get('answerKey')
             result = client.post(f'/api/tasks/{task.id}/verify', json=action(state, answer=answer))
             assert result.status_code == 200 and result.json()['ok'], result.text
             state = result.json()['snapshot']
             total += definition['knowledgeScore']
     assert state['state'] == 'ENDING_READY'
     report = client.get('/api/report').json()
-    assert report['knowledgeScore'] == report['maxScore'] == total
-    assert report['completedTaskCount'] == 21
-    assert report['completedRequiredTaskCount'] == report['requiredTaskCount'] == 6
-    assert report['completedOptionalTaskCount'] == report['optionalTaskCount'] == 15
+    assert report['knowledgeScore'] == report['requiredTaskMaxScore'] == total
+    assert report['maxScore'] == total + report['optionalTaskMaxScore']
+    assert report['completedTaskCount'] == 6
     result = client.post('/api/journeys/finale', json=action(state,choice_key='hang'))
     assert result.status_code == 200 and result.json()['snapshot']['state'] == 'COMPLETED'
