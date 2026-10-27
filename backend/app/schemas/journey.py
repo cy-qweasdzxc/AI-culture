@@ -42,15 +42,18 @@ class FinaleAction(JourneyAction):
 class LocationCheck(StrictBody):
     journey_id: str
     spot_id: str
-    lat: float | None = Field(default=None, ge=-90, le=90)
-    lng: float | None = Field(default=None, ge=-180, le=180)
-    accuracy_m: float | None = Field(default=None, ge=0, le=100000)
+    lat: float | None = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    lng: float | None = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
+    # Accuracy is intentionally unbounded: coarse browser readings must reach
+    # business validation so the route can return LOCATION_INACCURATE (409)
+    # instead of a generic 422 VALIDATION_ERROR.
+    accuracy_m: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     coordinate_system: Literal["wgs84", "gcj02"] = "wgs84"
 
 
 class LocationTrigger(JourneyAction):
     spot_id: str
-    lat: float | None = Field(default=None, ge=-90, le=90)
-    lng: float | None = Field(default=None, ge=-180, le=180)
-    accuracy_m: float | None = Field(default=None, ge=0, le=100000)
+    lat: float | None = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    lng: float | None = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
+    accuracy_m: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     coordinate_system: Literal["wgs84", "gcj02"] = "wgs84"
