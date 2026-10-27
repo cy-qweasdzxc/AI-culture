@@ -24,7 +24,9 @@ export default function Drawer({ open, onClose, title, children, side = 'right' 
     <dialog
       ref={ref}
       onClose={onClose}
-      className={`fixed inset-y-0 ${side === 'right' ? 'right-0' : 'left-0'} m-0 h-full max-h-none w-96 max-w-[92vw] border-line bg-surface p-0 backdrop:bg-ink/40 ${side === 'right' ? 'border-l' : 'border-r'}`}
+      className={`fixed inset-y-0 ${side === 'right' ? 'right-0 left-auto' : 'left-0 right-auto'} m-0 h-full max-h-none w-96 max-w-[92vw] border-line bg-surface p-0 backdrop:bg-ink/40 ${side === 'right' ? 'border-l' : 'border-r'}`}
+      data-side={side}
+      data-testid="drawer"
       aria-label={title}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
