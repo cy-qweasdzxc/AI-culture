@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import DemoDataNotice from '@/components/DemoDataNotice'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 import { initialSortingOrder } from '@/utils/sortingOrder'
@@ -150,10 +149,7 @@ export default function TaskPage() {
       </header>
 
       {/* 前置线索状态（密码 / 线索组合类） */}
-      {reward > 0 && <p role="status" className="mt-5 rounded-lg border border-inkgreen bg-inkgreen/5 p-4 text-inkgreen">本次获得 +{reward} 游戏积分，已保存到服务端。</p>}
-      <div className="mt-5">
-        <DemoDataNotice />
-      </div>
+      {reward > 0 && <p role="status" className="mt-5 rounded-lg border border-inkgreen bg-inkgreen/5 p-4 text-inkgreen">本次获得 +{reward} 游戏积分，已计入本次旅程。</p>}
       {task.requiredClues?.length ? (
         <div className="mt-6 border-b border-line pb-6">
           <h2 className="text-sm font-semibold text-ink">所需线索</h2>

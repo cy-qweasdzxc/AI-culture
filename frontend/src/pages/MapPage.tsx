@@ -190,7 +190,7 @@ export default function MapPage() {
       <p className="mt-4 text-xs leading-6 text-bluegray" role="status">
         {walking?.status === 'walking'
           ? `道路步行约 ${Math.round(walking.distance_m!)} 米 · ${Math.round(walking.duration_minutes!)} 分钟。${walking.message}`
-          : '当前连线为示意路线，不是实际道路导航；步行距离和时间未知。'}
+          : '路线示意 · 实地出行请使用道路导航。'}
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
@@ -247,7 +247,7 @@ export default function MapPage() {
                         </span>
                       </div>
                       <p className="mt-2 text-sm leading-6 text-ink-soft">{selected.intro}</p>
-                      <p className="mt-1 text-xs text-bluegray">配图为艺术化示意；实景照片与来源见点位详情。</p>
+                      <p className="mt-1 text-xs text-bluegray">场景插画 · 查看地点详情，认识沿途风物。</p>
                     </div>
                   </div>
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -314,9 +314,6 @@ export default function MapPage() {
                         : `实地模式：进入 ${selected.triggerRadiusM} 米范围后触发。`}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-xs leading-5 text-bluegray">
-                    演示路线 · 点位坐标为近似值，精确位置【待核实】。
-                  </p>
                 </div>
               ) : (
                 <div className="py-3 text-sm leading-6 text-bluegray">

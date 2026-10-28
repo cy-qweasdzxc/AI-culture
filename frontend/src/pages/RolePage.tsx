@@ -68,7 +68,6 @@ export default function RolePage() {
           <p className="mt-4 max-w-prose text-sm leading-7 text-ink-soft">
             角色不只是头像：它决定 NPC
             怎么称呼你、你带着什么线索上路、能听到哪些对话，甚至影响结局的措辞。
-            三位角色均为虚构身份。
           </p>
         </div>
         <Link to="/theme" className="btn-ghost shrink-0 !px-0 sm:!px-3">
@@ -93,7 +92,7 @@ export default function RolePage() {
             <option value="easy">简单 · 更多提示</option><option value="normal">标准</option><option value="advanced">深入 · 减少提示</option>
           </select>
         </label>
-        <p className="text-xs leading-6 text-bluegray sm:col-span-2">不收集真实年龄或姓名。开始答题后难度固定；儿童实地体验请由监护人陪同。</p>
+        <p className="text-xs leading-6 text-bluegray sm:col-span-2">选择适合你的表达方式与挑战难度。开始答题后，难度将固定。</p>
       </fieldset>
       <div className="mt-8 grid gap-5 md:grid-cols-3" role="radiogroup" aria-label="玩家角色">
         {roles.map((r, index) => {
@@ -196,7 +195,7 @@ export default function RolePage() {
             <span>
               <span className="block font-medium text-ink">虚拟游览</span>
               <span className="mt-2 block text-sm leading-7 text-bluegray">
-                不到现场也能完整体验：在地图上点击即可"到达"点位。适合比赛演示与线上体验。
+                在地图上点击即可到达点位，随时随地体验完整故事。
               </span>
             </span>
           </label>

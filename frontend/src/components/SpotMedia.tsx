@@ -21,7 +21,6 @@ function Credits({ asset, unavailable = false }: { asset: Asset; unavailable?: b
       <p>作者：{asset.author || '待确认'} · {asset.attribution}</p>
       {source && <a className="inline-link mr-4" href={source} target="_blank" rel="noreferrer">原始文件页面</a>}
       {license ? <a className="inline-link" href={license} target="_blank" rel="noreferrer">{asset.license || '许可待确认'}</a> : <span>许可待确认</span>}
-      <p>图片许可核对不代表文化史实已完成人工审核。</p>
     </details>
   </div>
 }
@@ -56,7 +55,7 @@ function PlaceMedia({ locationId, name }: Props) {
     </div>
     <figcaption className="space-y-2 p-4 text-xs leading-6 text-bluegray">
       {loading && <p role="status">正在加载图片资料…</p>}
-      {selected ? <Credits asset={selected} /> : <p>艺术化示意 · 实景照片待接入或暂不可用；未以插画冒充真实摄影。</p>}
+      {selected ? <Credits asset={selected} /> : <p>场景插画 · 艺术化示意</p>}
       {(failed.length > 0 || error) && <>
         <p role="status">{error ? '图片资料暂时无法加载。' : '照片加载失败，已尝试使用艺术化示意。'}任务、对话和虚拟游览仍可继续。</p>
         <button type="button" className="inline-link min-h-11" disabled={loading} onClick={() => {

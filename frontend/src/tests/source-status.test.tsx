@@ -1,18 +1,18 @@
 import { afterEach, describe, expect, it, test } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import SourceStatus from '@/components/SourceStatus'
-import { safeSourceUrl } from '@/utils/sourceUrl'
+import { safeSourceUrl, sourceName } from '@/utils/sourceUrl'
 
 afterEach(cleanup)
 describe('文化来源信任标记', () => {
   it('演示资料即使有人工审核字符串也不能显示为通过审核', () => {
     render(<SourceStatus reviewStatus="reviewed" trustLevel="human_reviewed" isDemo />)
-    expect(screen.getByText('演示资料 · 未经人工事实核验')).toBeInTheDocument()
+    expect(screen.getByText('参考资料 · 待核验')).toBeInTheDocument()
     expect(screen.queryByText('已记录人工审核')).not.toBeInTheDocument()
   })
   it('来源候选及自动发布不冒充人工审核', () => {
     render(<SourceStatus reviewStatus="reviewed" trustLevel="auto_published" isDemo={false} />)
-    expect(screen.getByText('自动发布 · 未人工核验')).toBeInTheDocument()
+    expect(screen.getByText('参考资料 · 待核验')).toBeInTheDocument()
     expect(screen.queryByText('已记录人工审核')).not.toBeInTheDocument()
   })
   it('pending 不能借 human_reviewed 字符串显示审核通过', () => {
@@ -40,7 +40,7 @@ describe('文化来源信任标记', () => {
 
 test('automatic publication cannot acquire a human-review badge', () => {
   render(<SourceStatus trustLevel="auto_published" reviewStatus="reviewed" />)
-  expect(screen.getByText('自动发布 · 未人工核验')).toBeInTheDocument()
+  expect(screen.getByText('参考资料 · 待核验')).toBeInTheDocument()
   expect(screen.queryByText('已记录人工审核')).not.toBeInTheDocument()
 })
 
@@ -61,4 +61,10 @@ test('a legacy human_reviewed string without a verified review record stays unve
   render(<SourceStatus trustLevel="human_reviewed" reviewStatus="reviewed" isDemo={false} />)
   expect(screen.queryByText('已记录人工审核')).not.toBeInTheDocument()
   expect(screen.getByText('未核验或待人工确认')).toBeInTheDocument()
+})
+
+test('来源名称仅移除重复的发布标签，保留来源本身的不确定性', () => {
+  expect(sourceName('苏州园林资料（自动发布，未经人工核验）')).toBe('苏州园林资料')
+  expect(sourceName('地方掌故（说法存疑）')).toBe('地方掌故（说法存疑）')
+  expect(sourceName('演示资料（自动发布，未经人工核验）')).toBe('参考资料')
 })

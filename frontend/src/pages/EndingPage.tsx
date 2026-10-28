@@ -56,7 +56,7 @@ export default function EndingPage() {
           {ending.narrative}
         </p>
         <p className="mt-7 border-t border-line pt-5 text-xs leading-6 text-bluegray">
-          结局判定由规则执行：{ending.conditionText}。正式版本中 AI 仅润色叙事文案，判定结果可复现。
+          结局印记：{ending.conditionText}。
         </p>
       </div>
 

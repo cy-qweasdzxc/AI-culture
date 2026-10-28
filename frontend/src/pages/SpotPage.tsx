@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PersonaAvatar from '@/components/PersonaAvatar'
-import DemoDataNotice from '@/components/DemoDataNotice'
 import TypeTag from '@/components/TypeTag'
 import SpotMedia from '@/components/SpotMedia'
 import ExplorationPanel from '@/components/ExplorationPanel'
 import AudioGuide from '@/components/AudioGuide'
 import SourceStatus from '@/components/SourceStatus'
 import { api } from '@/services/api'
+import { sourceName } from '@/utils/sourceUrl'
 import type { KnowledgeType } from '@/types'
 import { finalChoices } from '@/data/publicRoute'
 import { canEnterFinale, useJourney } from '@/engine/journeyStore'
@@ -58,7 +58,7 @@ export default function SpotPage() {
     <h3 className="font-semibold">{entry.title}</h3>
     <TypeTag type={entry.content_type} />
     <p className="mt-3 text-sm leading-7">{entry.content}</p>
-    <p className="mt-2 text-xs leading-6 text-bluegray">来源：{entry.source}</p>
+    <p className="mt-2 text-xs leading-6 text-bluegray">来源：{sourceName(entry.source)}</p>
     <SourceStatus trustLevel={entry.trust_level} reviewStatus={entry.review_status} isDemo={entry.is_demo}
       isFictional={entry.is_fictional} sourceUrl={entry.source_url} license={entry.license} humanReviewVerified={entry.human_review_verified} />
   </article>
@@ -140,7 +140,7 @@ export default function SpotPage() {
           <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight text-ink">
             {spot.name}
           </h1>
-          <p className="mt-3 text-xs text-bluegray">地点简介 · 演示资料，未经人工事实核验</p>
+          <p className="mt-3 text-xs text-bluegray">地点参考介绍</p>
           <p className="mt-1 text-base font-medium leading-7 text-inkgreen">{spot.intro}</p>
           <p className="mt-4 text-xs text-bluegray">剧情设定（虚构）</p>
           <p
@@ -154,14 +154,14 @@ export default function SpotPage() {
       </header>
 
       <section className="mt-8 border-t border-line pt-6" aria-labelledby="spot-culture-title">
-        <h2 id="spot-culture-title" className="font-serif text-xl font-semibold">文化资料与审核状态</h2>
-        <p className="mt-2 text-xs leading-6 text-bluegray">演示资料与未核验候选仅供浏览，不会自动用于 NPC 的正式文化事实检索。</p>
+        <h2 id="spot-culture-title" className="font-serif text-xl font-semibold">文化寻访</h2>
+        <p className="mt-2 text-sm leading-7 text-bluegray">从资料中读懂这里的故事，展开条目可查看来源。</p>
         {cultureError && <p role="status" className="mt-2 text-sm">{cultureError}</p>}
         {culture && <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">{culture.knowledge.map(cultureCard)}</div>
-          {culture.knowledge.length === 0 && <p className="mt-3 text-sm text-bluegray">当前没有独立人工审核通过的文化资料。</p>}
+          {culture.knowledge.length === 0 && <p className="mt-3 text-sm text-bluegray">这里的资料正在整理，可展开下方参考资料继续阅读。</p>}
           {culture.source_candidates.length > 0 && <details className="mt-4 rounded-lg border border-line p-4">
-            <summary className="min-h-11 cursor-pointer leading-[44px]">演示资料与待审核来源候选（{culture.source_candidates.length}）</summary>
+            <summary className="min-h-11 cursor-pointer leading-[44px]">参考资料 · 待核验（{culture.source_candidates.length}）</summary>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">{culture.source_candidates.map(cultureCard)}</div>
           </details>}
         </>}
@@ -404,9 +404,6 @@ export default function SpotPage() {
       )}
 
       {arrived && !needsReturn && <ExplorationPanel spotId={spot.id} />}
-      <div className="mt-10">
-        <DemoDataNotice />
-      </div>
     </div>
   )
 }

@@ -28,11 +28,11 @@ export default function SceneDirectorPanel({
     : null
 
   return (
-    <section aria-label="导演调度" className="space-y-5">
+    <section aria-label="场景指引" className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-ink">导演 Agent</h2>
+        <h2 className="text-sm font-semibold text-ink">场景指引</h2>
         <span className="text-xs text-bluegray">
-          {direction ? (direction.mode === 'model' ? '模型调度' : '规则调度') : '等待开场'}
+          {direction ? '故事进行中' : '等待开场'}
         </span>
       </div>
       {direction ? (

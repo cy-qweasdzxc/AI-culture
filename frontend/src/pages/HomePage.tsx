@@ -88,7 +88,7 @@ export default function HomePage() {
           />
           <span className="home-scene-label">
             <span className="h-1.5 w-1.5 rounded-full bg-cinnabar" />
-            艺术化示意 · 本期故事 · {demoTheme.name}
+            本期故事 · {demoTheme.name}
           </span>
           <div className="home-scene-caption">
             <div>
@@ -106,21 +106,11 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <span className="text-xs text-bluegray">当前开放</span>
             <strong className="font-medium text-ink">{demoTheme.name}</strong>
-            <span className="rounded bg-inkgreen/5 px-2 py-1 text-[11px] text-inkgreen">
-              演示路线
-            </span>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs text-ink-soft">
             <span className="flex items-center gap-2">
               <Icon name="pin" className="h-4 w-4" />
               {publicRouteStops.length} 处文化点位
-            </span>
-            <span className="flex items-center gap-2">
-              <Icon name="clock" className="h-4 w-4" />游览时间待核验
-            </span>
-            <span className="flex items-center gap-2">
-              <Icon name="route" className="h-4 w-4" />
-              步行距离待道路规划
             </span>
           </div>
         </div>
@@ -138,7 +128,6 @@ export default function HomePage() {
             <Icon name="arrow" className="h-4 w-4" />
           </Link>
         </div>
-        <p className="mb-4 text-xs text-bluegray">以下插画为艺术化示意；景点详情展示实景照片与许可。</p>
         <ol className="destination-grid">
           {destinations.map((place, index) => (
             <li key={place.id}>
@@ -181,7 +170,6 @@ export default function HomePage() {
               选择你的故事身份
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
-            <p className="mt-5 text-xs text-bluegray">人物为虚构角色，文化讲述附资料来源。</p>
           </div>
           <ul className="divide-y divide-line">
             {encounters.map((person) => (
@@ -199,33 +187,8 @@ export default function HomePage() {
           </ul>
         </div>
       </section>
-      <section className="page-width py-12 md:py-16">
-        <div className="grid items-start gap-8 md:grid-cols-[1fr_1.25fr] md:gap-20">
-          <div>
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-inkgreen/5 text-inkgreen">
-              <Icon name="book" />
-            </div>
-            <h2 className="font-serif text-2xl font-bold text-ink">
-              故事可以想象，
-              <br className="hidden md:block" />
-              文化需要出处。
-            </h2>
-          </div>
-          <div>
-            <p className="max-w-prose text-sm leading-8 text-ink-soft">
-              旅途中，史实、争议、传说与虚构会清楚标注。角色讲述文化知识时附上证据来源，资料无法确认的地方，也会如实告诉你。解锁的见闻会进入文化图鉴，结束时生成你的体验报告。
-            </p>
-            <p className="mt-4 text-xs leading-6 text-bluegray">
-              当前含演示资料，内容类别不代表人工事实核验；来源与审核状态在详情中标注。
-            </p>
-            <Link to="/intro" className="inline-link mt-4">
-              了解内容来源与体验说明
-              <Icon name="arrow" className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
       <div className="page-width"><CityExplorer /></div>
+
     </div>
   )
 }

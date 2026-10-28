@@ -6,6 +6,7 @@ import SceneDirectorPanel from '@/components/SceneDirectorPanel'
 import SceneParticipants from '@/components/SceneParticipants'
 import TypeTag from '@/components/TypeTag'
 import SourceStatus from '@/components/SourceStatus'
+import { sourceName } from '@/utils/sourceUrl'
 import { suggestedChoices, type ChoiceTopic } from '@/data/chatChoices'
 import { topicsForSpot } from '@/data/suzhouQuestionBank'
 import { sceneVisual } from '@/data/sceneVisuals'
@@ -18,7 +19,7 @@ const CLUE_NOTICE_MARK = '\n（已发放演示剧情线索'
 /** Keep server-awarded clue notices separate from character dialogue. */
 function splitClueNotice(text: string): [string, string | null] {
   const index = text.indexOf(CLUE_NOTICE_MARK)
-  return index < 0 ? [text, null] : [text.slice(0, index), text.slice(index + 1)]
+  return index < 0 ? [text, null] : [text.slice(0, index), text.slice(index + 1).replace('已发放演示剧情线索', '已收集剧情线索')]
 }
 
 export default function ChatPage() {
@@ -521,17 +522,14 @@ export default function ChatPage() {
                       {!isUser ? (
                         <p className="mt-2 text-xs text-bluegray">
                           {m.reason === 'NARRATIVE_GUIDANCE'
-                            ? '剧情引导 · 未调用模型'
+                            ? '剧情引导'
                             : m.provider === 'none'
                               ? m.reason === 'CONTEXT_AMBIGUOUS' || m.reason === 'CONTEXT_REQUIRED'
-                                ? '确认话题 · 未调用模型'
-                                : '规则拒答 · 未调用模型'
+                                ? '确认话题'
+                                : '资料暂不足'
                               : m.mock || m.provider === 'mock'
-                                ? 'Mock 模型 · 开发演示'
-                                : m.provider
-                                  ? `模型提供方：${m.provider}`
-                                  : '服务端回答'}
-                          {m.dataScope ? ` · 资料范围：${m.dataScope}` : ''}
+                                ? '预设回复'
+                                : '文化问答'}
                           {isTemporary ? ' · 本轮尚未保存' : ''}
                         </p>
                       ) : null}
@@ -706,11 +704,8 @@ export default function ChatPage() {
             <p className="text-sm leading-relaxed text-ink-soft">{evidence.content}</p>
             <div className="rounded-md bg-paper-deep p-3">
               <h4 className="text-xs font-medium text-ink">来源</h4>
-              <p className="mt-1 text-xs leading-relaxed text-bluegray">{evidence.source}</p>
+              <p className="mt-1 text-xs leading-relaxed text-bluegray">{sourceName(evidence.source)}</p>
               <SourceStatus trustLevel={evidence.trust_level} reviewStatus={evidence.review_status ?? evidence.reviewStatus} sourceUrl={evidence.source_url ?? evidence.sourceUrl} license={evidence.license} isDemo={evidence.is_demo} isFictional={evidence.is_fictional ?? evidence.type === 'fiction'} citationCurrent={evidence.citation_current} humanReviewVerified={evidence.human_review_verified} />
-              <p className="mt-2 text-xs text-bluegray">
-                审核状态：{evidence.review_status ?? evidence.reviewStatus ?? '待补充'}
-              </p>
             </div>
           </div>
         ) : null}

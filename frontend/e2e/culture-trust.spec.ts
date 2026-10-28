@@ -37,7 +37,7 @@ test('候选、人工审核、内容换版与撤审在公开页和证据抽屉�
     review_status: 'pending', trust_level: 'unverified', is_demo: false, is_fictional: true, human_review_verified: false,
   })
   await page.goto('/spot/pingjiang')
-  await page.locator('summary').filter({ hasText: '演示资料与待审核来源候选' }).click()
+  await page.locator('summary').filter({ hasText: '参考资料 · 待核验' }).click()
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: title, exact: true }) })
   await expect(card.getByText('未核验或待人工确认', { exact: true })).toBeVisible()
   await expect(card.getByText('剧情虚构 · 不作为文化史实', { exact: true })).toBeVisible()

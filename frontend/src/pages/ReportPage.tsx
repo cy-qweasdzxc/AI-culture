@@ -26,7 +26,7 @@ export default function ReportPage() {
         <p className="mb-4 text-sm font-medium text-inkgreen">体验报告</p>
         <h1 className="font-serif text-3xl font-bold text-ink">暂无数据</h1>
         <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-bluegray">
-          开始一段旅程后，这里会生成由真实旅程状态计算的体验报告。
+          开始一段旅程，沿途的发现与收获都会记录在这里。
         </p>
         <Link to="/role" className="btn-primary mt-6 inline-flex">
           去选择角色
@@ -102,7 +102,7 @@ export default function ReportPage() {
         <div>
           <h1 className="font-serif text-3xl font-bold text-ink sm:text-4xl">体验报告</h1>
           <p className="mt-3 max-w-prose text-sm leading-7 text-bluegray">
-            由本次旅程的真实状态计算生成{role ? ` · ${role.name}（${role.identity}）` : ''}
+            记录你在这座城里的每一步{role ? ` · ${role.name}（${role.identity}）` : ''}
           </p>
         </div>
         {ending ? (
@@ -157,7 +157,7 @@ export default function ReportPage() {
         <h2 id="exploration-report-title" className="text-lg font-semibold">可选探索记录</h2>
         <p className="mt-2 text-sm leading-7">可选探索 {report.optionalCompletedCount ?? 0}/{report.optionalTotalCount ?? 0} · 不影响主线结局</p>
         <ProgressBar value={report.optionalScore ?? 0} max={report.optionalMaxScore ?? 0} label={`探索积分 ${report.optionalScore ?? 0}/${report.optionalMaxScore ?? 0}`} />
-        <p className="mt-3 text-sm leading-7">体验总分 {report.totalScore ?? score}/{report.totalMaxScore ?? maxScore}（主线知识分、挑战积分与探索积分合计，不代表已核验的学习成效）</p>
+        <p className="mt-3 text-sm leading-7">体验总分 {report.totalScore ?? score}/{report.totalMaxScore ?? maxScore}</p>
       </section>
       <div className="mt-9 grid gap-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
         {/* 知识得分与图鉴 */}
@@ -168,7 +168,7 @@ export default function ReportPage() {
             {maxScore} 分 · 用时约 {minutes} 分钟
           </p>
           <h3 className="mt-5 border-t border-line pt-5 text-sm font-medium leading-6 text-ink">
-            知识条目的内容分类分布（分类不代表人工核验）
+            沿途见闻的内容分类
           </h3>
           {unlocked.length === 0 ? (
             <p className="mt-3 text-sm leading-7 text-bluegray">
@@ -241,9 +241,6 @@ export default function ReportPage() {
         )}
       </section>
 
-      <p className="mt-6 border-t border-line pt-5 text-xs leading-6 text-bluegray">
-        说明：本报告来自服务端保存的本次匿名旅程，知识分表示剧情任务得分，不代表经过验证的学习效果。
-      </p>
     </div>
   )
 }

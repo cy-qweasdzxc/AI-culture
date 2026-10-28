@@ -4,6 +4,7 @@ import Icon from '@/components/Icon'
 import PersonaAvatar from '@/components/PersonaAvatar'
 import ProgressBar from '@/components/ProgressBar'
 import JourneyTimeline from '@/components/JourneyTimeline'
+import SiteFooter from '@/components/SiteFooter'
 import { selectCompletedTaskCount, useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -93,6 +94,7 @@ export default function JourneyLayout() {
       <main id="main-content" className="flex-1" tabIndex={-1}>
         <Outlet />
       </main>
+      <SiteFooter />
       <nav
         className="journey-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface md:hidden"
         aria-label="旅程导航"

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Drawer from '@/components/Drawer'
 import TypeTag from '@/components/TypeTag'
 import SourceStatus from '@/components/SourceStatus'
-import DemoDataNotice from '@/components/DemoDataNotice'
+import { sourceName } from '@/utils/sourceUrl'
 import { knowledgeTypeLabel } from '@/data/knowledgeLabels'
 import { useJourney } from '@/engine/journeyStore'
 import type { KnowledgeType } from '@/types'
@@ -208,9 +208,6 @@ export default function CodexPage() {
         </>
       )}
 
-      <div className="mt-10">
-        <DemoDataNotice />
-      </div>
 
       <Drawer open={!!detail} onClose={() => setDetailId(null)} title={detail?.title ?? ''}>
         {detail ? (
@@ -228,11 +225,8 @@ export default function CodexPage() {
             </p>
             <section className="mt-7 border-t border-line pt-5">
               <h3 className="text-sm font-semibold text-ink">来源</h3>
-              <p className="mt-2 break-words text-xs leading-6 text-ink-soft">{detail.source}</p>
+              <p className="mt-2 break-words text-xs leading-6 text-ink-soft">{sourceName(detail.source)}</p>
               <SourceStatus trustLevel={detail.trustLevel} reviewStatus={detail.reviewStatus} sourceUrl={detail.sourceUrl} license={detail.license} isDemo={detail.isDemo} isFictional={detail.isFictional ?? detail.type === 'fiction'} humanReviewVerified={detail.humanReviewVerified} />
-              <p className="mt-3 text-xs leading-6 text-bluegray">
-                {detail.isDemo ? '演示资料 · ' : ''}发布状态：{detail.reviewStatus ?? '待补充'}
-              </p>
             </section>
             <p className="mt-6 border-t border-line pt-4 text-xs leading-6 text-bluegray">
               所属点位：{spots.find((spot) => spot.id === detail.spotId)?.name} · 内容类型：

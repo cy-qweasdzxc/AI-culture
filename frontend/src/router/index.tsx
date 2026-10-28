@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import RequireJourney from '@/components/RequireJourney'
 import JourneyLayout from '@/layouts/JourneyLayout'
 import PublicLayout from '@/layouts/PublicLayout'
@@ -6,7 +6,6 @@ import AdminPage from '@/pages/AdminPage'
 import ChatPage from '@/pages/ChatPage'
 import CluesPage from '@/pages/CluesPage'
 import CodexPage from '@/pages/CodexPage'
-import DemoPage from '@/pages/DemoPage'
 import EndingPage from '@/pages/EndingPage'
 import HomePage from '@/pages/HomePage'
 import IntroPage from '@/pages/IntroPage'
@@ -31,7 +30,8 @@ export const router = createBrowserRouter([
       { path: '/intro', element: <IntroPage /> },
       { path: '/theme', element: <ThemePage /> },
       { path: '/role', element: <RolePage /> },
-      { path: '/demo', element: <DemoPage /> },
+      { path: '/demo', element: <Navigate to="/role" replace /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
   {
@@ -84,5 +84,4 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/admin', element: <AdminPage /> },
-  { path: '*', element: <NotFoundPage /> },
 ])

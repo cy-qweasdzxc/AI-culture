@@ -1,6 +1,5 @@
 import ResilientImage from '@/components/ResilientImage'
 import { Link } from 'react-router-dom'
-import DemoDataNotice from '@/components/DemoDataNotice'
 import CityExplorer from '@/components/CityExplorer'
 import { publicRouteStops } from '@/data/publicRoute'
 import { useJourney } from '@/engine/journeyStore'
@@ -48,14 +47,6 @@ export default function ThemePage() {
               <dt className="text-bluegray">点位</dt>
               <dd className="font-semibold text-ink">{publicRouteStops.length} 个</dd>
             </div>
-            <div className="flex items-baseline gap-2">
-              <dt className="text-bluegray">预计</dt>
-              <dd className="font-semibold text-ink">待现场核验</dd>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <dt className="text-bluegray">步行</dt>
-              <dd className="font-semibold text-ink">待道路规划</dd>
-            </div>
           </dl>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link to="/role" className="btn-primary">
@@ -96,7 +87,7 @@ export default function ThemePage() {
               开始旅程后，按剧情顺序解锁点位详情与任务。
             </p>
             <p className="mt-4 text-xs leading-6 text-bluegray">
-              以下为公开路线预览，完整故事将在途中展开。
+              沿途的人物与故事，等你亲自发现。
             </p>
           </div>
           <ol className="divide-y divide-line border-y border-line">
@@ -129,7 +120,6 @@ export default function ThemePage() {
       </section>
       <div className="mt-8">
         <CityExplorer />
-        <DemoDataNotice />
       </div>
     </div>
   )

@@ -23,7 +23,7 @@ export default function SchematicMap({ spots, spotStatus, reason, onSpotClick }:
   const path = positions.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
   return <div className="flex h-full flex-col">
     {reason && <p className="shrink-0 border-b border-line bg-paper-deep px-3 py-1.5 text-xs text-bluegray">
-      {reason}。当前显示路线示意图，可通过点位或下方列表继续虚拟游览。
+      当前显示路线示意图，点击点位或下方列表继续探索。
     </p>}
     <div className="relative min-h-0 w-full flex-1" role="group" aria-label="文化路线示意图">
       <svg viewBox="0 0 560 500" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">

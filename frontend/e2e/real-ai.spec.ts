@@ -97,7 +97,7 @@ test('浏览器真实 AI：引用、拒答与故障处理', async ({ page }) => 
       await expect(badge).toBeVisible({ timeout: 20000 })
       await badge.click()
       await expect(page.getByText('证据来源')).toBeVisible()
-      await expect(page.getByText(/审核状态：/)).toBeVisible()
+      await expect(page.getByText(/已记录人工审核|参考资料 · 待核验|未核验或待人工确认|历史引用/)).toBeVisible()
       await page.getByRole('button', { name: '关闭', exact: true }).click()
     } else {
       expect(probe.reason, `${label} 应拒答`).toBeTruthy()

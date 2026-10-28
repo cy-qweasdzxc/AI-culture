@@ -1,27 +1,26 @@
 import { Link } from 'react-router-dom'
-import DemoDataNotice from '@/components/DemoDataNotice'
 
 const flow = [
   {
     title: '选择主题与角色',
-    text: '每条文化路线配三位玩家角色，角色影响初始线索、NPC 态度与结局措辞。',
+    text: '选择一位角色，带着自己的线索进入故事。不同身份，会遇见不同的对话。',
   },
   {
     title: '抵达点位',
-    text: '虚拟模式在地图上点击到达；实地模式走到触发范围内自动校验。点位按剧情顺序解锁。',
+    text: '沿着平江路、耦园、狮子林、拙政园走向苏州博物馆，五站按故事顺序逐一开启。线上点击到达，实地则在附近使用定位。',
   },
   {
-    title: '与 NPC 对话',
-    text: '自由提问，或从六类主题、65 条苏州推荐问题中点选提问；可选探索需要的剧情提示也会显示在对话中。NPC 只讲自己领域内、且有证据支撑的内容，回答下方可展开来源。',
+    title: '与城中人交谈',
+    text: '与老茶客、园林手艺人和青年馆员交谈。可以自由提问，也可以选择感兴趣的话题；回答中的资料来源可随时展开。',
   },
   {
     title: '完成任务',
-    text: '六道主线谜题推进路线；每站三道自选挑战，共十五道，包含观察、多选和线索配对。另有八项可选探索，包含证据判断、排序与匹配。两类选做内容均可跳过，不阻塞下一站或主线结局；答案与奖励由服务端判定，不能重复领取。',
+    text: '解开六道主线谜题，串起沿途线索。想再走深一些，还能尝试十五道自选挑战与八项可选探索；选做内容不会影响主线推进。',
   },
   { title: '收集图鉴', text: '文化条目标注史实 / 争议 / 传说 / 虚构，未解锁条目只显示轮廓。' },
   {
     title: '抵达结局',
-    text: '尾声的关键选择决定结局走向，报告分别记录主线、自选挑战和可选探索。结局前可回访已到达的点位继续探索；旅程结束后可只读回顾，如需补做请开启新旅程。',
+    text: '在尾声留下你的选择，走向属于自己的结局。体验报告会记录沿途的任务与发现；结束后仍可回顾这段旅程。',
   },
 ]
 
@@ -29,12 +28,12 @@ const modes = [
   {
     name: '虚拟游览',
     note: '随时开始，无需定位',
-    text: '不需要定位权限，在地图上点击即可到达点位。完整剧情与实地一致，适合线上体验与演示。',
+    text: '不需要定位权限，在地图上点击即可到达点位。完整体验人物对话、解谜与结局。',
   },
   {
     name: '实地探索',
     note: '带上手机，走进城市',
-    text: '使用浏览器定位判断你是否真的走到了点位附近（约 120-150 米触发半径）。位置仅在触发校验时使用，默认不长期保存原始坐标。',
+    text: '走到点位附近后，使用定位开启故事。出发前请了解场馆预约及开放安排，沿途注意通行安全。',
   },
 ]
 
@@ -59,9 +58,6 @@ export default function IntroPage() {
         </a>
         <a href="#experience-modes" className="inline-flex min-h-11 items-center hover:text-ink">
           体验模式
-        </a>
-        <a href="#ai-privacy" className="inline-flex min-h-11 items-center hover:text-ink">
-          AI 与隐私
         </a>
       </nav>
 
@@ -108,40 +104,6 @@ export default function IntroPage() {
           </Link>
         </section>
       </div>
-
-      <section
-        id="ai-privacy"
-        className="mt-10 scroll-mt-24 border-t border-line pt-8 sm:mt-12"
-        aria-labelledby="ai-privacy-title"
-      >
-        <div className="grid gap-5 lg:grid-cols-[1fr_2fr] lg:gap-12">
-          <div>
-            <h2 id="ai-privacy-title" className="text-xl font-semibold text-ink">
-              AI 与隐私边界
-            </h2>
-            <p className="mt-3 max-w-sm text-sm leading-7 text-bluegray">
-              你可以查看回答的依据，也可以随时清除本次旅程。
-            </p>
-          </div>
-          <ul className="list-disc space-y-4 pl-5 text-sm leading-7 text-ink-soft marker:text-inkgreen">
-            <li>
-              NPC
-              的回答来自检索增强生成（RAG）：先检索已记录人工审核且版本有效的资料，再组织回答，并附证据编号。
-            </li>
-            <li>证据不足、问题越界或来源冲突时，NPC 使用固定话术拒答，不会编造史实。</li>
-            <li>
-              匿名体验：不需要注册，HttpOnly Cookie
-              关联服务端旅程，「设置与隐私」页可清除本次旅程数据。
-            </li>
-            <li>
-              定位遵循明示授权：只在实地模式下读取浏览器位置，交由服务端判断距离与精度。浏览器坐标可能被模拟。
-            </li>
-          </ul>
-        </div>
-        <div className="mt-8">
-          <DemoDataNotice />
-        </div>
-      </section>
     </div>
   )
 }

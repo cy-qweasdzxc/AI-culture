@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import DemoDataNotice from '@/components/DemoDataNotice'
 import Icon from '@/components/Icon'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
@@ -15,7 +14,11 @@ export default function SettingsPage() {
   const busy = useJourney((s) => s.busy)
   const audience = useJourney((s) => s.audienceMode ?? 'adult')
   const difficulty = useJourney((s) => s.difficulty ?? 'normal')
-  const difficultyLocked = useJourney((s) => Object.values(s.taskStates).some((task) => task.attempts > 0) || Object.values(s.activityStates ?? {}).some((activity) => activity.attempts > 0))
+  const difficultyLocked = useJourney(
+    (s) =>
+      Object.values(s.taskStates).some((task) => task.attempts > 0) ||
+      Object.values(s.activityStates ?? {}).some((activity) => activity.attempts > 0),
+  )
   const setProfile = useJourney((s) => s.setProfile)
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
@@ -39,19 +42,55 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <section className="grid gap-4 border-b border-line py-6 sm:grid-cols-2" aria-label="调整人群与难度" aria-busy={busy}>
-        <label className="text-sm">表达模式
-          <select className="input mt-2" aria-label="表达模式" value={audience} disabled={!hasJourney || busy} onChange={(event) => void setProfile(event.target.value as AudienceMode).catch((err: Error) => setError(err.message))}>
-            <option value="child">儿童</option><option value="student">学生</option><option value="adult">成人</option>
+      <section
+        className="grid gap-4 border-b border-line py-6 sm:grid-cols-2"
+        aria-label="调整人群与难度"
+        aria-busy={busy}
+      >
+        <label className="text-sm">
+          表达模式
+          <select
+            className="input mt-2"
+            aria-label="表达模式"
+            value={audience}
+            disabled={!hasJourney || busy}
+            onChange={(event) =>
+              void setProfile(event.target.value as AudienceMode).catch((err: Error) =>
+                setError(err.message),
+              )
+            }
+          >
+            <option value="child">儿童</option>
+            <option value="student">学生</option>
+            <option value="adult">成人</option>
           </select>
         </label>
-        <label className="text-sm">任务难度
-          <select className="input mt-2" aria-label="任务难度" value={difficulty} disabled={!hasJourney || busy || difficultyLocked} onChange={(event) => void setProfile(audience, event.target.value as DifficultyLevel).catch((err: Error) => setError(err.message))}>
-            <option value="easy">简单</option><option value="normal">标准</option><option value="advanced">深入</option>
+        <label className="text-sm">
+          任务难度
+          <select
+            className="input mt-2"
+            aria-label="任务难度"
+            value={difficulty}
+            disabled={!hasJourney || busy || difficultyLocked}
+            onChange={(event) =>
+              void setProfile(audience, event.target.value as DifficultyLevel).catch((err: Error) =>
+                setError(err.message),
+              )
+            }
+          >
+            <option value="easy">简单</option>
+            <option value="normal">标准</option>
+            <option value="advanced">深入</option>
           </select>
         </label>
-        <p className="text-xs leading-6 text-bluegray sm:col-span-2">设置保存在服务端。开始答题后难度固定，表达模式仍可调整；不采集真实年龄或姓名。</p>
-        {hasJourney && <p role="status" className="text-xs text-bluegray sm:col-span-2">{busy ? '正在保存设置，请等待完成后刷新…' : '设置已与服务端同步。'}</p>}
+        <p className="text-xs leading-6 text-bluegray sm:col-span-2">
+          开始答题后难度固定，表达模式仍可调整。
+        </p>
+        {hasJourney && (
+          <p role="status" className="text-xs text-bluegray sm:col-span-2">
+            {busy ? '正在保存设置，请等待完成后刷新…' : '设置已保存。'}
+          </p>
+        )}
       </section>
       <section className="grid gap-5 border-b border-line py-7 sm:py-9 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
         <div>
@@ -118,16 +157,11 @@ export default function SettingsPage() {
           <dl className="space-y-5 text-sm leading-7 text-ink-soft">
             <div>
               <dt className="mb-1 font-semibold text-ink">位置授权</dt>
-              <dd>
-                仅在授权后读取浏览器坐标，提交服务端计算距离和定位精度，不保存原始坐标。浏览器位置可被模拟，此校验不构成可信位置证明。
-              </dd>
+              <dd>仅在你授权并使用实地探索时读取位置，用于判断是否到达点位，不保存原始坐标。</dd>
             </div>
             <div>
               <dt className="mb-1 font-semibold text-ink">旅程记录</dt>
-              <dd>
-                平台不需要注册：HttpOnly Cookie
-                关联匿名会话，旅程进度保存在服务端，刷新后可恢复。清除操作删除当前会话及其旅程记录。
-              </dd>
+              <dd>旅程进度会自动保存，刷新后可继续。你可以随时清除本次旅程及相关记录。</dd>
             </div>
             <div>
               <dt className="mb-1 font-semibold text-ink">不使用定位</dt>
@@ -151,24 +185,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 py-7 sm:py-9 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
-        <div>
-          <h2 className="text-xl font-semibold text-ink">AI 说明</h2>
-          <p className="mt-2 text-sm leading-7 text-bluegray">回答可查看来源，剧情由规则推进。</p>
-        </div>
-        <div>
-          <p className="text-sm leading-8 text-ink-soft">
-            NPC
-            对话通过服务端检索与模型适配器生成，提供方和资料模式在回答中明示。只有明确记录人工审核且版本有效的资料进入文化问答；自动发布与待审资料不视为已核验。
-            证据不足或超出知识边界时，NPC
-            使用固定话术拒答。任务、道具、图鉴与结局的任何变化都必须经服务端状态机校验，AI
-            无权直接修改。
-          </p>
-          <div className="mt-4">
-            <DemoDataNotice />
-          </div>
-        </div>
-      </section>
       {error && !confirming ? (
         <p role="alert" className="mt-4 text-sm text-danger">
           {error}
@@ -190,7 +206,7 @@ export default function SettingsPage() {
           确认清除全部数据？
         </h2>
         <p id="clear-description" className="mt-3 text-sm leading-7 text-ink-soft">
-          将删除当前匿名会话及其服务端旅程进度、线索、图鉴解锁与对话记录，且不可恢复。
+          将删除本次旅程进度、线索、图鉴解锁与对话记录，且不可恢复。
         </p>
         {error && confirming ? (
           <p role="alert" className="mt-4 text-sm leading-7 text-danger">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Icon from '@/components/Icon'
+import SiteFooter from '@/components/SiteFooter'
 import { useJourney } from '@/engine/journeyStore'
 import { cn } from '@/utils/cn'
 
@@ -102,35 +103,7 @@ export default function PublicLayout() {
       <main id="main-content" className="flex-1" tabIndex={-1}>
         <Outlet />
       </main>
-      <footer className="border-t border-line bg-surface">
-        <div className="page-width grid gap-6 py-8 md:grid-cols-[1fr_auto] md:items-center">
-          <div>
-            <p className="font-serif text-base font-bold text-ink">
-              城迹入戏
-              <span className="ml-3 font-sans text-xs font-normal text-ink-soft">
-                让文化，成为沿途的故事。
-              </span>
-            </p>
-            <p className="mt-3 max-w-xl text-xs leading-6 text-bluegray">
-              AI 地方文化剧本游 · 演示原型。文化内容分级标注，回答附证据引用，资料不足时明确告知。
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 text-xs text-bluegray">
-            <div className="flex gap-5">
-              <Link to="/intro" className="footer-link">
-                体验说明
-              </Link>
-              <Link to="/settings" className="footer-link">
-                设置与隐私
-              </Link>
-              <Link to="/demo" className="footer-link">
-                演示入口
-              </Link>
-            </div>
-            <p>位置仅用于点位触发，旅程数据可随时清除。</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

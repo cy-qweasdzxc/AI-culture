@@ -92,7 +92,7 @@ async function assertAnsweredOrRefused(page: Page): Promise<void> {
   if (await cited.isVisible().catch(() => false)) {
     await cited.click()
     await expect(page.getByText('证据来源')).toBeVisible()
-    await expect(page.getByText(/审核状态：/)).toBeVisible()
+    await expect(page.getByText(/已记录人工审核|参考资料 · 待核验|未核验或待人工确认|历史引用/)).toBeVisible()
     await page.getByRole('button', { name: '关闭', exact: true }).click()
   }
 }
@@ -146,8 +146,8 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await arrive('平江路', 'pingjiang')
   await openChat(page, '与周伯对话', 'zhou-bo')
   await page.getByRole('button', { name: '《平江图》是什么？' }).click()
-  await expect(page.getByText(/规则拒答 · 未调用模型|Mock 模型 · 开发演示|检索/)).toBeVisible()
-  await expect(page.getByText(/已发放演示剧情线索/)).toBeVisible()
+  await expect(page.getByRole('log', { name: '对话消息' }).getByText(/^(资料暂不足|预设回复|文化问答|剧情引导)( · 本轮尚未保存)?$/).last()).toBeVisible()
+  await expect(page.getByText(/已收集剧情线索/)).toBeVisible()
   // 不变量：回答要么明确拒答，要么必须挂出已审核证据。断言"必然拒答"等于假定知识库为空，
   // 而导入已审核语料后同一问题会正常作答——那样的测试无法同时覆盖两种部署状态。
   await assertAnsweredOrRefused(page)
@@ -180,7 +180,7 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await arrive('苏州博物馆', 'subo')
   await openChat(page, '与小沈对话', 'xiao-shen')
   await page.getByRole('button', { name: '片石假山妙在哪里？' }).click()
-  await expect(page.getByText(/已发放演示剧情线索/)).toBeVisible()
+  await expect(page.getByText(/已收集剧情线索/)).toBeVisible()
   if (ending.complete) await quiz('task-pianshi', 'A.以石为绘')
   await gotoApp(page, '/spot/subo', () => page.getByRole('button', { name: '确认选择，迎接结局' }))
   await page.getByRole('radio', { name: new RegExp(ending.choice) }).click()
@@ -212,9 +212,8 @@ for (const ending of endingCases) test(`服务端旅程、拒答、恢复与清�
   await gotoApp(page, '/codex', () => page.getByRole('heading', { level: 1, name: '文化图鉴' }))
   if (ending.complete) await expect(page.getByText(/已解锁 24 \/ 24/)).toBeVisible()
   await page.locator('button.card').first().click()
-  // 图鉴抽屉必须显示该条目的资料状态；演示库为 pending，导入正式语料后为 reviewed，
-  // 自动发布语料也显示 reviewed，但页面文案是“发布状态”，不能再用旧的“审核状态”断言。
-  await expect(page.getByText(/发布状态：\s*(pending|reviewed|auto_published)/)).toBeVisible()
+  // Human verification remains explicit even though internal publication states are hidden.
+  await expect(page.getByText(/已记录人工审核|参考资料 · 待核验|未核验或待人工确认/)).toBeVisible()
   await page.getByRole('button', { name: '关闭', exact: true }).click()
   await gotoApp(page, '/settings', () => page.getByRole('button', { name: '清除全部旅程数据' }))
   await page.getByRole('button', { name: '清除全部旅程数据' }).click()

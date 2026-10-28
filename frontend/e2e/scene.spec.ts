@@ -82,7 +82,7 @@ test('导演调度两位已相识角色，旁白串场并在刷新后恢复', as
     page.getByText(group.director.beat, { exact: true }).filter({ visible: true }).first(),
   ).toBeVisible()
   await openDirector()
-  await expect(page.getByRole('heading', { name: '导演 Agent', exact: true }).last()).toBeVisible()
+  await expect(page.getByRole('heading', { name: '场景指引', exact: true }).last()).toBeVisible()
   await closeDirector()
   const redirected = await ask('暂时别让周伯发言，阿蘅总结。')
   expect(redirected.director.speakerOrder).toEqual(['a-heng'])
@@ -92,7 +92,9 @@ test('导演调度两位已相识角色，旁白串场并在刷新后恢复', as
   )
   await page.getByRole('button', { name: '继续剧情', exact: true }).last().click()
   const next = await savedTurn((await continued).postDataJSON().request_id)
-  expect(next.director.pace).toBe('transition')
+  // A live director can choose pacing; the rule fallback always transitions.
+  if (next.director.mode === 'rules') expect(next.director.pace).toBe('transition')
+  else expect(['explore', 'focus', 'transition']).toContain(next.director.pace)
   expect(next.director.nextAction.type).toBe('task')
   expect(next.messages.some((message) => message.reason === 'NARRATIVE_GUIDANCE')).toBe(true)
   expect(next.snapshot.taskStates).toEqual(group.snapshot.taskStates)

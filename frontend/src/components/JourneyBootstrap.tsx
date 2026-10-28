@@ -30,7 +30,7 @@ export default function JourneyBootstrap({ children }: { children: ReactNode }) 
               className="mt-4 max-w-sm text-sm leading-7 text-ink-soft"
               role={error ? 'alert' : 'status'}
             >
-              {error ?? '正在恢复服务端旅程…'}
+              {error ?? '正在准备你的旅程…'}
             </p>
             {error && !loading && (
               <button className="btn-primary mt-6" onClick={() => void restore()}>
