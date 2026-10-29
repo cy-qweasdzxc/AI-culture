@@ -61,3 +61,9 @@ pytest-of-*/
 
 # Browser QA screenshots are generated test artifacts.
 /browser-qa/
+
+# Standalone Mock Demo private state
+.runtime/
+
+# Disposable build-isolation directories created by local pip.
+pip-*/

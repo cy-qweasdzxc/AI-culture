@@ -33,3 +33,7 @@ docs/competition/artifacts
 
 # Browser QA screenshots are generated test artifacts.
 /browser-qa/
+
+.venv
+.runtime
+pip-*

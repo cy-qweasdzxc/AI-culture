@@ -10,6 +10,8 @@ COPY backend/alembic ./alembic
 COPY backend/scripts ./scripts
 COPY data/demo ./data/demo
 COPY data/suzhou ./data/suzhou
+# Controlled reviewed releases are restored only by an explicit administrator command.
+COPY data/releases ./data/releases
 # Evaluation inputs ship with the image so the retrieval/live tooling can run inside the
 # container without a manual `docker cp`. Reviewed corpora and result files stay out.
 COPY data/raw ./data/raw
