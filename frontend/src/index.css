@@ -390,6 +390,14 @@ html[data-audience='child'] .input {
 .chat-canvas {
   background-color: var(--paper-deep);
 }
+.chat-panel .chat-canvas {
+  min-height: 96px;
+}
+.chat-suggestions {
+  max-height: min(25dvh, 192px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .chat-panel {
   height: calc(var(--visual-viewport-height, 100dvh) - 15rem);
   min-height: 260px;
@@ -404,6 +412,12 @@ html[data-audience='child'] .input {
   }
 }
 @media (max-width: 767px) {
+  .chat-suggestions {
+    max-height: min(22dvh, 160px);
+  }
+  html[data-compact-viewport='true'] .chat-suggestions {
+    display: none;
+  }
   .chat-panel:focus-within {
     min-height: min(260px, calc(var(--visual-viewport-height, 100dvh) - 15rem));
   }

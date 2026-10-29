@@ -596,9 +596,10 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* 每个推荐问题独占一行，连同输入框共四行，统一左对齐 */}
+          {/* Keep recommendations scrollable so five choices cannot hide messages or evidence. */}
           <div className="shrink-0 border-t border-line bg-surface p-3 sm:p-4">
             <div className="flex flex-col gap-2">
+              <div className="chat-suggestions flex min-h-0 flex-col gap-2">
               {journeyComplete ? <p role="status" className="text-sm leading-7 text-bluegray">旅程已结束，可只读回顾对话与证据；开启新旅程后可继续提问。</p> : availableTopics.length > 0 ? (
                 <label className="flex min-h-11 items-center gap-3 text-xs text-bluegray">
                   推荐问题主题
@@ -620,6 +621,7 @@ export default function ChatPage() {
                   {c}
                 </button>
               ))}
+              </div>
               <form
                 className="flex min-w-0 items-center gap-2"
                 onSubmit={(e) => {
