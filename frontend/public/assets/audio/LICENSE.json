@@ -1,0 +1,19 @@
+{
+  "title": "Guqin — Yangguan Sandie",
+  "author": "Charlie Huang (Charles R Tsua / CharlieHuang)",
+  "recorded_year": 2013,
+  "source_url": "https://commons.wikimedia.org/wiki/File:Guqin-Yangguan_Sandie.ogg",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "original": {
+    "file": "guqin-yangguan-sandie.ogg",
+    "sha256": "a8ba709b4f2642a9acb6db355896657bf03cbd441832828d84a8477198188d4d"
+  },
+  "converted": {
+    "file": "guqin-yangguan-sandie.m4a",
+    "sha256": "075b77f9b0e87dbb291ccfc3939eba02879a61407dbecfe13b7f0cc3bf01f8f8",
+    "change": "Converted original Ogg Vorbis to AAC in M4A, 160 kbit/s, no intentional edits to duration or performance",
+    "license": "CC BY-SA 3.0",
+    "tool": "7.1-essentials_build-www.gyan.dev"
+  }
+}

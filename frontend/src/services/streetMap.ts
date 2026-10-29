@@ -1,7 +1,9 @@
-export interface StreetMapPoint { id: string; name: string; lat: number; lng: number }
+import { toWgs84, type CoordinateSystem } from './coordinates'
+
+export interface StreetMapPoint { id: string; name: string; lat: number; lng: number; coordinateSystem?: CoordinateSystem }
 
 export function streetMapUrl(points: StreetMapPoint[], focusId?: string): string | null {
-  const valid = points.filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng)
+  const valid = points.map(toWgs84).filter((point): point is StreetMapPoint & { coordinateSystem: 'wgs84' } => point !== null).filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng)
     && Math.abs(point.lat) <= 85 && Math.abs(point.lng) <= 180)
   if (!valid.length) return null
   const focused = valid.find((point) => point.id === focusId)

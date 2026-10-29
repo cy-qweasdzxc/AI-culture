@@ -6,13 +6,14 @@ export default function AudioGuide({ locationId, text, audience = 'adult' }: { l
   const [status, setStatus] = useState<'idle' | 'playing' | 'paused' | 'error'>('idle')
   const defaultRate = audience === 'child' || audience === 'senior' ? 0.75 : 1
   const [rate, setRate] = useState(defaultRate)
+  const signal = (playing: boolean) => window.dispatchEvent(new CustomEvent('citystory:narration', { detail: playing }))
   const active = useRef<SpeechSynthesisUtterance | null>(null)
   const narration = audience === 'child' ? (text.match(/[^。！？.!?]+[。！？.!?]?/g) ?? [text]).slice(0, 2).join('') : text
   useEffect(() => { setRate(defaultRate) }, [defaultRate])
   useEffect(() => {
     const stop = () => {
       if (active.current) { active.current = null; window.speechSynthesis?.cancel() }
-      setStatus('idle')
+      signal(false); setStatus('idle')
     }
     const hide = () => { if (document.visibilityState === 'hidden') stop() }
     document.addEventListener('visibilitychange', hide)
@@ -21,7 +22,7 @@ export default function AudioGuide({ locationId, text, audience = 'adult' }: { l
   function stop() {
     active.current = null
     window.speechSynthesis?.cancel()
-    setStatus('idle')
+    signal(false); setStatus('idle')
   }
   function play() {
     if (!supported || !narration.trim()) return
@@ -32,9 +33,9 @@ export default function AudioGuide({ locationId, text, audience = 'adult' }: { l
     utterance.rate = rate
     const voice = window.speechSynthesis.getVoices().find((item) => item.lang.toLowerCase().startsWith('zh'))
     if (voice) utterance.voice = voice
-    utterance.onend = () => { if (active.current === utterance) { active.current = null; setStatus('idle') } }
-    utterance.onerror = () => { if (active.current === utterance) { active.current = null; setStatus('error') } }
-    try { window.speechSynthesis.speak(utterance); setStatus('playing') } catch { active.current = null; setStatus('error') }
+    utterance.onend = () => { if (active.current === utterance) { active.current = null; signal(false); setStatus('idle') } }
+    utterance.onerror = () => { if (active.current === utterance) { active.current = null; signal(false); setStatus('error') } }
+    try { window.speechSynthesis.speak(utterance); signal(true); setStatus('playing') } catch { active.current = null; signal(false); setStatus('error') }
   }
   return <section className="play-audio-panel mt-6 rounded-xl border border-line bg-surface p-4" aria-label="语音讲解">
     <div className="flex items-start gap-3"><span className="play-feature-icon" aria-hidden>🔊</span><h2 className="font-semibold">语音讲解</h2></div>
@@ -43,8 +44,8 @@ export default function AudioGuide({ locationId, text, audience = 'adult' }: { l
       <button className="btn-primary" onClick={play} disabled={!narration.trim()}>播放讲解</button>
       <span className="rounded-full border border-line bg-paper-deep px-3 py-2 text-sm" aria-live="polite">{rate === 0.75 ? '慢速' : rate === 1 ? '正常' : '加速'} {rate}×</span>
       <button className="btn-ghost" disabled={status !== 'playing' && status !== 'paused'} onClick={() => {
-        if (status === 'paused') { window.speechSynthesis.resume(); setStatus('playing') }
-        else { window.speechSynthesis.pause(); setStatus('paused') }
+        if (status === 'paused') { window.speechSynthesis.resume(); signal(true); setStatus('playing') }
+        else { window.speechSynthesis.pause(); signal(false); setStatus('paused') }
       }}>{status === 'paused' ? '继续' : '暂停'}</button>
       <button className="btn-ghost" onClick={stop} disabled={status === 'idle'}>停止</button>
       <label className="flex min-h-11 items-center gap-2 text-sm">语速

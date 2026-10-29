@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import SchematicMap from '@/components/SchematicMap'
 import StreetMapOverlay from '@/components/StreetMapOverlay'
+import { toWgs84 } from '@/services/coordinates'
 import { streetMapUrl } from '@/services/streetMap'
 import type { Spot } from '@/types'
 
@@ -21,7 +22,7 @@ it('does not connect to a street map until the user chooses it and excludes lock
   const frame = screen.getByTitle('OpenStreetMap 街道底图')
   expect(frame).toHaveAttribute('referrerpolicy', 'no-referrer')
   const url = new URL(frame.getAttribute('src')!)
-  expect(url.searchParams.get('marker')).toBe('31.31,120.61')
+  expect(url.searchParams.get('marker')).toBe(`${toWgs84(first)!.lat},${toWgs84(first)!.lng}`)
   expect(url.searchParams.get('bbox')).not.toContain('120.65')
   expect(screen.getByRole('link', { name: /OpenStreetMap contributors/ })).toHaveAttribute('href', 'https://www.openstreetmap.org/copyright')
   fireEvent.click(screen.getByRole('button', { name: '返回示意图' }))
@@ -35,7 +36,7 @@ it('uses dynamic city bounds, validates coordinates and focuses the selected poi
   const [west, south, east, north] = url.searchParams.get('bbox')!.split(',').map(Number)
   expect(west).toBeLessThan(other.lng); expect(east).toBeGreaterThan(other.lng)
   expect(south).toBeLessThan(other.lat); expect(north).toBeGreaterThan(other.lat)
-  expect(new URL(streetMapUrl([first, second], 'two')!).searchParams.get('marker')).toBe('31.34,120.65')
+  expect(new URL(streetMapUrl([first, second], 'two')!).searchParams.get('marker')).toBe(`${toWgs84(second)!.lat},${toWgs84(second)!.lng}`)
   expect(streetMapUrl([{ ...other, lat: Number.NaN }])).toBeNull()
 })
 

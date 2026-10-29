@@ -32,7 +32,8 @@ export default function StreetMapOverlay({ points, focusId, onClose }: {
         : <p role="status" className="p-4 text-sm">街道底图暂不可用，仍可返回示意路线和点位列表继续游览。</p>}
     </div>
     <div className="shrink-0 border-t border-line bg-surface p-3 text-xs leading-6 text-bluegray">
-      <p>点位为近似坐标，坐标系可能存在偏差；仅供街巷参考，不用于导航、实地定位或任务触发。</p>
+      <p>可在景点列表选择点位，底图显示所选位置；同时浏览全部点位请返回示意图。</p>
+      <p>底图使用由 GCJ-02 近似换算的 WGS-84 坐标；原始点位未经入口核验，仅供街巷参考，不用于导航、实地定位或任务触发。</p>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <a className="inline-link inline-flex min-h-11 items-center" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors · 来源与许可</a>
         <div className="flex flex-wrap gap-3">

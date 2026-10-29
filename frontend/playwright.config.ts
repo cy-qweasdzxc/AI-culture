@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: '**/real-ai.spec.ts',
+  testIgnore: ['**/real-ai.spec.ts', '**/release-compatibility.spec.ts'],
   fullyParallel: false,
   timeout: 90000,
   expect: { timeout: 10000 },
@@ -31,7 +31,7 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
+  webServer: process.env.E2E_BASE_URL ? undefined : {
     command: 'npm run dev -- --host 127.0.0.1 --port 5173 --strictPort',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,

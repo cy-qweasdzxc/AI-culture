@@ -3,3 +3,5 @@ Source: https://commons.wikimedia.org/wiki/File:Guqin-Yangguan_Sandie.ogg
 License selected: Creative Commons Attribution-ShareAlike 3.0 Unported.
 License and legal code: https://creativecommons.org/licenses/by-sa/3.0/ and https://creativecommons.org/licenses/by-sa/3.0/legalcode
 The original Ogg is redistributed unchanged. Preserve this attribution and license; adaptations are subject to ShareAlike. The repository code license does not replace this audio license.
+
+Compatibility derivative: guqin-yangguan-sandie.m4a was transcoded from the unchanged original Ogg using AAC at 160 kbit/s, without intentional performance edits. Same author and CC BY-SA 3.0 license apply. SHA-256 and conversion metadata: LICENSE.json.

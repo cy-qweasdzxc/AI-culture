@@ -9,5 +9,12 @@
   "sha1": "1790acd2dfd99a8dcaf7c27a7040f867b89246f2",
   "sha256": "a8ba709b4f2642a9acb6db355896657bf03cbd441832828d84a8477198188d4d",
   "redistributable": true,
-  "license_checked_on": "2026-10-29"
+  "license_checked_on": "2026-10-29",
+  "compatibility_derivative": {
+    "file": "guqin-yangguan-sandie.m4a",
+    "sha256": "075b77f9b0e87dbb291ccfc3939eba02879a61407dbecfe13b7f0cc3bf01f8f8",
+    "change": "Converted original Ogg Vorbis to AAC in M4A, 160 kbit/s, no intentional edits to duration or performance",
+    "license": "CC BY-SA 3.0",
+    "tool": "7.1-essentials_build-www.gyan.dev"
+  }
 }

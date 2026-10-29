@@ -4,7 +4,7 @@ import BackgroundMusic from '@/components/BackgroundMusic'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 function audio(play = vi.fn().mockResolvedValue(undefined)) {
-  const instance = { play, pause: vi.fn(), load: vi.fn(), removeAttribute: vi.fn(), canPlayType: vi.fn().mockReturnValue('probably'), src: '', onpause: null, onerror: null }
+  const instance = { play, pause: vi.fn(), load: vi.fn(), removeAttribute: vi.fn(), canPlayType: vi.fn<(mime?: string) => string>().mockReturnValue('probably'), src: '', onpause: null, onerror: null }
   const create = vi.fn(function () { return instance }); vi.stubGlobal('Audio', create)
   return { instance, create }
 }
@@ -37,4 +37,24 @@ it('unsupported audio remains optional and exposes original attribution', async 
   expect(instance.play).not.toHaveBeenCalled()
   const details = screen.getByText('音乐来源与许可').closest('details')!; details.open = true
   expect(screen.getByRole('link', { name: 'CC BY-SA 3.0' })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by-sa/3.0/')
+})
+
+it('stops network loading when disabled and ducks while narration is active', async () => {
+  const { instance } = audio(); render(<BackgroundMusic />)
+  fireEvent.click(screen.getByRole('button', { name: '开启古琴背景音乐' }))
+  await screen.findByRole('button', { name: '关闭古琴背景音乐' })
+  window.dispatchEvent(new CustomEvent('citystory:narration', { detail: true }))
+  expect((instance as unknown as HTMLAudioElement).volume).toBe(0.035)
+  window.dispatchEvent(new CustomEvent('citystory:narration', { detail: false }))
+  expect((instance as unknown as HTMLAudioElement).volume).toBe(0.18)
+  fireEvent.click(screen.getByRole('button', { name: '关闭古琴背景音乐' }))
+  expect(instance.removeAttribute).toHaveBeenCalledWith('src'); expect(instance.load).toHaveBeenCalled()
+})
+
+it('chooses AAC when the browser cannot decode Ogg', async () => {
+  const { instance } = audio()
+  instance.canPlayType.mockImplementation((mime?: string) => mime === 'audio/mp4' ? 'probably' : '')
+  render(<BackgroundMusic />); fireEvent.click(screen.getByRole('button', { name: '开启古琴背景音乐' }))
+  await screen.findByRole('button', { name: '关闭古琴背景音乐' })
+  expect(instance.src).toBe('/assets/audio/guqin-yangguan-sandie.m4a')
 })
