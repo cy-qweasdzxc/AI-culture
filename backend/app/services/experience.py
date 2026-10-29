@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import DomainError
 from app.models import Task, UserStoryState, UserTaskState
 
-AUDIENCES = {"child", "student", "adult"}
+AUDIENCES = {"child", "student", "adult", "senior"}
 DIFFICULTIES = {"easy", "normal", "advanced"}
 
 
@@ -20,7 +20,7 @@ def profile(journey: UserStoryState) -> dict:
 
 
 def validate_profile(audience: str, difficulty: str | None) -> dict:
-    selected = difficulty or ("easy" if audience == "child" else "normal")
+    selected = difficulty or ("easy" if audience in {"child", "senior"} else "normal")
     if audience not in AUDIENCES or selected not in DIFFICULTIES:
         raise DomainError("PROFILE_INVALID", "人群或难度不受支持。", 422)
     return {"audience_mode": audience, "difficulty": selected}
@@ -45,6 +45,10 @@ def task_definition(task: Task, journey: UserStoryState) -> tuple[dict, dict]:
     difficulty = selected["difficulty"]
     data.update(audienceMode=selected["audience_mode"], difficulty=difficulty,
                 knowledgeScore=int(task.knowledge_score * {"easy": 0.75, "normal": 1, "advanced": 1.5}[difficulty]))
+    if selected["audience_mode"] == "child":
+        data["briefing"] = "儿童玩法：看图、找线索，按步骤完成。 " + data.get("briefing", "")
+    elif selected["audience_mode"] == "senior":
+        data["briefing"] = "慢游玩法：可先听讲解，再用大按钮作答。 " + data.get("briefing", "")
     if task.type == "matching":
         pairs = data.get("matchingPairs", [])
         data["matchingLeft"] = [{"id": pair["id"], "text": pair["left"]} for pair in pairs]
@@ -88,6 +92,7 @@ def agent_context(journey: UserStoryState) -> dict:
         "child": "使用短句和常见词，给出一步一步的安全提示；不索取姓名、年龄或其他个人信息。",
         "student": "围绕来源和证据解释，给出适合研学的提问与简单推理。",
         "adult": "根据问题提供较完整背景，区分事实、争议与推测；允许轻松体验。",
+        "senior": "使用清楚、简短的句子，先给结论再解释；避免生僻术语，提醒用户可以播放语音并慢慢操作。",
     }
     return {**selected, "expression_instruction": styles[selected["audience_mode"]],
             "truthfulness_instruction": "所有人群保持同一证据约束，不因模式编造或弱化引用要求。"}

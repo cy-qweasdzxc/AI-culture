@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import StreetMapOverlay, { STREET_MAP_NOTICE } from '@/components/StreetMapOverlay'
 import type { Spot, SpotStatus } from '@/types'
 
 const NODE_POS = [
@@ -15,20 +17,29 @@ interface Props {
   spotStatus: Record<string, SpotStatus>
   reason?: string
   onSpotClick?: (spotId: string) => void
+  focusSpotId?: string
+  allowStreetMap?: boolean
 }
 
 /** Schematic positions express story order, never real distances or walking times. */
-export default function SchematicMap({ spots, spotStatus, reason, onSpotClick }: Props) {
+export default function SchematicMap({ spots, spotStatus, reason, onSpotClick, focusSpotId, allowStreetMap = true }: Props) {
+  const [streetMap, setStreetMap] = useState(false)
+  const publicPoints = spots.filter((spot) => (spotStatus[spot.id] ?? 'undiscovered') !== 'undiscovered'
+    && Number.isFinite(spot.lat) && Number.isFinite(spot.lng) && Math.abs(spot.lat) <= 85 && Math.abs(spot.lng) <= 180)
+  const focused = publicPoints.find((spot) => spot.id === focusSpotId)?.id
+    ?? publicPoints.find((spot) => spotStatus[spot.id] === 'current')?.id
   const positions = spots.map((spot, index) => NODE_POS[spot.order - 1] ?? NODE_POS[index % NODE_POS.length])
   const path = positions.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+  if (streetMap && allowStreetMap) return <StreetMapOverlay points={publicPoints} focusId={focused} onClose={() => setStreetMap(false)} />
   return <div className="flex h-full flex-col">
     {reason && <p className="shrink-0 border-b border-line bg-paper-deep px-3 py-1.5 text-xs text-bluegray">
       当前显示路线示意图，点击点位或下方列表继续探索。
     </p>}
     <div className="relative min-h-0 w-full flex-1" role="group" aria-label="文化路线示意图">
       <svg viewBox="0 0 560 500" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
-        <path d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60" fill="none" stroke="var(--bluegray)" strokeWidth="22" strokeLinecap="round" opacity="0.15" />
-        <path d={path} fill="none" stroke="var(--cinnabar)" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
+        <path d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60" fill="none" stroke="var(--bluegray)" strokeWidth="22" strokeLinecap="round" opacity="0.25" />
+        <path d="M 40 460 C 120 380, 90 300, 160 240 S 260 140, 250 60" fill="none" stroke="var(--bluegray)" strokeWidth="2" strokeDasharray="1 8" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="var(--cinnabar)" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" className="route-line-draw" />
       </svg>
       {spots.map((spot, index) => {
         const status = spotStatus[spot.id] ?? 'undiscovered'
@@ -46,5 +57,9 @@ export default function SchematicMap({ spots, spotStatus, reason, onSpotClick }:
         </button>
       })}
     </div>
+    {allowStreetMap && publicPoints.length > 0 && <div className="shrink-0 border-t border-line bg-surface px-3 py-2 text-xs leading-5 text-bluegray">
+      <button className="inline-link min-h-11" type="button" onClick={() => setStreetMap(true)}>加载 OpenStreetMap 街道底图</button>
+      <p>{STREET_MAP_NOTICE}</p>
+    </div>}
   </div>
 }

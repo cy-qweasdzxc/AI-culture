@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import SchematicMap from '@/components/SchematicMap'
+import { loadTMap, type TMapMap, type TMapNS } from '@/services/tmap'
 import type { Spot, SpotStatus } from '@/types'
 
 /**
@@ -9,40 +10,6 @@ import type { Spot, SpotStatus } from '@/types'
  *  - 未配置：直接降级为示意路线，不访问无密钥代理。
  * 加载失败时通过 onUnavailable 回调让上层降级为示意图。
  */
-
-interface TMapLatLng {
-  getLat(): number
-  getLng(): number
-}
-
-interface TMapNS {
-  Map: new (el: HTMLElement, opts: Record<string, unknown>) => TMapMap
-  LatLng: new (lat: number, lng: number) => TMapLatLng
-  MultiMarker: new (opts: Record<string, unknown>) => {
-    setGeometries(g: unknown[]): void
-    on(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void
-    off?(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void
-    setMap?(map: null): void
-  }
-  MultiPolyline: new (opts: Record<string, unknown>) => { setMap?(map: null): void }
-  MarkerStyle: new (opts: Record<string, unknown>) => object
-  PolylineStyle: new (opts: Record<string, unknown>) => object
-}
-
-interface TMapMap {
-  setCenter(c: TMapLatLng): void
-  setZoom(z: number): void
-  resize?(): void
-  destroy(): void
-  on(e: string, cb: () => void): void
-}
-
-declare global {
-  interface Window {
-    TMap?: TMapNS
-    _TMapSecurityConfig?: { serviceHost: string }
-  }
-}
 
 const STATUS_COLOR: Record<SpotStatus, { bg: string; fg: string; glyph: string }> = {
   undiscovered: { bg: '#8b8b8b', fg: '#ffffff', glyph: '?' },
@@ -66,62 +33,29 @@ function markerIcon(status: SpotStatus): string {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
-let loaderPromise: Promise<void> | null = null
-
-function loadTMap(): Promise<void> {
-  if (window.TMap) return Promise.resolve()
-  if (loaderPromise) return loaderPromise
-  const key = import.meta.env.VITE_TMAP_KEY as string | undefined
-  if (!key) return Promise.reject(new Error('未配置地图密钥'))
-  const existing = [...document.scripts].find((script) => {
-    try { const url = new URL(script.src); return url.origin === 'https://map.qq.com' && url.pathname === '/api/gljs' }
-    catch { return false }
-  })
-  const script = existing ?? document.createElement('script')
-  const promise = new Promise<void>((resolve, reject) => {
-    const finish = (error?: Error) => {
-      window.clearTimeout(timeout)
-      script.removeEventListener('load', loaded)
-      script.removeEventListener('error', failed)
-      if (error) { script.remove(); reject(error) }
-      else resolve()
-    }
-    const loaded = () => finish(window.TMap ? undefined : new Error('在线地图 SDK 未能就绪'))
-    const failed = () => finish(new Error('在线地图 SDK 加载失败'))
-    const timeout = window.setTimeout(() => finish(new Error('在线地图加载超时')), 10000)
-    script.addEventListener('load', loaded, { once: true })
-    script.addEventListener('error', failed, { once: true })
-    if (!existing) {
-      script.async = true
-      script.src = `https://map.qq.com/api/gljs?v=1.exp&key=${encodeURIComponent(key)}`
-      document.head.appendChild(script)
-    }
-  })
-  loaderPromise = promise.catch((error: unknown) => {
-    loaderPromise = null
-    throw error
-  })
-  return loaderPromise
-}
-
 interface MapViewProps {
   routeGeometry?: { lat: number; lng: number }[]
   spots: Spot[]
   spotStatus: Record<string, SpotStatus>
   onSpotClick?: (spotId: string) => void
   onUnavailable: (reason: string) => void
+  focusSpotId?: string
 }
 
-export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable, routeGeometry }: MapViewProps) {
+export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable, routeGeometry, focusSpotId }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const callbacks = useRef({ onSpotClick, onUnavailable })
   callbacks.current = { onSpotClick, onUnavailable }
   const statuses = useRef(spotStatus)
   statuses.current = spotStatus
   const markersRef = useRef<InstanceType<TMapNS['MultiMarker']> | null>(null)
+  const mapRef = useRef<TMapMap | null>(null)
   const [ready, setReady] = useState(false)
   // Include coordinates and names: an edited point must update the route as well as its marker.
   const mapData = JSON.stringify({ spots: spots.filter(hasCoordinates).map(({ id, name, lat, lng }) => ({ id, name, lat, lng })), routeGeometry })
+  const focused = spots.find((spot) => spot.id === focusSpotId && hasCoordinates(spot)
+    && (spotStatus[spot.id] ?? 'undiscovered') !== 'undiscovered')
+  const focusData = focused ? JSON.stringify({ id: focused.id, lat: focused.lat, lng: focused.lng }) : ''
 
   useEffect(() => {
     let cancelled = false
@@ -141,6 +75,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable,
       markers?.setMap?.(null)
       line?.setMap?.(null)
       markersRef.current = null
+      mapRef.current = null
       markers = null; line = null
       map?.destroy(); map = null
     }
@@ -154,6 +89,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable,
       const TMap = window.TMap
       const first = data.spots[0]
       map = new TMap.Map(containerRef.current, { center: new TMap.LatLng(first.lat, first.lng), zoom: 15 })
+      mapRef.current = map
       const route = data.routeGeometry ?? data.spots
       if (route.some((point) => !hasCoordinates(point as Spot))) throw new Error('Invalid route coordinates')
       if (route.length > 1) line = new TMap.MultiPolyline({
@@ -192,6 +128,14 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable,
     })))
   }, [spotStatus, spots, ready])
 
+  useEffect(() => {
+    if (ready && focusData && mapRef.current && window.TMap) {
+      const point = JSON.parse(focusData) as { lat: number; lng: number }
+      mapRef.current.setCenter(new window.TMap.LatLng(point.lat, point.lng))
+      mapRef.current.setZoom(17)
+    }
+  }, [focusData, ready])
+
   return (
     <div className="relative h-full w-full bg-paper-deep">
       <div ref={containerRef} className="absolute inset-0" aria-label="文化路线地图" />
@@ -199,7 +143,7 @@ export default function MapView({ spots, spotStatus, onSpotClick, onUnavailable,
         onClick={() => onUnavailable('已选择示意路线')}>使用示意路线</button>}
       {!ready && (
         <div className="absolute inset-0 bg-paper-deep">
-          <SchematicMap spots={spots} spotStatus={spotStatus} onSpotClick={onSpotClick} />
+          <SchematicMap spots={spots} spotStatus={spotStatus} onSpotClick={onSpotClick} allowStreetMap={false} />
           <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-line bg-surface px-4 py-2">
             <p role="status" className="text-xs text-bluegray">
               正在载入在线地图，示意路线已可操作。

@@ -11,7 +11,7 @@ class JourneyStart(StrictBody):
     story_id: str = "suzhou-pingjiang"
     role_id: str
     mode: Literal["virtual", "onsite"] = "virtual"
-    audience_mode: Literal["child", "student", "adult"] = "adult"
+    audience_mode: Literal["child", "student", "adult", "senior"] = "adult"
     difficulty: Literal["easy", "normal", "advanced"] | None = None
     route_id: str | None = None
 
@@ -27,7 +27,7 @@ class ModeAction(JourneyAction):
 
 
 class ProfileAction(JourneyAction):
-    audience_mode: Literal["child", "student", "adult"]
+    audience_mode: Literal["child", "student", "adult", "senior"]
     difficulty: Literal["easy", "normal", "advanced"] | None = None
 
 

@@ -1,3 +1,4 @@
+import CitywideAttractionExplorer from '@/components/CitywideAttractionExplorer'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/services/api'
@@ -133,7 +134,7 @@ export default function CityExplorer() {
   return (
     <section
       id="city-catalog"
-      className="mt-10 scroll-mt-24 border-t border-line py-8"
+      className="city-catalog mt-10 scroll-mt-24 border-t border-line py-8"
       aria-labelledby="city-catalog-title"
     >
       <h2 id="city-catalog-title" className="font-serif text-2xl font-semibold">
@@ -325,6 +326,7 @@ export default function CityExplorer() {
           </div>
         ))}
       </div>
+      {selected === 'suzhou' && <CitywideAttractionExplorer />}
     </section>
   )
 }

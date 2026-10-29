@@ -84,6 +84,7 @@ export default function SpotPage() {
   const spotTasks = tasks.filter((task) => task.spotId === spot.id)
   const requiredTasks = spotTasks.filter((task) => !task.optional)
   const optionalTasks = spotTasks.filter((task) => task.optional)
+  const completedTasks = spotTasks.filter((task) => taskStates[task.id]?.status === 'completed').length
   const needsReturn = arrived && currentSpotId !== spot.id && journeyState !== 'COMPLETED'
   const journeyComplete = journeyState === 'COMPLETED'
 
@@ -107,7 +108,7 @@ export default function SpotPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+    <div className="spot-page mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
       <nav className="flex flex-wrap items-center gap-2 text-sm text-bluegray" aria-label="面包屑">
         <Link to="/map" className="inline-flex min-h-11 items-center gap-2 hover:text-cinnabar">
           <span aria-hidden>←</span>路线地图
@@ -142,6 +143,10 @@ export default function SpotPage() {
           </h1>
           <p className="mt-3 text-xs text-bluegray">地点参考介绍</p>
           <p className="mt-1 text-base font-medium leading-7 text-inkgreen">{spot.intro}</p>
+          <div className="spot-fact-card mt-4 rounded-xl border border-line p-3 text-xs leading-7 text-bluegray">
+            <div>点位：{spot.name} · 第 {spot.order} 站</div>
+            <div>文化事实以已审核条目为准；下方人物与剧情明确标为虚构。</div>
+          </div>
           <p className="mt-4 text-xs text-bluegray">剧情设定（虚构）</p>
           <p
             className="mt-5 max-w-prose text-sm leading-7 text-ink-soft"
@@ -152,6 +157,8 @@ export default function SpotPage() {
         </div>
         <div><SpotMedia locationId={spot.id} name={spot.name} /><AudioGuide locationId={spot.id} text={audience === 'child' ? spot.intro : `${spot.intro}\n剧情设定（虚构）：${spot.story}`} audience={audience} /></div>
       </header>
+
+      <section className="spot-highlight-card mt-5" aria-label="游览观察提示"><h2 className="font-semibold">带着问题看风景</h2><ul><li>先看图片和文字，再观察空间、材料与细节。</li><li>可主动播放讲解，向当前点位的角色提问并查看证据。</li><li>主线之外的挑战与探索可以跳过，不影响故事结局。</li></ul></section>
 
       <section className="mt-8 border-t border-line pt-6" aria-labelledby="spot-culture-title">
         <h2 id="spot-culture-title" className="font-serif text-xl font-semibold">文化寻访</h2>
@@ -202,6 +209,10 @@ export default function SpotPage() {
                 <h2 id="spot-tasks-title" className="text-xl font-semibold text-ink">
                   这里的谜题
                 </h2>
+                <span className="text-sm text-bluegray">已完成 {completedTasks} / {spotTasks.length}</span>
+              </div>
+              <div className="spot-task-progress mt-4" role="progressbar" aria-label="点位任务完成度" aria-valuemin={0} aria-valuemax={spotTasks.length || 1} aria-valuenow={completedTasks}>
+                <span style={{ width: `${spotTasks.length ? completedTasks / spotTasks.length * 100 : 0}%` }} />
               </div>
               <p className="mt-2 text-sm leading-6 text-ink-soft">
                 观察眼前的景物，也从对话里寻找答案。完成主线即可前往下一站，自选挑战可跳过。

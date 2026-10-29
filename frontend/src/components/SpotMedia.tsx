@@ -31,6 +31,7 @@ function PlaceMedia({ locationId, name }: Props) {
   const [attempt, setAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
   useEffect(() => {
     let active = true
     setLoading(true); setError(false)
@@ -43,15 +44,28 @@ function PlaceMedia({ locationId, name }: Props) {
   const available = assets.filter((asset) => asset.displayable && asset.url)
   const ordered = [...available.filter((asset) => asset.kind === 'photograph'),
     ...available.filter((asset) => asset.kind === 'illustration')]
-  const selected = ordered.find((asset) => !failedUrls.includes(asset.url!))
+  const slides = ordered.filter((asset) => !failedUrls.includes(asset.url!))
+  const selected = slides.find((asset) => asset.id === activeId) ?? slides[0]
+  const selectedIndex = selected ? slides.indexOf(selected) : 0
+  const move = (offset: number) => {
+    if (slides.length) setActiveId(slides[(selectedIndex + offset + slides.length) % slides.length].id)
+  }
   const failed = ordered.filter((asset) => failedUrls.includes(asset.url!))
   const art = sceneVisual(locationId)
-  return <figure className="my-5 min-w-0 overflow-hidden rounded-xl border border-line bg-surface" aria-label={`${name}图片`}>
-    <div className="aspect-[4/3] w-full bg-paper-deep">
+  return <figure className="spot-media-carousel my-5 min-w-0 overflow-hidden rounded-xl border border-line bg-surface" aria-label={`${name}图片`}>
+    <div className="relative aspect-[4/3] w-full bg-paper-deep">
       {selected ? <img key={selected.url} src={selected.url!} alt={selected.title} loading="lazy"
         className="h-full w-full object-contain" onError={() => setFailedUrls((urls) =>
           urls.includes(selected.url!) ? urls : [...urls, selected.url!])} />
         : <ResilientImage key={attempt} src={art?.src} alt={`${name}艺术化示意`} className="h-full w-full object-contain" />}
+      {slides.length > 1 && <>
+        <button type="button" className="spot-media-arrow spot-media-prev" onClick={() => move(-1)} aria-label="上一张图片">‹</button>
+        <button type="button" className="spot-media-arrow spot-media-next" onClick={() => move(1)} aria-label="下一张图片">›</button>
+        <div className="spot-media-dots" aria-label="图片切换">
+          {slides.map((asset, index) => <button key={asset.id} type="button" className={index === selectedIndex ? 'is-active' : ''}
+            onClick={() => setActiveId(asset.id)} aria-label={`查看第 ${index + 1} 张图片`} aria-current={index === selectedIndex} />)}
+        </div>
+      </>}
     </div>
     <figcaption className="space-y-2 p-4 text-xs leading-6 text-bluegray">
       {loading && <p role="status">正在加载图片资料…</p>}
@@ -59,7 +73,7 @@ function PlaceMedia({ locationId, name }: Props) {
       {(failed.length > 0 || error) && <>
         <p role="status">{error ? '图片资料暂时无法加载。' : '照片加载失败，已尝试使用艺术化示意。'}任务、对话和虚拟游览仍可继续。</p>
         <button type="button" className="inline-link min-h-11" disabled={loading} onClick={() => {
-          setFailedUrls([]); setAttempt((value) => value + 1)
+          setActiveId(null); setFailedUrls([]); setAttempt((value) => value + 1)
         }}>重新加载图片</button>
       </>}
       {failed.map((asset) => <div key={asset.id} className="border-t border-line pt-2">

@@ -131,3 +131,23 @@ it('shares one SDK download between two maps without constructing after either u
   second.unmount()
   expect(value.instance.destroy).toHaveBeenCalledTimes(1)
 })
+
+it('focuses a selected disclosed station without rebuilding the SDK map or unlocking a hidden station', async () => {
+  const MapView = (await import('@/components/MapView')).default
+  const value = sdk(); install(value)
+  const second = { ...spots[0], id: 'second', order: 2, lat: 31.32, lng: 120.65 }
+  const routeSpots = [...spots, second]
+  const props = { spots: routeSpots, spotStatus: { fixture: 'current', second: 'discovered' } as const, onUnavailable: vi.fn() }
+  const view = render(<MapView {...props} focusSpotId="fixture" />)
+  await waitFor(() => expect(value.instance.setCenter).toHaveBeenCalled())
+  value.instance.setCenter.mockClear()
+  view.rerender(<MapView {...props} focusSpotId="second" />)
+  await waitFor(() => expect(value.instance.setCenter).toHaveBeenCalledWith(expect.objectContaining({ lat: 31.32, lng: 120.65 })))
+  expect(value.instance.setZoom).toHaveBeenCalledWith(17)
+  expect(value.namespace.Map).toHaveBeenCalledTimes(1)
+  value.instance.setCenter.mockClear()
+  view.rerender(<MapView {...props} spots={[...routeSpots]} spotStatus={{ ...props.spotStatus }} focusSpotId="second" />)
+  expect(value.instance.setCenter).not.toHaveBeenCalled()
+  view.rerender(<MapView {...props} spotStatus={{ fixture: 'current', second: 'undiscovered' }} focusSpotId="second" />)
+  expect(value.instance.setCenter).not.toHaveBeenCalled()
+})

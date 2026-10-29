@@ -135,9 +135,9 @@ function select(pool: Choice[], seed: number, turn: number): Choice[] {
   )
   const selected: Choice[] = lead ? [lead] : []
   const kinds = new Set(selected.map((choice) => choice.kind))
-  // 同一批尽量跨类型：一个任务或事实、一个工艺或故事，而不是三连问。
+  // 同一批最多五题，尽量覆盖任务、事实、工艺与故事。
   for (const kind of shuffled(KIND_ORDER, seed ^ 0x85ebca6b)) {
-    if (selected.length >= 3) break
+    if (selected.length >= 5) break
     if (kinds.has(kind)) continue
     const choice = remaining.find((item) => item.kind === kind && !selected.includes(item))
     if (choice) {
@@ -146,7 +146,7 @@ function select(pool: Choice[], seed: number, turn: number): Choice[] {
     }
   }
   for (const choice of remaining) {
-    if (selected.length >= 3) break
+    if (selected.length >= 5) break
     if (!selected.includes(choice)) selected.push(choice)
   }
   return shuffled(selected, seed ^ 0x9e3779b9)

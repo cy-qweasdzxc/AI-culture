@@ -9,6 +9,7 @@ const navItems = [
   { to: '/', label: '首页', end: true },
   { to: '/theme', label: '文化主题' },
   { to: '/intro', label: '玩法说明' },
+  { to: '/demo', label: '比赛演示' },
   { to: '/codex', label: '文化图鉴' },
 ]
 

@@ -11,7 +11,7 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.errors import DomainError
 from app.core.rate_limit import check_rate
-from app.models import City, CulturalKnowledge, CulturalLocation, MediaAsset, Route, RouteStop, User
+from app.models import City, CulturalKnowledge, CulturalLocation, MediaAsset, Route, RouteStop, Task, User
 from app.services.catalog import media_dto, publication_scope
 from app.services.journey import owned_journey
 from app.services.knowledge import public_knowledge
@@ -57,7 +57,7 @@ class RecommendationBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
     city_id: str = Field(default="suzhou", max_length=80)
     journey_id: str | None = None
-    audience_mode: Literal["child", "student", "adult"] = "adult"
+    audience_mode: Literal["child", "student", "adult", "senior"] = "adult"
     difficulty: Literal["easy", "normal", "advanced"] = "normal"
     time_budget_minutes: int | None = Field(default=None, ge=15, le=720)
     interests: list[Literal["architecture", "history", "opera", "story"]] = Field(default_factory=list, max_length=4)
@@ -98,6 +98,44 @@ def places(city_id: str, db: Session = Depends(get_db)):
                        "lat": p.lat, "lng": p.lng, "entrance_verified": False, "opening_status": "unknown", "source_checked_at": None}
                       for p in locations] + [{**p, "playable": False} for p in city.data.get("preview_places", [])]}
 
+
+
+@router.get("/cities/{city_id}/attractions")
+def attraction_previews(city_id: str, db: Session = Depends(get_db)):
+    from app.services.attractions import city_attractions
+    city_or_error(db, city_id)
+    return city_attractions(city_id)
+
+
+@router.get("/cities/{city_id}/attractions/{attraction_id}")
+def attraction_preview_detail(city_id: str, attraction_id: str, db: Session = Depends(get_db)):
+    from app.services.attractions import attraction_detail
+    city_or_error(db, city_id)
+    detail = attraction_detail(city_id, attraction_id)
+    scope = publication_scope()
+    pairs = db.execute(select(Route, RouteStop.position).join(RouteStop).where(
+        RouteStop.location_id == attraction_id, Route.city_id == city_id,
+        Route.id.in_(scope["routes"]), Route.story_id.in_(scope["stories"]),
+    ).order_by(Route.id)).all()
+    related = []
+    playable_stories = set()
+    for route, position in pairs:
+        published = route_dto(db, route)
+        related.append({key: published[key] for key in ("id", "name", "status", "playable")} | {"position": position})
+        if published["playable"]:
+            playable_stories.add(route.story_id)
+    # The preview cannot publish facts or unlock stations. Only already-published
+    # route metadata and the same reviewed facts as the public place page are added.
+    facts = list(db.scalars(select(CulturalKnowledge).where(
+        CulturalKnowledge.location_id == attraction_id,
+        CulturalKnowledge.story_id.in_(playable_stories),
+    ).order_by(CulturalKnowledge.id))) if playable_stories else []
+    tasks = list(db.scalars(select(Task).where(
+        Task.location_id == attraction_id, Task.story_id.in_(playable_stories),
+    ).order_by(Task.id))) if playable_stories else []
+    return {**detail, "routes": related,
+            "tasks": [{"id": task.id, "title": task.title, "type": task.type} for task in tasks],
+            "knowledge": [public_knowledge(row) for row in facts if has_human_review(row)]}
 
 
 @router.get("/places/{location_id}")

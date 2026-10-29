@@ -11,10 +11,10 @@ const base = {
 }
 
 describe('推荐问题', () => {
-  it('首轮保留当前任务问题，并凑足三条', () => {
+  it('首轮保留当前任务问题，并展示五条不同的问题', () => {
     const choices = suggestedChoices('zhou-bo', base)
-    expect(choices).toHaveLength(3)
-    expect(new Set(choices).size).toBe(3)
+    expect(choices).toHaveLength(5)
+    expect(new Set(choices).size).toBe(5)
     expect(choices).toContain('《平江图》是什么？')
   })
 
@@ -25,7 +25,7 @@ describe('推荐问题', () => {
       asked: ['《平江图》是什么？'],
     })
     expect(choices).not.toContain('《平江图》是什么？')
-    expect(choices).toHaveLength(3)
+    expect(choices).toHaveLength(5)
   })
 
   it('按点位过滤，不在耦园推荐狮子林或拙政园', () => {

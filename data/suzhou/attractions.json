@@ -1,0 +1,1757 @@
+{
+  "schema_version": 1,
+  "dataset_id": "suzhou-citywide-tourism-preview",
+  "city": "苏州",
+  "source_checked_at": "2026-10-26",
+  "coordinate_system": "GCJ-02 / 腾讯地图坐标系",
+  "purpose": "用于《城迹入戏》全域景点地图与候选目录预览，不是正式游玩路线或已审核文化知识库。",
+  "counts": {
+    "attraction_count": 50,
+    "coordinates_approximate_count": 50,
+    "coordinates_entrance_verified_count": 0,
+    "content_human_reviewed_count": 0,
+    "license_confirmed_count": 0,
+    "playable_count": 0
+  },
+  "sources": [
+    {
+      "name": "苏州市国家等级旅游景区名录",
+      "url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "supports": "景区名称、等级、行政区域及部分地址"
+    },
+    {
+      "name": "苏州市博物馆名录",
+      "url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "supports": "博物馆名称、地址与管理单位"
+    },
+    {
+      "name": "苏州古典园林世界遗产名录",
+      "url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "supports": "九处世界遗产古典园林名称"
+    },
+    {
+      "name": "苏州旅游导览发布说明",
+      "url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "supports": "全域旅游、古城、金鸡湖、环太湖与阳澄湖等导览范围"
+    },
+    {
+      "name": "苏州市地方志：自然地理和资源",
+      "url": "https://dfzb.suzhou.gov.cn/dfzb/zrdl/202411/7eb0584cc1d643398991206f22728adf.shtml",
+      "supports": "苏州行政地理、古城格局与全市文旅资源背景"
+    },
+    {
+      "name": "苏州市文旅部门古城旅游线路",
+      "url": "https://visitsz.wglj.suzhou.com.cn/news-detail.aspx?id=352",
+      "supports": "拙政园、平江路、耦园、盘门等古城路线与景点介绍"
+    },
+    {
+      "name": "金鸡湖景区官方导览",
+      "url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "supports": "金鸡湖景区及现代文旅资源"
+    },
+    {
+      "name": "周庄旅游官方网站",
+      "url": "https://zhouzhuang.net/intro_5.html",
+      "supports": "周庄古镇简介、地理信息与主要景点"
+    },
+    {
+      "name": "苏州市园林和绿化管理局：甪直景区",
+      "url": "https://ylj.suzhou.gov.cn/szsylj/fjmsq/201912/c3aaf3421fde4ff29c61b2490ae36ab3.shtml",
+      "supports": "甪直古镇的官方概况"
+    },
+    {
+      "name": "苏州市地方志：灵岩山",
+      "url": "https://dfzb.suzhou.gov.cn/dfzb/szdq/202405/884041a70aeb4912b1529a2836ed890c.shtml",
+      "supports": "灵岩山地理位置与山水背景"
+    }
+  ],
+  "limitations": [
+    "公开网页访问不等于允许复制、转载、图片再分发、向量化或商业使用；版权/许可需逐项确认。",
+    "所有坐标均标为 approximate_demo，属于地图定位锚点，不是官方测绘坐标，也未验证游客入口、GCJ-02 转换精度或现场定位半径。",
+    "开放时间、票价、预约规则未作为静态事实导入，需接入官方实时页面或人工维护。",
+    "每个点位的 intro 仅作目录级摘要；不能直接作为 RAG 的已审核事实。正式知识条目须有逐句来源、支持证据、许可说明和人工审核记录。",
+    "所有点位均设置为 building / playable=false，不会自动成为可游玩剧情点或正式 RAG 证据。"
+  ],
+  "attractions": [
+    {
+      "id": "pingjiang",
+      "name": "平江历史文化街区",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "历史街区",
+      "address": "姑苏区平江路",
+      "lat": 31.3169,
+      "lng": 120.6343,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州古城保存较完整的历史街区之一，可围绕河街格局、桥巷空间与市井生活设计探索内容。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古城",
+        "水巷",
+        "运河"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文旅部门古城旅游线路",
+      "source_url": "https://visitsz.wglj.suzhou.com.cn/news-detail.aspx?id=352",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "ouyuan",
+      "name": "耦园",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区仓街小新桥巷6号",
+      "lat": 31.3199,
+      "lng": 120.6416,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一；园名、宅园布局与沈秉成、严永华相关史料可作为内容核验方向。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "文人",
+        "家族"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "shizilin",
+      "name": "狮子林",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区园林路23号",
+      "lat": 31.3271,
+      "lng": 120.6308,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，以湖石假山和曲折游览空间为显著特征。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "假山",
+        "空间谜题"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "zhuozhengyuan",
+      "name": "拙政园",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区东北街178号",
+      "lat": 31.3254,
+      "lng": 120.6307,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，可围绕水景布局、园林空间和明代园林史料构建任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "水景",
+        "文人"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "subo",
+      "name": "苏州博物馆本馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "博物馆",
+      "address": "姑苏区东北街204号",
+      "lat": 31.3244,
+      "lng": 120.6294,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "馆址与忠王府历史建筑相邻，适合连接城市史、建筑设计与馆藏研究线索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "博物馆",
+        "建筑",
+        "城市史"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "liuyuan",
+      "name": "留园",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区留园路338号",
+      "lat": 31.3218,
+      "lng": 120.6037,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，可围绕空间层次、建筑与山水关系设计观察任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "空间",
+        "造园"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "shantang",
+      "name": "山塘历史文化街区",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "历史街区",
+      "address": "姑苏区山塘街",
+      "lat": 31.3157,
+      "lng": 120.5993,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "大运河苏州段相关历史文化街区，可围绕水路交通、街市商业与桥梁空间开展探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "运河",
+        "街市",
+        "桥梁"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文旅部门文化遗产名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/whyz/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "huqiu",
+      "name": "虎丘山风景名胜区",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "风景名胜",
+      "address": "姑苏区虎丘山门内8号",
+      "lat": 31.3368,
+      "lng": 120.5684,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州重要风景名胜区，云岩寺塔等历史遗存适合组织建筑观察与史料辨析任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古塔",
+        "遗迹",
+        "山水"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "hanshansi",
+      "name": "寒山寺",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "寺观古迹",
+      "address": "姑苏区枫桥路",
+      "lat": 31.3054,
+      "lng": 120.5689,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "与枫桥、运河水路和诗歌记忆关联紧密，适合设计文本辨析与文化传播主题。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "诗歌",
+        "运河",
+        "寺院"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市地方志及旅游导览资料",
+      "source_url": "https://dfzb.suzhou.gov.cn/dfzb/zrdl/202411/7eb0584cc1d643398991206f22728adf.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "panmen",
+      "name": "盘门景区",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "城门遗址/历史景区",
+      "address": "姑苏区东大街49号",
+      "lat": 31.2899,
+      "lng": 120.6159,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "大运河苏州段相关遗产点，可围绕水陆城门、古城防御与水路交通开展探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "城门",
+        "运河",
+        "城市防御"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文旅部门文化遗产名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/whyz/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "canglangting",
+      "name": "沧浪亭",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区沧浪亭街3号",
+      "lat": 31.2923,
+      "lng": 120.6258,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，可围绕园林与文人生活、空间题名等主题核验史料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "文人",
+        "题名"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "wangshiyuan",
+      "name": "网师园",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区阔家头巷11号",
+      "lat": 31.2966,
+      "lng": 120.6338,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，适合围绕小尺度空间、园林构景和夜游文化展开内容。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "空间",
+        "夜游"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "yipu",
+      "name": "艺圃",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区文衙弄5号",
+      "lat": 31.3153,
+      "lng": 120.6118,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林名录中的园林之一，可设计安静观察、园林构景和历史资料比对任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "小园林",
+        "观察"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "huanxiu",
+      "name": "环秀山庄",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古典园林",
+      "address": "姑苏区景德路272号",
+      "lat": 31.3157,
+      "lng": 120.6177,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，适合围绕假山叠石、山水意境和造园技艺设计任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "叠石",
+        "造园"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "beisita",
+      "name": "报恩寺塔（北寺塔）",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "古塔/寺观",
+      "address": "姑苏区人民路",
+      "lat": 31.3259,
+      "lng": 120.6175,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "古城内具有辨识度的塔寺地标，可围绕城市天际线、古建结构与历史地图展开探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古塔",
+        "古城地图",
+        "建筑"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市旅游导览及地方志资料",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "guanqian",
+      "name": "观前街历史街区",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "商业街区",
+      "address": "姑苏区观前街",
+      "lat": 31.3125,
+      "lng": 120.6213,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "传统商业街区，可围绕老字号、城市消费史和商业空间变化构建支线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "商业史",
+        "老字号",
+        "街区"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "shiquan",
+      "name": "十全街",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "历史街巷",
+      "address": "姑苏区十全街",
+      "lat": 31.294,
+      "lng": 120.6383,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "历史街巷与当代文旅消费交织的街区，适合围绕城市更新、街巷生活与地方饮食开展探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "街巷",
+        "饮食",
+        "城市更新"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "xiangmen",
+      "name": "相门城墙与城墙博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "城墙/博物馆",
+      "address": "姑苏区干将东路相门城墙文化休闲景区",
+      "lat": 31.3154,
+      "lng": 120.6435,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "可将古城墙、城门空间与现代城市公共空间联系起来，设计地图比对任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "城墙",
+        "地图",
+        "城市史"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "kunqu-museum",
+      "name": "中国昆曲博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "非遗/博物馆",
+      "address": "姑苏区中张家巷14号",
+      "lat": 31.3184,
+      "lng": 120.6225,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "围绕昆曲的表演艺术、曲牌、舞台空间与非遗传承整理资料；具体展陈以馆方信息为准。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "昆曲",
+        "非遗",
+        "表演"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "pingtan-museum",
+      "name": "中国苏州评弹博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "非遗/博物馆",
+      "address": "姑苏区中张家巷3号",
+      "lat": 31.3186,
+      "lng": 120.6221,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "围绕评弹的说唱传统、书场文化与城市日常生活整理知识；开放安排待核验。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "评弹",
+        "非遗",
+        "书场"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "garden-museum",
+      "name": "苏州园林博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "博物馆",
+      "address": "姑苏区东北街202号",
+      "lat": 31.3249,
+      "lng": 120.6296,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "可作为园林术语、造园方法、园林史和现场观察之间的知识枢纽。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林史",
+        "博物馆",
+        "造园"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "silk-museum",
+      "name": "苏州丝绸博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "博物馆/传统工艺",
+      "address": "姑苏区人民路2001号",
+      "lat": 31.33,
+      "lng": 120.6185,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "适合围绕丝绸生产、织造技艺、贸易与江南日常生活构建可核验的文化任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "丝绸",
+        "工艺",
+        "商贸"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "embroidery-museum",
+      "name": "苏州刺绣博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "博物馆/传统工艺",
+      "address": "姑苏区景德路274号",
+      "lat": 31.3168,
+      "lng": 120.6135,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "可围绕苏绣针法、作品鉴赏与传统工艺传承设计观察任务，具体知识须对应馆方资料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "苏绣",
+        "工艺",
+        "非遗"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "inscription-museum",
+      "name": "苏州碑刻博物馆",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "博物馆/碑刻",
+      "address": "姑苏区人民路613号",
+      "lat": 31.3053,
+      "lng": 120.6162,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "适合围绕碑刻释读、文字版本、史料来源与证据可信度设计解谜。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "碑刻",
+        "文字",
+        "史料"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文化广电和旅游局博物馆名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/bwg/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "xiyuan",
+      "name": "西园寺",
+      "district": "姑苏区",
+      "region": "姑苏区",
+      "category": "寺观古迹",
+      "address": "姑苏区留园路西园弄",
+      "lat": 31.3128,
+      "lng": 120.5954,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "寺院建筑与园林环境相结合，可作为宗教建筑、空间礼仪与城市历史主题的候选点。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "寺院",
+        "建筑",
+        "园林"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览及园林旅游资料",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "suzhou-west-museum",
+      "name": "苏州博物馆西馆",
+      "district": "高新区",
+      "region": "高新区",
+      "category": "博物馆",
+      "address": "高新区长江路399号",
+      "lat": 31.2933,
+      "lng": 120.5674,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "以苏州历史、城市、人物和社会生活为主题的博物馆，可连接古城与当代城市空间。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "博物馆",
+        "城市史",
+        "当代建筑"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市旅游咨询中心场馆介绍",
+      "source_url": "https://visitsz.wglj.suzhou.com.cn/venue-detail.aspx?Id=41",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "jinji-lake",
+      "name": "金鸡湖景区",
+      "district": "工业园区",
+      "region": "工业园区",
+      "category": "湖泊/城市景区",
+      "address": "工业园区钟园路747号附近",
+      "lat": 31.3205,
+      "lng": 120.7005,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "国家5A级旅游景区，融合湖泊景观、现代城市天际线、文化场馆与环湖步道。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "现代苏州",
+        "湖泊",
+        "城市空间"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "金鸡湖景区官方导览",
+      "source_url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "oriental-gate",
+      "name": "东方之门",
+      "district": "工业园区",
+      "region": "工业园区",
+      "category": "现代建筑地标",
+      "address": "工业园区星港街附近",
+      "lat": 31.3245,
+      "lng": 120.6753,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "金鸡湖周边现代城市地标，可与古典园林形成传统与现代城市形象的对照。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "现代建筑",
+        "城市天际线",
+        "对照叙事"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "金鸡湖景区官方导览",
+      "source_url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "eslite",
+      "name": "诚品生活苏州",
+      "district": "工业园区",
+      "region": "工业园区",
+      "category": "文化商业空间",
+      "address": "工业园区金鸡湖文化水廊附近",
+      "lat": 31.3218,
+      "lng": 120.7103,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "金鸡湖文化旅游资源之一，可围绕阅读、设计、文化消费和城市生活构建现代支线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "阅读",
+        "设计",
+        "现代生活"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "金鸡湖景区官方导览",
+      "source_url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "ligongdi",
+      "name": "李公堤",
+      "district": "工业园区",
+      "region": "工业园区",
+      "category": "历史街区/湖滨街区",
+      "address": "工业园区金鸡湖东南侧",
+      "lat": 31.2986,
+      "lng": 120.7046,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "金鸡湖景区的湖滨文化街区，可结合湖岸空间、街区商业与城市更新设计剧情。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "湖滨",
+        "街区",
+        "城市更新"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "金鸡湖景区官方导览",
+      "source_url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "culture-arts",
+      "name": "苏州文化艺术中心",
+      "district": "工业园区",
+      "region": "工业园区",
+      "category": "文化场馆",
+      "address": "工业园区观枫街1号附近",
+      "lat": 31.3283,
+      "lng": 120.7043,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "金鸡湖周边重要文化场馆，可作为现代演艺、公共文化与城市夜间体验主题点。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "演艺",
+        "公共文化",
+        "现代苏州"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "金鸡湖景区官方导览",
+      "source_url": "https://jinjilake.sipac.gov.cn/daolan-333.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "mudu",
+      "name": "木渎古镇",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "古镇",
+      "address": "吴中区木渎镇",
+      "lat": 31.254,
+      "lng": 120.517,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "太湖周边历史古镇，可围绕水陆交通、古镇商业与周边山水关系整理资料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "山水",
+        "商贸"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "tianping",
+      "name": "天平山风景名胜区",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "山岳景区",
+      "address": "吴中区木渎镇灵天路",
+      "lat": 31.2952,
+      "lng": 120.5016,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州重要山岳景区，可围绕山水游览、季节景观与历史人物相关资料设计探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "山水",
+        "季节景观",
+        "游览"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "lingyan",
+      "name": "灵岩山",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "山岳/寺观",
+      "address": "吴中区木渎镇灵岩山",
+      "lat": 31.232,
+      "lng": 120.4985,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "地方志资料介绍其位于苏州古城西南、木渎古镇西北，适合连接山水、寺观与历史叙事。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "山水",
+        "寺观",
+        "地方志"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市地方志编纂委员会办公室",
+      "source_url": "https://dfzb.suzhou.gov.cn/dfzb/szdq/202405/884041a70aeb4912b1529a2836ed890c.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "qionglong",
+      "name": "穹窿山景区",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "山岳景区",
+      "address": "吴中区藏书镇兵圣路附近",
+      "lat": 31.241,
+      "lng": 120.406,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州西部山岳景区，可围绕山地地理、兵学文化和山林游览组织主题线索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "山水",
+        "兵学文化",
+        "自然"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "baodai",
+      "name": "宝带桥",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "古桥/运河遗产",
+      "address": "吴中区东方大道与吴东路交界处附近",
+      "lat": 31.255,
+      "lng": 120.635,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "大运河苏州段相关遗产点，适合围绕桥梁工程、水路交通与古代城市联系设计任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古桥",
+        "运河",
+        "工程"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市文旅部门文化遗产名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/whyz/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "dongshan-qiyuan",
+      "name": "启园",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "园林/湖滨景区",
+      "address": "吴中区东山镇",
+      "lat": 31.064,
+      "lng": 120.422,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "太湖东山区域的园林景区候选点，可结合湖岸景观与东山地方文化开展探索。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "太湖",
+        "园林",
+        "湖岸"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "luxiang",
+      "name": "陆巷古村",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "古村落",
+      "address": "吴中区东山镇陆巷古村",
+      "lat": 31.101,
+      "lng": 120.482,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "太湖东山区域古村落，可围绕传统聚落、家族空间和村落保护收集可核验资料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古村",
+        "聚落",
+        "家族史"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "tongli",
+      "name": "同里古镇",
+      "district": "吴江区",
+      "region": "吴江区",
+      "category": "古镇",
+      "address": "吴江区同里镇中川南路附近",
+      "lat": 31.1567,
+      "lng": 120.722,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "国家5A级旅游景区与江南水乡古镇，可围绕桥、河、宅院与日常生活组织主题路线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "水乡",
+        "桥梁"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "tuisi",
+      "name": "退思园",
+      "district": "吴江区",
+      "region": "吴江区",
+      "category": "古典园林",
+      "address": "吴江区同里古镇内",
+      "lat": 31.1557,
+      "lng": 120.7226,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "世界文化遗产苏州古典园林之一，位于同里古镇，可设计园林空间与隐逸主题任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "园林",
+        "隐逸",
+        "世界遗产"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/sjyc/nav_list.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "zhenze",
+      "name": "震泽古镇",
+      "district": "吴江区",
+      "region": "吴江区",
+      "category": "古镇",
+      "address": "吴江区震泽镇",
+      "lat": 30.913,
+      "lng": 120.513,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "江南水乡与丝绸产业相关的古镇候选点，可进一步核实古桥、蚕桑和商贸史料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "丝绸",
+        "水乡"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "zhouzhuang",
+      "name": "周庄古镇",
+      "district": "昆山市",
+      "region": "昆山市",
+      "category": "古镇",
+      "address": "昆山市周庄镇全福路121号",
+      "lat": 31.117,
+      "lng": 120.85,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "国家5A级旅游景区；官方介绍提及因河成镇、依水成街以及富安桥、双桥等主要景点。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "古桥",
+        "水乡"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "周庄旅游官方网站",
+      "source_url": "https://zhouzhuang.net/intro_5.html",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "luzhi",
+      "name": "甪直古镇",
+      "district": "吴中区",
+      "region": "吴中区",
+      "category": "古镇",
+      "address": "吴中区甪直镇",
+      "lat": 31.275,
+      "lng": 120.864,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "官方资料介绍其以江南水乡古镇和古桥系列景观为特色，包含多个主要景点。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "古桥",
+        "水乡"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市园林和绿化管理局",
+      "source_url": "https://ylj.suzhou.gov.cn/szsylj/fjmsq/201912/c3aaf3421fde4ff29c61b2490ae36ab3.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "jinxi",
+      "name": "锦溪古镇",
+      "district": "昆山市",
+      "region": "昆山市",
+      "category": "古镇",
+      "address": "昆山市锦溪镇",
+      "lat": 31.169,
+      "lng": 120.972,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州地区水乡古镇候选点，建议进一步核实博物馆群、桥梁和古镇保护相关资料。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "水乡",
+        "民俗"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "qiandeng",
+      "name": "千灯古镇",
+      "district": "昆山市",
+      "region": "昆山市",
+      "category": "古镇",
+      "address": "昆山市千灯镇",
+      "lat": 31.321,
+      "lng": 121.006,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州地区历史古镇候选点，可围绕古镇街巷、昆曲文化关联和地方历史开展后续核验。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "古镇",
+        "街巷",
+        "戏曲"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "yangcheng",
+      "name": "阳澄湖半岛旅游度假区",
+      "district": "工业园区/相城区",
+      "region": "工业园区/相城区",
+      "category": "湖泊/度假区",
+      "address": "苏州工业园区阳澄湖半岛",
+      "lat": 31.403,
+      "lng": 120.782,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "阳澄湖周边旅游区域，可结合湖泊生态、季节性水产文化与休闲步道规划主题支线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "湖泊",
+        "生态",
+        "饮食文化"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州旅游导览",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/gzdt/202408/938e0ce0afee4aecabd7a69325f6893d.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "shajiabang",
+      "name": "沙家浜风景区",
+      "district": "常熟市",
+      "region": "常熟市",
+      "category": "湿地/红色文化景区",
+      "address": "常熟市沙家浜镇",
+      "lat": 31.522,
+      "lng": 120.862,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州范围内的湿地与文化景区候选点；具体历史叙事须使用官方场馆资料核验。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "湿地",
+        "地方记忆",
+        "生态"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "yushan-shanghu",
+      "name": "虞山尚湖旅游区",
+      "district": "常熟市",
+      "region": "常熟市",
+      "category": "山水景区",
+      "address": "常熟市虞山街道/尚湖区域",
+      "lat": 31.617,
+      "lng": 120.741,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "苏州范围内的山水旅游区，可围绕山湖地理、自然观察和地方文化组织路线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "山水",
+        "自然观察",
+        "地方文化"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "苏州市国家等级旅游景区名录",
+      "source_url": "https://wglj.suzhou.gov.cn/szwhgdhly/Ajqq/list_tt.shtml",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "taihu-wetland",
+      "name": "苏州太湖国家湿地公园",
+      "district": "高新区",
+      "region": "高新区",
+      "category": "湿地公园",
+      "address": "高新区绣品街1号",
+      "lat": 31.3237,
+      "lng": 120.3628,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "湿地生态主题点位，可围绕水乡生态、鸟类观察与自然保护设计任务。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "湿地",
+        "生态",
+        "自然观察"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "公开景点目录候选；地址待官方复核",
+      "source_url": "https://www.poilist.cn/poi-list-%E6%99%AF%E7%82%B9-%E8%8B%8F%E5%B7%9E/120/",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    },
+    {
+      "id": "shushan",
+      "name": "树山生态村",
+      "district": "高新区",
+      "region": "高新区",
+      "category": "乡村旅游/自然",
+      "address": "高新区通安镇树山村",
+      "lat": 31.3625,
+      "lng": 120.4658,
+      "coordinate_system": "gcj02",
+      "coordinate_status": "approximate_demo",
+      "coordinates_verified": false,
+      "entrance_verified": false,
+      "status": "building",
+      "opening_status": "unknown",
+      "intro": "乡村生态旅游候选点，可围绕村落空间、季节物产和生态保护建立支线。",
+      "note": "全域景点目录预览；坐标为近似锚点，未核验游客入口、开放状态、实地路线或定位触发，不可直接作为实地任务点。",
+      "tags": [
+        "乡村",
+        "生态",
+        "物产"
+      ],
+      "story_hooks": [
+        "创作方向（非史实）：可从现场观察、地图比对、人物关系或地方记忆设计线索；剧情需与已核验史料分离。"
+      ],
+      "source_name": "公开景点目录候选；需以属地官方资料复核",
+      "source_url": "https://www.poilist.cn/poi-list-%E6%99%AF%E7%82%B9-%E8%8B%8F%E5%B7%9E/120/",
+      "source_checked_at": "2026-10-26",
+      "content_review_status": "pending",
+      "license_status": "unconfirmed",
+      "playable": false
+    }
+  ],
+  "suggested_route_templates": [
+    {
+      "id": "route-gusu-gardens",
+      "name": "姑苏园林与造园谜题",
+      "status": "preview_only",
+      "stop_ids": [
+        "zhuozhengyuan",
+        "shizilin",
+        "garden-museum",
+        "yipu",
+        "liuyuan"
+      ],
+      "note": "候选主题路线；跨点步行顺序、开放时间和入口需核验。"
+    },
+    {
+      "id": "route-grand-canal",
+      "name": "古城运河与城门档案",
+      "status": "preview_only",
+      "stop_ids": [
+        "pingjiang",
+        "xiangmen",
+        "shantang",
+        "huqiu",
+        "panmen"
+      ],
+      "note": "候选主题路线；地理跨度较大，不应默认视为单次短途步行。"
+    },
+    {
+      "id": "route-kunqu-pingtan",
+      "name": "昆曲与评弹的城市回声",
+      "status": "preview_only",
+      "stop_ids": [
+        "kunqu-museum",
+        "pingtan-museum",
+        "guanqian",
+        "shiquan"
+      ],
+      "note": "候选主题路线；场馆开放与展陈内容需核验。"
+    },
+    {
+      "id": "route-modern-suzhou",
+      "name": "金鸡湖与现代苏州",
+      "status": "preview_only",
+      "stop_ids": [
+        "jinji-lake",
+        "oriental-gate",
+        "culture-arts",
+        "eslite",
+        "ligongdi"
+      ],
+      "note": "候选主题路线；建议按实际步行入口重新排序。"
+    },
+    {
+      "id": "route-water-towns",
+      "name": "江南水乡古镇群像",
+      "status": "preview_only",
+      "stop_ids": [
+        "zhouzhuang",
+        "tongli",
+        "luzhi",
+        "jinxi",
+        "zhenze"
+      ],
+      "note": "跨区县路线模板，适合拆成多日或多条独立支线，不是连续步行路线。"
+    },
+    {
+      "id": "route-taihu",
+      "name": "太湖山水与古村",
+      "status": "preview_only",
+      "stop_ids": [
+        "mudu",
+        "tianping",
+        "lingyan",
+        "qionglong",
+        "dongshan-qiyuan",
+        "luxiang"
+      ],
+      "note": "候选主题路线；交通、距离和游览时长待实际路线规划。"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ export type SpotStatus = 'undiscovered' | 'discovered' | 'current' | 'completed'
 
 /** 体验模式 */
 export type JourneyMode = 'virtual' | 'onsite'
-export type AudienceMode = 'child' | 'student' | 'adult'
+export type AudienceMode = 'child' | 'student' | 'adult' | 'senior'
 export type DifficultyLevel = 'easy' | 'normal' | 'advanced'
 
 /** 文化内容四级（输出时必须明确标注） */

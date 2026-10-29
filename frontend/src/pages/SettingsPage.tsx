@@ -60,9 +60,10 @@ export default function SettingsPage() {
               )
             }
           >
-            <option value="child">儿童</option>
-            <option value="student">学生</option>
-            <option value="adult">成人</option>
+            <option value="child">儿童｜卡通引导</option>
+            <option value="student">学生｜证据与推理</option>
+            <option value="adult">成人｜深度内容</option>
+            <option value="senior">老人｜大字语音</option>
           </select>
         </label>
         <label className="text-sm">
@@ -84,7 +85,7 @@ export default function SettingsPage() {
           </select>
         </label>
         <p className="text-xs leading-6 text-bluegray sm:col-span-2">
-          开始答题后难度固定，表达模式仍可调整。
+          设置随旅程保存。开始答题后难度固定，表达模式仍可调整；不采集真实年龄或姓名。
         </p>
         {hasJourney && (
           <p role="status" className="text-xs text-bluegray sm:col-span-2">
@@ -157,7 +158,7 @@ export default function SettingsPage() {
           <dl className="space-y-5 text-sm leading-7 text-ink-soft">
             <div>
               <dt className="mb-1 font-semibold text-ink">位置授权</dt>
-              <dd>仅在你授权并使用实地探索时读取位置，用于判断是否到达点位，不保存原始坐标。</dd>
+              <dd>仅在你授权并使用实地探索时读取位置，用于判断是否到达点位，不保存原始坐标。浏览器位置可被模拟，此校验不构成可信位置证明。</dd>
             </div>
             <div>
               <dt className="mb-1 font-semibold text-ink">旅程记录</dt>
@@ -183,6 +184,11 @@ export default function SettingsPage() {
             <p className="text-xs leading-6 text-bluegray">清除后无法恢复，请谨慎操作。</p>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-5 py-7 sm:py-9 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+        <div><h2 className="text-xl font-semibold text-ink">AI 说明</h2><p className="mt-2 text-sm leading-7 text-bluegray">回答可查看来源，剧情由规则推进。</p></div>
+        <p className="text-sm leading-8 text-ink-soft">NPC 使用经过人工审核且与当前内容版本匹配的文化资料回答；待审核来源候选仅供预览。证据不足时会说明无法确认。任务、道具、图鉴和结局均按游戏规则判定，AI 无权直接修改。</p>
       </section>
 
       {error && !confirming ? (

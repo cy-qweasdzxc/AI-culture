@@ -79,3 +79,26 @@ it('recovers manually after media API failure without automatically looping', as
   await screen.findByAltText('合成媒体夹具')
   expect(get).toHaveBeenCalledTimes(2)
 })
+
+it('switches licensed slides and their own provenance without displaying unauthorized media', async () => {
+  get.mockResolvedValue({ items: [asset(), { ...asset('photograph', '/assets/second.jpg'), title: '第二张合成照片',
+    source_url: 'https://example.invalid/second' }, { ...asset('photograph', '/assets/not-authorized.jpg'), displayable: false }] })
+  render(<SpotMedia locationId="pingjiang" name="平江路" />)
+  await screen.findByAltText('合成媒体夹具')
+  fireEvent.click(screen.getByRole('button', { name: '下一张图片' }))
+  expect(screen.getByAltText('第二张合成照片')).toHaveAttribute('src', '/assets/second.jpg')
+  expect(screen.getByRole('link', { name: '原始文件页面' })).toHaveAttribute('href', 'https://example.invalid/second')
+  expect(screen.queryByRole('button', { name: '查看第 3 张图片' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '上一张图片' }))
+  expect(screen.getByAltText('合成媒体夹具')).toHaveAttribute('src', '/assets/first.jpg')
+})
+
+it('continues from a failed selected slide and retains its credits', async () => {
+  get.mockResolvedValue({ items: [asset(), { ...asset('photograph', '/assets/second.jpg'), title: '第二张合成照片' }] })
+  render(<SpotMedia locationId="pingjiang" name="平江路" />)
+  await screen.findByAltText('合成媒体夹具')
+  fireEvent.click(screen.getByRole('button', { name: '下一张图片' }))
+  fireEvent.error(screen.getByAltText('第二张合成照片'))
+  expect(screen.getByAltText('合成媒体夹具')).toHaveAttribute('src', '/assets/first.jpg')
+  expect(screen.getByText('第二张合成照片（未能显示） · 实景照片')).toBeInTheDocument()
+})

@@ -37,7 +37,12 @@ const encounters = [
 export default function HomePage() {
   const state = useJourney((s) => s.state)
   const demoTheme = useJourney((s) => s.themes[0])
+  const report = useJourney((s) => s.report)
+  const spots = useJourney((s) => s.spots)
+  const spotStatus = useJourney((s) => s.spotStatus)
   const inJourney = state !== 'CREATED'
+  const completedCount = spots.filter((spot) => spotStatus[spot.id] === 'completed').length
+  const totalSpotCount = report?.totalSpotCount ?? publicRouteStops.length
   if (!demoTheme)
     return (
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
@@ -99,6 +104,18 @@ export default function HomePage() {
               <Icon name="arrow" />
             </span>
           </div>
+        </Link>
+      </section>
+      <section className="page-width home-quick-cards" aria-label="快速入口">
+        <Link to="/theme" className="home-quick-card home-card-route"><span className="home-card-icon" aria-hidden>🗺️</span><span><strong>选择路线</strong><small>城市目录与完整文化路线</small></span><Icon name="arrow" /></Link>
+        <Link to="/role" className="home-quick-card home-card-mode"><span className="home-card-icon" aria-hidden>🎭</span><span><strong>选择玩法</strong><small>儿童｜学生｜老人｜成人</small></span><Icon name="arrow" /></Link>
+        <Link to="/intro" className="home-quick-card home-card-guide"><span className="home-card-icon" aria-hidden>📖</span><span><strong>了解规则</strong><small>任务｜语音｜积分</small></span><Icon name="arrow" /></Link>
+      </section>
+      <section className="page-width home-primary-card" aria-label="路线入口">
+        <Link to={inJourney ? '/map' : '/demo'} className="home-primary-link">
+          <span className="home-card-icon" aria-hidden>🗺️</span>
+          <span><strong>{inJourney ? '继续当前旅程' : '虚拟游览演示'}</strong><small>{inJourney ? `已完成 ${completedCount}/${totalSpotCount} 站｜进入当前路线` : '平江寻梦完整路线｜无需定位'}</small></span>
+          <Icon name="arrow" />
         </Link>
       </section>
       <div className="page-width">

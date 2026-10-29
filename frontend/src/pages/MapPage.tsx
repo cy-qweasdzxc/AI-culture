@@ -146,7 +146,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+    <div className="journey-map-page mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
       <header className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <h1 className="font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl">
@@ -187,12 +187,21 @@ export default function MapPage() {
           ))}
         </div>
       </header>
-      <p className="mt-4 text-xs leading-6 text-bluegray" role="status">
+      <div className="route-source-card mt-5" role="status">
+        <span className="route-source-icon" aria-hidden>🗺️</span>
+        <div><strong>{walking?.status === 'walking' ? '道路步行路线' : '路线总览与地图资料'}</strong>
+        <p className="mt-1 text-xs leading-6 text-bluegray">
         {walking?.status === 'walking'
           ? `道路步行约 ${Math.round(walking.distance_m!)} 米 · ${Math.round(walking.duration_minutes!)} 分钟。${walking.message}`
           : '路线示意 · 实地出行请使用道路导航。'}
-      </p>
+        </p></div>
+      </div>
 
+      <nav className="route-evidence-grid mt-4" aria-label="旅程资料快捷入口">
+        <Link className="route-evidence-card" to="/clues"><span aria-hidden>🎒</span><span><strong>线索与物品</strong><small>回看沿途收集的证据</small></span></Link>
+        <Link className="route-evidence-card" to="/codex"><span aria-hidden>📖</span><span><strong>文化证据图鉴</strong><small>区分审核资料与剧情</small></span></Link>
+        <Link className="route-evidence-card" to="/theme"><span aria-hidden>🗺️</span><span><strong>查看完整路线</strong><small>点位来源与其他城市</small></span></Link>
+      </nav>
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
         <p className="font-medium text-ink">苏州 · 平江历史街区</p>
         <p className="text-bluegray">
@@ -220,6 +229,7 @@ export default function MapPage() {
               ) : (
                 <MapView
                   spots={spots}
+                  focusSpotId={selectedId ?? undefined}
                   spotStatus={spotStatus}
                   routeGeometry={walking?.status === 'walking' ? walking.polyline : undefined}
                   onSpotClick={selectSpot}
@@ -335,7 +345,7 @@ export default function MapPage() {
 
         <aside className="min-w-0 lg:sticky lg:top-24" aria-label="章节与点位列表">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-ink">沿途五站</h2>
+            <h2 className="text-base font-semibold text-ink">本次路线｜{totalSpots} 站</h2>
             <span className="text-xs text-bluegray">按剧情顺序解锁</span>
           </div>
           <ol className="overflow-hidden rounded-xl border border-line bg-surface">

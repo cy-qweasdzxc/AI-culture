@@ -58,3 +58,6 @@ Thumbs.db
 
 # Pytest temporary roots are not source or Docker build inputs.
 pytest-of-*/
+
+# Browser QA screenshots are generated test artifacts.
+/browser-qa/

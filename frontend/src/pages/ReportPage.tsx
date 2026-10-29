@@ -97,7 +97,7 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:py-10">
+    <div className="report-page mx-auto max-w-5xl px-4 py-7 sm:px-6 lg:py-10">
       <header className="flex flex-wrap items-end justify-between gap-5 border-b border-line pb-7 sm:pb-9">
         <div>
           <h1 className="font-serif text-3xl font-bold text-ink sm:text-4xl">体验报告</h1>

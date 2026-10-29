@@ -20,6 +20,8 @@ export default function JourneyLayout() {
   const { pathname } = useLocation()
   const roleId = useJourney((s) => s.roleId)
   const mode = useJourney((s) => s.mode)
+  const audience = useJourney((s) => s.audienceMode ?? 'adult')
+  const audienceLabel = { child: '儿童模式', student: '学生模式', adult: '成人模式', senior: '老人模式' }[audience]
   const done = useJourney(selectCompletedTaskCount)
   const roles = useJourney((s) => s.roles)
   const totalTasks = useJourney((s) => s.report?.totalTaskCount ?? 6)
@@ -27,6 +29,10 @@ export default function JourneyLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [pathname])
+  useEffect(() => {
+    document.documentElement.dataset.audience = audience
+    return () => { delete document.documentElement.dataset.audience }
+  }, [audience])
   useEffect(() => {
     const viewport = window.visualViewport
     const update = () => {
@@ -81,7 +87,7 @@ export default function JourneyLayout() {
                 <div className="hidden sm:block">
                   <p className="max-w-28 truncate text-xs font-medium text-ink">{role.name}</p>
                   <p className="mt-1 text-[10px] text-bluegray">
-                    {mode === 'virtual' ? '虚拟游览' : '实地探索'}
+                    {audienceLabel}｜{mode === 'virtual' ? '虚拟游览' : '实地探索'}
                   </p>
                 </div>
               </div>

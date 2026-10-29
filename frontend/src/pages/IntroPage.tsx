@@ -104,6 +104,14 @@ export default function IntroPage() {
           </Link>
         </section>
       </div>
+      <section className="ai-workflow-card mt-8" aria-labelledby="ai-workflow-title">
+        <div><span className="play-feature-icon" aria-hidden>💬</span><div><h2 id="ai-workflow-title" className="text-xl font-semibold">NPC 如何回答你的问题</h2><p className="mt-1 text-sm text-bluegray">文化资料与剧情各有边界，回答中可展开证据与来源。</p></div></div>
+        <ol className="ai-workflow-steps mt-4">
+          {['提出当前点位的问题', '查找已审核文化资料', '区分事实与虚构剧情', '查看回答和引用来源'].map((step, index) => <li key={step}><b aria-hidden>{index + 1}</b><span>{step}</span></li>)}
+        </ol>
+        <p className="mt-3 text-xs leading-7 text-bluegray">没有可靠资料时会说明无法确认。儿童、学生、成人和老人模式只调整表达与辅助，不改变资料审核要求。虚拟演示无需定位，语音和音乐均由你主动开启。</p>
+        <Link to="/demo" className="inline-link mt-3 inline-flex min-h-11 items-center">进入独立比赛演示</Link>
+      </section>
     </div>
   )
 }

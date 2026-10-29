@@ -129,6 +129,7 @@ def public_activity(a: Activity, journey: UserStoryState) -> dict:
         "child": "一次看一张卡片。不确定时可以展开提示，也可以请眼前的角色帮忙。",
         "student": "先读材料，再找支持判断的证据；注意区分画面、推断和剧情。",
         "adult": "按给定材料完成观察或推理；本互动不作为正式历史事实审核结果。",
+        "senior": "先听或读一张卡片，再慢慢操作；可以展开提示，材料与剧情仍须分开理解。",
     }[selected["audience_mode"]]
     return result
 

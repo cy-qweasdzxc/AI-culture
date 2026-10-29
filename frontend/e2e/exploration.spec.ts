@@ -49,7 +49,7 @@ for (const [index, difficulty] of difficulties.entries()) test(`首页出发与�
   await page.goto('/')
   await page.getByRole('button', { name: /苏州 · 已开放/ }).click()
   await page.getByRole('link', { name: '选择这条完整路线', exact: true }).click()
-  await page.getByLabel('适合人群', { exact: true }).selectOption(['child','student','adult'][index])
+  await page.getByRole('radio', { name: ['儿童模式','学生模式','成人模式'][index], exact: true }).click()
   await page.getByLabel('任务难度', { exact: true }).selectOption(difficulty)
   await page.getByRole('radio', { name: /沈观澜/ }).check()
   await page.getByRole('button', { name: '创建旅程，开始体验', exact: true }).click()

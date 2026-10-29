@@ -42,6 +42,7 @@ export default function ThemePage() {
           >
             {demoTheme.description}
           </p>
+          <div className="route-demo-badge mt-6"><span aria-hidden>✓</span><strong>完整示范路线</strong><span>线上虚拟游览 · 实地需核验定位</span></div>
           <dl className="mt-7 flex flex-wrap gap-x-7 gap-y-4 border-y border-line py-5 text-sm">
             <div className="flex items-baseline gap-2">
               <dt className="text-bluegray">点位</dt>
@@ -90,29 +91,27 @@ export default function ThemePage() {
               沿途的人物与故事，等你亲自发现。
             </p>
           </div>
-          <ol className="divide-y divide-line border-y border-line">
+          <ol className="route-stop-grid">
             {publicRouteStops.map((name, i) => (
               <li
                 key={name}
                 id={routeScenes[i]?.image}
-                className="flex scroll-mt-28 items-center gap-4 py-4 sm:gap-5"
+                className="route-stop-card scroll-mt-28"
               >
-                <span className="w-5 shrink-0 text-sm tabular-nums text-bluegray">
+                <span className="route-stop-number">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <ResilientImage
                   src={`/assets/scenes/${routeScenes[i]?.image ?? 'pingjiang'}.webp`}
                   alt={`${name}艺术化示意`}
                   loading="lazy"
-                  className="h-16 w-20 shrink-0 rounded-md object-cover sm:h-20 sm:w-28"
+                  className="route-stop-image"
                 />
                 <div className="min-w-0">
                   <h3 className="text-base font-semibold text-ink">{name}</h3>
                   <p className="mt-1 text-sm text-bluegray">{routeScenes[i]?.detail}</p>
                 </div>
-                {i === publicRouteStops.length - 1 ? (
-                  <span className="ml-auto hidden text-xs text-bluegray sm:block">终点</span>
-                ) : null}
+                <span className="route-stop-arrow" aria-hidden>{i === publicRouteStops.length - 1 ? '✓' : '↗'}</span>
               </li>
             ))}
           </ol>

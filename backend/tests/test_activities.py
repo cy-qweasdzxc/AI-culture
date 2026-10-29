@@ -106,7 +106,7 @@ def test_unknown_locked_and_foreign_activities(client, started):
     assert client.get("/api/activities", params={"journey_id": started["journeyId"]}).status_code == 404
 
 
-@pytest.mark.parametrize("audience", ["child", "student", "adult"])
+@pytest.mark.parametrize("audience", ["child", "student", "adult", "senior"])
 def test_audience_changes_expression_not_grading_or_evidence(client, db, started, audience):
     a = published()[0]
     state = at_activity(db, client, started, a, "advanced", audience)

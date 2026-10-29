@@ -5,6 +5,20 @@ import { useJourney } from '@/engine/journeyStore'
 import type { AudienceMode, DifficultyLevel, JourneyMode } from '@/types'
 import { cn } from '@/utils/cn'
 
+const audienceOptions: Array<{
+  id: AudienceMode
+  icon: string
+  title: string
+  tagline: string
+  features: string
+  defaultDifficulty: DifficultyLevel
+}> = [
+  { id: 'child', icon: '🦁', title: '儿童模式', tagline: '看图、听故事、找线索', features: '卡通引导｜简短讲解｜更多提示', defaultDifficulty: 'easy' },
+  { id: 'student', icon: '📚', title: '学生模式', tagline: '读资料、找证据、做推理', features: '研学提问｜证据辨析｜自主挑战', defaultDifficulty: 'normal' },
+  { id: 'adult', icon: '📜', title: '成人模式', tagline: '完整资料、自由探索', features: '文化背景｜推理任务｜深度内容', defaultDifficulty: 'normal' },
+  { id: 'senior', icon: '🕊️', title: '老人模式', tagline: '大字、语音、慢慢游', features: '大按钮｜慢速讲解｜清晰信息', defaultDifficulty: 'easy' },
+]
+
 export default function RolePage() {
   const navigate = useNavigate()
   const state = useJourney((s) => s.state)
@@ -61,13 +75,12 @@ export default function RolePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
+    <div className={cn('role-page mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12', `audience-preview-${audience}`)}>
       <header className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:gap-8">
         <div>
           <h1 className="font-serif text-3xl font-bold text-ink sm:text-4xl">选择你的身份</h1>
           <p className="mt-4 max-w-prose text-sm leading-7 text-ink-soft">
-            角色不只是头像：它决定 NPC
-            怎么称呼你、你带着什么线索上路、能听到哪些对话，甚至影响结局的措辞。
+            角色会影响初始线索、NPC 对话和部分任务。三位角色均为虚构身份。
           </p>
         </div>
         <Link to="/theme" className="btn-ghost shrink-0 !px-0 sm:!px-3">
@@ -75,24 +88,46 @@ export default function RolePage() {
         </Link>
       </header>
 
-      <fieldset className="mt-6 grid gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-2">
-        <legend className="px-2 font-semibold">适合人群与难度</legend>
-        <label className="text-sm">表达模式
-          <select aria-label="适合人群" className="input mt-2" value={audience} onChange={(event) => {
-            const value = event.target.value as AudienceMode
-            setAudience(value); setDifficulty(value === 'child' ? 'easy' : 'normal')
-          }}>
-            <option value="child">儿童 · 短句与安全提示</option>
-            <option value="student">学生 · 证据与推理</option>
-            <option value="adult">成人 · 完整背景</option>
-          </select>
-        </label>
-        <label className="text-sm">任务难度
-          <select aria-label="任务难度" className="input mt-2" value={difficulty} onChange={(event) => setDifficulty(event.target.value as DifficultyLevel)}>
-            <option value="easy">简单 · 更多提示</option><option value="normal">标准</option><option value="advanced">深入 · 减少提示</option>
-          </select>
-        </label>
-        <p className="text-xs leading-6 text-bluegray sm:col-span-2">选择适合你的表达方式与挑战难度。开始答题后，难度将固定。</p>
+      <fieldset className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
+        <legend className="px-2 font-semibold">选择适合人群</legend>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="适合人群">
+          {audienceOptions.map((option, index) => {
+            const selected = audience === option.id
+            const choose = () => { setAudience(option.id); setDifficulty(option.defaultDifficulty) }
+            return <button key={option.id} type="button" role="radio" aria-label={option.title}
+              aria-checked={selected} tabIndex={selected ? 0 : -1}
+              className={cn('audience-card min-h-36 min-w-0 rounded-xl border p-4 text-left transition-colors',
+                `audience-card-${option.id}`, selected ? 'is-selected border-cinnabar ring-2 ring-cinnabar/20' : 'border-line hover:border-inkgreen/60')}
+              onClick={choose}
+              onKeyDown={(event) => {
+                const direction = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 0
+                if (!direction && event.key !== 'Home' && event.key !== 'End') return
+                event.preventDefault()
+                const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? audienceOptions.length - 1 : (index + direction + audienceOptions.length) % audienceOptions.length
+                const next = audienceOptions[nextIndex]
+                setAudience(next.id); setDifficulty(next.defaultDifficulty)
+                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus()
+              }}>
+              <span className="audience-mascot" aria-hidden>{option.icon}</span>
+              <span className="mt-3 block text-lg font-bold text-ink">{option.title}</span>
+              <span className="mt-1 block text-sm text-ink-soft">{option.tagline}</span>
+              <span className="mt-3 block text-xs leading-6 text-bluegray">{option.features}</span>
+            </button>
+          })}
+        </div>
+        <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-end">
+          <label className="text-sm">任务难度
+            <select aria-label="任务难度" className="input mt-2" value={difficulty} onChange={(event) => setDifficulty(event.target.value as DifficultyLevel)}>
+              <option value="easy">简单｜更多提示</option><option value="normal">标准</option><option value="advanced">深入｜减少提示</option>
+            </select>
+          </label>
+          <p className="text-xs leading-6 text-bluegray">不收集真实年龄或姓名。儿童实地体验请由监护人陪同；老人模式默认使用简单任务、大字和慢速语音。开始答题后难度固定。</p>
+        </div>
+        <div className={cn('audience-current-note', `audience-current-${audience}`)}>
+          <span aria-hidden>{audienceOptions.find((item) => item.id === audience)?.icon}</span>
+          当前选择：<strong>{audienceOptions.find((item) => item.id === audience)?.title}</strong>
+          <span>｜{audience === 'child' || audience === 'senior' ? '慢速语音、更多辅助' : audience === 'student' ? '证据与推理、自主挑战' : '正常语速、完整资料'}</span>
+        </div>
       </fieldset>
       <div className="mt-8 grid gap-5 md:grid-cols-3" role="radiogroup" aria-label="玩家角色">
         {roles.map((r, index) => {

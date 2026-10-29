@@ -27,6 +27,8 @@ def recommend_routes(db: Session, city: City, audience: str, difficulty: str, bu
             reasons.append("仅片段预览；完整结局仍需按经典主线完成必要任务")
         if audience == "child":
             reasons.append("可选简单任务；实地体验需要监护人陪同")
+        if audience == "senior":
+            reasons.append("优先语音讲解与慢游操作；实际休息点和无障碍条件以现场为准")
         if interests:
             reasons.append("兴趣用于展示偏好，不改变合法任务依赖")
         results.append({"route_id": route.id, "name": route.name, "city_id": city.id, "status": route.status,

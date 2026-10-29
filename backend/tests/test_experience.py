@@ -7,7 +7,7 @@ from app.models import Task, UserStoryState
 from app.services.experience import agent_context, profile, task_definition
 
 
-@pytest.mark.parametrize('audience', ['child', 'student', 'adult'])
+@pytest.mark.parametrize('audience', ['child', 'student', 'adult', 'senior'])
 @pytest.mark.parametrize('difficulty', ['easy', 'normal', 'advanced'])
 def test_profiles_real_tasks_rewards_and_restore(client, db, audience, difficulty):
     client.post('/api/session')

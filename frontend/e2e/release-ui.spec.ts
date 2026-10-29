@@ -3,7 +3,9 @@ import type { Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const developerCopy = /工程演示|演示原型|开发演示|比赛演示|服务端|HttpOnly|待道路规划|待现场核验|正式版本|Mock 模型|未配置地图密钥/
+// 比赛演示 is now an explicitly requested user entry, not implementation copy.
+// Keep the remaining implementation-copy and privacy/layout assertions intact.
+const developerCopy = /工程演示|演示原型|开发演示|服务端|HttpOnly|待道路规划|待现场核验|正式版本|Mock 模型|未配置地图密钥/
 const screenshots = resolve(process.cwd(), '../browser-qa/2026-10-28-release/screenshots')
 mkdirSync(screenshots, { recursive: true })
 
@@ -33,7 +35,7 @@ test('正式展示：公共页面、页脚声明、路线推荐及旧入口兼�
   await expect(page.getByRole('link', { name: '选择角色，开始旅程' })).toBeVisible()
   await checkPage(page)
   const footer = page.getByRole('contentinfo', { name: '网站页脚' })
-  await footer.locator('summary').click()
+  await footer.locator('summary').filter({ hasText: '内容、出行与隐私说明' }).click()
   await expect(footer.getByRole('heading', { name: '内容与来源' })).toBeVisible()
   await expect(footer.getByRole('heading', { name: '出行与隐私' })).toBeVisible()
   await page.screenshot({ path: resolve(screenshots, `${info.project.name}-footer.png`), fullPage: true })
@@ -44,7 +46,8 @@ test('正式展示：公共页面、页脚声明、路线推荐及旧入口兼�
     await expect(page.getByRole('button', { name: '打开导航菜单' })).toHaveAttribute('aria-expanded', 'false')
   }
   await page.goto('/demo')
-  await expect(page).toHaveURL(/\/role$/)
+  await expect(page).toHaveURL(/\/demo$/)
+  await expect(page.getByRole('heading', { name: '用一段旅程，了解平江寻梦' })).toBeVisible()
   await checkPage(page)
   expect(errors).toEqual([])
 })
@@ -70,7 +73,9 @@ test('正式展示：开始旅程后地图、景点、对话、任务与回顾�
     await checkPage(page)
     await page.screenshot({ path: resolve(screenshots, `${info.project.name}-${name}.png`), fullPage: true })
   }
-  await page.goto('/demo')
+  // The independent /demo entry now has its own preservation/restart regression.
+  // Continue verifying the existing role page's restart confirmation here.
+  await page.goto('/role')
   await expect(page).toHaveURL(/\/role$/)
   await page.getByRole('radio', { name: /沈观澜/ }).click()
   await page.getByRole('button', { name: '创建旅程，开始体验' }).click()

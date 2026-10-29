@@ -39,7 +39,7 @@ test('城市状态、规则推荐、儿童简单任务、权威积分与刷新�
     await expect(recommendedRoute).toBeVisible()
     await capture('recommended-route')
     await recommendedRoute.click()
-    await page.getByLabel('适合人群',{exact:true}).selectOption('child')
+    await page.getByRole('radio',{name:'儿童模式',exact:true}).click()
     await expect(page.getByLabel('任务难度',{exact:true})).toHaveValue('easy')
     await page.getByRole('radio',{name:/沈观澜/}).click()
     await page.getByRole('button',{name:'创建旅程，开始体验'}).click()

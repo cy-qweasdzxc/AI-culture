@@ -45,3 +45,27 @@ test('unsupported browsers retain the readable text', () => {
   expect(screen.getByRole('status')).toHaveTextContent('不支持语音')
   expect(screen.getByText('保留介绍。')).toBeInTheDocument()
 })
+
+test.each(['child', 'senior'] as const)('%s defaults to slow narration without losing manual speed selection', (audience) => {
+  const synth = mockSpeech()
+  render(<AudioGuide locationId="a" text="第一句。第二句。第三句。" audience={audience} />)
+  expect(screen.getByLabelText('讲解语速')).toHaveValue('0.75')
+  fireEvent.click(screen.getByRole('button', { name: '播放讲解' }))
+  expect(synth.speak.mock.calls[0][0].rate).toBe(0.75)
+  fireEvent.change(screen.getByLabelText('讲解语速'), { target: { value: '1.5' } })
+  fireEvent.click(screen.getByRole('button', { name: '播放讲解' }))
+  expect(synth.speak.mock.calls[1][0].rate).toBe(1.5)
+})
+
+test('switching to a different audience stops speech and restores that audience default', () => {
+  const synth = mockSpeech()
+  const view = render(<AudioGuide locationId="a" text="介绍。" audience="adult" />)
+  fireEvent.click(screen.getByRole('button', { name: '播放讲解' }))
+  view.rerender(<AudioGuide locationId="a" text="介绍。" audience="senior" />)
+  expect(screen.getByLabelText('讲解语速')).toHaveValue('0.75')
+  expect(screen.getByRole('button', { name: '暂停' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: '播放讲解' }))
+  expect(synth.speak.mock.calls[synth.speak.mock.calls.length - 1][0].rate).toBe(0.75)
+  view.rerender(<AudioGuide locationId="a" text="介绍。" audience="student" />)
+  expect(screen.getByLabelText('讲解语速')).toHaveValue('1')
+})

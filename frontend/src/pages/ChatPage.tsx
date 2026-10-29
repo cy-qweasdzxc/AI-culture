@@ -339,7 +339,7 @@ export default function ChatPage() {
   )
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:py-8">
+    <div className="chat-page mx-auto max-w-[1440px] px-4 py-5 sm:px-6 lg:py-8">
       <div className="grid gap-6 xl:grid-cols-[190px_minmax(0,1fr)_220px] 2xl:gap-8">
         {/* 左：NPC 档案（桌面端） */}
         <aside className="hidden self-start py-5 xl:block">{profilePanel}</aside>
