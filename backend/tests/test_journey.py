@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.ai.rag.index import approved_records
 from app.ai.rag.retrieval import retrieve_knowledge
 from app.core.errors import DomainError
-from app.models import CulturalKnowledge, KnowledgeChunk, StoryEdge, User, UserInventory, UserStoryState
+from app.models import CulturalKnowledge, Item, KnowledgeChunk, StoryEdge, User, UserInventory, UserStoryState
 from app.services.journey import add_event, mutate_journey, start_journey
 from app.services.seed import seed_database
 
@@ -65,7 +65,10 @@ def test_migrations_and_idempotent_seed(db, database):
     assert {"cities", "routes", "route_stops", "media_assets"} <= set(tables)
     seed_database(db, auto_publish=False)
     seed_database(db, auto_publish=False)
-    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
+    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 22
+    for suffix in ("shouyuandeng", "zhenqu"):
+        assert db.get(CulturalKnowledge, f"kn-{suffix}") is None
+        assert db.get(Item, f"codex-{suffix}").knowledge_id is None
     assert not db.scalar(select(func.count()).select_from(CulturalKnowledge).where(CulturalKnowledge.review_status != "pending"))
     assert not db.scalar(select(func.count()).select_from(KnowledgeChunk))
     assert db.scalar(select(func.count()).select_from(StoryEdge)) > 20
@@ -73,10 +76,10 @@ def test_migrations_and_idempotent_seed(db, database):
 
 def test_seed_preserves_pending_knowledge_and_does_not_forge_review(db):
     result = seed_database(db)
-    assert result["knowledge"] == 24 and result["chunks"] == 0
+    assert result["knowledge"] == 22 and result["chunks"] == 0
     assert db.scalar(select(func.count()).select_from(CulturalKnowledge).where(
         CulturalKnowledge.review_status == "pending",
-    )) == 24
+    )) == 22
     assert db.scalar(select(func.count()).select_from(KnowledgeChunk)) == result["chunks"]
     assert approved_records(db, "suzhou-pingjiang") == []
     hits = retrieve_knowledge(

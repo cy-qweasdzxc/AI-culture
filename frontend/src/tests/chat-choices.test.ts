@@ -85,8 +85,8 @@ it('问题池问尽后不循环推荐旧问题', () => {
   expect(suggestedChoices('zhou-bo', { ...base, asked: [...seen] })).toEqual([])
 })
 
-it('65 条苏州问题可按当前点位主题筛选，同时保留默认主线入口', () => {
-  expect(SUZHOU_QUESTION_BANK).toHaveLength(65)
+it('80 条苏州问题可按当前点位主题筛选，同时保留默认主线入口', () => {
+  expect(SUZHOU_QUESTION_BANK).toHaveLength(80)
   expect(topicsForSpot('pingjiang')).toContain('史实辨析')
   const choices = suggestedChoices('zhou-bo', { ...base, topic: '史实辨析' })
   expect(choices.length).toBeGreaterThan(0)

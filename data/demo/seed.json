@@ -1208,14 +1208,6 @@
       "source": "苏州园林公开史料（演示数据，待正式审核）"
     },
     {
-      "id": "kn-zhenqu",
-      "spotId": "shizilin",
-      "type": "legend",
-      "title": "\"真趣\"轶闻",
-      "content": "相传清乾隆帝游历狮子林，兴之所至题下\"真趣\"二字。此类帝王轶闻多见于后世记载与民间讲述，作为传说欣赏为宜。",
-      "source": "民间传说与地方掌故（演示数据，待正式审核）"
-    },
-    {
       "id": "kn-zhuozheng-origin",
       "spotId": "zhuozhengyuan",
       "type": "fact",
@@ -1262,14 +1254,6 @@
       "title": "忠王府旧址",
       "content": "苏州博物馆馆址包含太平天国忠王府旧址，是国内保存较完整的太平天国时期王府建筑之一。",
       "source": "苏州博物馆公开介绍（演示数据，待正式审核）"
-    },
-    {
-      "id": "kn-shouyuandeng",
-      "spotId": "subo",
-      "type": "fiction",
-      "title": "守园灯（剧情创作）",
-      "content": "\"守园灯\"为本平台剧情创作：传说每座园林都有一盏守园灯，点亮它的人，会把这一路的故事继续讲下去。",
-      "source": "城迹入戏剧情创作（艺术化虚构）"
     },
     {
       "id": "kn-zhenqu-bian",

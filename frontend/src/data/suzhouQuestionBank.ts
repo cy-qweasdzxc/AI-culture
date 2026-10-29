@@ -1,5 +1,5 @@
 /**
- * 苏州路线可点选提问。问题只覆盖演示种子与现有知识条目；它们是提问入口，
+ * 苏州路线可点选提问。覆盖现有知识与已由用户审核发布的扩充资料；它们是提问入口，
  * 不代表 NPC 必须给出肯定回答，事实仍由服务端 RAG 和证据边界决定。
  */
 export type QuestionTopic =
@@ -22,6 +22,22 @@ export const QUESTION_TOPICS: QuestionTopic[] = [
 ]
 
 export const SUZHOU_QUESTION_BANK: SuggestedQuestion[] = [
+  // 2026-10-29 用户审核发布的扩充资料；按地点加入人物、园史、藏品和传说入口。
+  { spotId: 'pingjiang', topic: '街巷生活', text: '平江路古名“十泉里”有什么记载？' },
+  { spotId: 'pingjiang', topic: '历史人物', text: '平江路与洪钧有哪些历史联系？' },
+  { spotId: 'pingjiang', topic: '街巷生活', text: '平江路的义庄体现了怎样的地方生活？' },
+  { spotId: 'ouyuan', topic: '历史人物', text: '画家顾沄参与耦园设计有什么记载？' },
+  { spotId: 'ouyuan', topic: '史实辨析', text: '耦园旧名“涉园”有哪些来源记载？' },
+  { spotId: 'ouyuan', topic: '历史人物', text: '织帘老屋的匾额典故是什么？' },
+  { spotId: 'shizilin', topic: '历史人物', text: '明性和尚重建圣恩寺有什么记载？' },
+  { spotId: 'shizilin', topic: '历史人物', text: '指柏轩与“赵州指柏”公案有什么关系？' },
+  { spotId: 'shizilin', topic: '史实辨析', text: '狮子峰与群狮石有哪些民间传说？' },
+  { spotId: 'zhuozhengyuan', topic: '历史人物', text: '拙政园东部为什么曾叫“归田园居”？' },
+  { spotId: 'zhuozhengyuan', topic: '史实辨析', text: '见山楼与李秀成的故事属于传说吗？' },
+  { spotId: 'zhuozhengyuan', topic: '园林营造', text: '与谁同坐轩的扇形设计有什么特点？' },
+  { spotId: 'subo', topic: '历史人物', text: '苏博资料如何介绍何澄的收藏身份？' },
+  { spotId: 'subo', topic: '史实辨析', text: '真珠舍利宝幢的尺度与材料有什么特点？' },
+  { spotId: 'subo', topic: '历史人物', text: '吴王余眜剑的入藏与长铭有什么记载？' },
   // 平江路：街巷生活
   {
     spotId: 'pingjiang',

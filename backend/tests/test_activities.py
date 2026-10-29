@@ -188,7 +188,7 @@ def test_seed_and_content_catalog_never_grant_human_review(db):
     seed_database(db)
     seed_database(db)
     assert db.get(Item, original.id).name == "人工修改的札记标题"
-    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 24
+    assert db.scalar(select(func.count()).select_from(CulturalKnowledge)) == 22
     assert approved_records(db, "suzhou-pingjiang") == []
     from app.services import activities
     original_defs = definitions()

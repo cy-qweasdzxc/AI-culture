@@ -99,6 +99,9 @@ def seed_database(db: Session, path: Path | None = None, *, auto_publish: bool =
         insert_missing(db, Item, clue["id"], story_id=story_id, kind=clue["kind"], name=clue["name"], data={**clue, "isDemo": True})
     for codex in raw["codex"]:
         knowledge_id = codex["id"].replace("codex-", "kn-", 1)
+        # Story-only codex rewards do not need a cultural evidence record.
+        if db.get(CulturalKnowledge, knowledge_id) is None:
+            knowledge_id = None
         insert_missing(db, Item, codex["id"], story_id=story_id, knowledge_id=knowledge_id, kind="codex", name=codex["title"], data=codex)
     for task in raw["tasks"]:
         validation = {key: task[key] for key in ("answerKey", "answerKeys", "matchingAnswer", "password", "sortingAnswer", "requiredClues") if key in task}
