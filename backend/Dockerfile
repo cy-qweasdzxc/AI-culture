@@ -9,7 +9,6 @@ COPY backend/alembic.ini ./
 COPY backend/alembic ./alembic
 COPY backend/scripts ./scripts
 COPY data/demo ./data/demo
-COPY data/suzhou ./data/suzhou
 # Evaluation inputs ship with the image so the retrieval/live tooling can run inside the
 # container without a manual `docker cp`. Reviewed corpora and result files stay out.
 COPY data/raw ./data/raw

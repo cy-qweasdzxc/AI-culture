@@ -100,20 +100,6 @@ def places(city_id: str, db: Session = Depends(get_db)):
 
 
 
-@router.get("/cities/{city_id}/attractions")
-def attraction_previews(city_id: str, db: Session = Depends(get_db)):
-    from app.services.attractions import city_attractions
-    city_or_error(db, city_id)
-    return city_attractions(city_id)
-
-
-@router.get("/cities/{city_id}/attractions/{attraction_id}")
-def attraction_preview_detail(city_id: str, attraction_id: str, db: Session = Depends(get_db)):
-    from app.services.attractions import attraction_detail
-    city_or_error(db, city_id)
-    return attraction_detail(city_id, attraction_id)
-
-
 @router.get("/places/{location_id}")
 def place_detail(location_id: str, db: Session = Depends(get_db)):
     place = db.get(CulturalLocation, location_id)

@@ -1,4 +1,3 @@
-import CitywideAttractionExplorer from '@/components/CitywideAttractionExplorer'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '@/services/api'
@@ -326,7 +325,6 @@ export default function CityExplorer() {
           </div>
         ))}
       </div>
-      {selected === 'suzhou' && <CitywideAttractionExplorer />}
     </section>
   )
 }

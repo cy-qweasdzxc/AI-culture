@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import SchematicMap from '@/components/SchematicMap'
-import { loadTMap, type TMapMap, type TMapNS } from '@/services/tmap'
 import type { Spot, SpotStatus } from '@/types'
 
 /**
@@ -10,6 +9,40 @@ import type { Spot, SpotStatus } from '@/types'
  *  - 未配置：直接降级为示意路线，不访问无密钥代理。
  * 加载失败时通过 onUnavailable 回调让上层降级为示意图。
  */
+
+interface TMapLatLng {
+  getLat(): number
+  getLng(): number
+}
+
+interface TMapNS {
+  Map: new (el: HTMLElement, opts: Record<string, unknown>) => TMapMap
+  LatLng: new (lat: number, lng: number) => TMapLatLng
+  MultiMarker: new (opts: Record<string, unknown>) => {
+    setGeometries(g: unknown[]): void
+    on(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void
+    off?(e: string, cb: (evt: { geometry?: { id?: string } }) => void): void
+    setMap?(map: null): void
+  }
+  MultiPolyline: new (opts: Record<string, unknown>) => { setMap?(map: null): void }
+  MarkerStyle: new (opts: Record<string, unknown>) => object
+  PolylineStyle: new (opts: Record<string, unknown>) => object
+}
+
+interface TMapMap {
+  setCenter(c: TMapLatLng): void
+  setZoom(z: number): void
+  resize?(): void
+  destroy(): void
+  on(e: string, cb: () => void): void
+}
+
+declare global {
+  interface Window {
+    TMap?: TMapNS
+    _TMapSecurityConfig?: { serviceHost: string }
+  }
+}
 
 const STATUS_COLOR: Record<SpotStatus, { bg: string; fg: string; glyph: string }> = {
   undiscovered: { bg: '#8b8b8b', fg: '#ffffff', glyph: '?' },
@@ -31,6 +64,44 @@ function markerIcon(status: SpotStatus): string {
   const c = STATUS_COLOR[status]
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40"><path d="M15 1C7.8 1 2 6.8 2 14c0 9.5 11 24 12.4 25.5a1 1 0 0 0 1.2 0C17 38 28 23.5 28 14 28 6.8 22.2 1 15 1z" fill="${c.bg}" stroke="#fff" stroke-width="1.5"/><text x="15" y="18" text-anchor="middle" font-size="13" fill="${c.fg}" font-family="sans-serif">${c.glyph}</text></svg>`
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
+let loaderPromise: Promise<void> | null = null
+
+function loadTMap(): Promise<void> {
+  if (window.TMap) return Promise.resolve()
+  if (loaderPromise) return loaderPromise
+  const key = import.meta.env.VITE_TMAP_KEY as string | undefined
+  if (!key) return Promise.reject(new Error('未配置地图密钥'))
+  const existing = [...document.scripts].find((script) => {
+    try { const url = new URL(script.src); return url.origin === 'https://map.qq.com' && url.pathname === '/api/gljs' }
+    catch { return false }
+  })
+  const script = existing ?? document.createElement('script')
+  const promise = new Promise<void>((resolve, reject) => {
+    const finish = (error?: Error) => {
+      window.clearTimeout(timeout)
+      script.removeEventListener('load', loaded)
+      script.removeEventListener('error', failed)
+      if (error) { script.remove(); reject(error) }
+      else resolve()
+    }
+    const loaded = () => finish(window.TMap ? undefined : new Error('在线地图 SDK 未能就绪'))
+    const failed = () => finish(new Error('在线地图 SDK 加载失败'))
+    const timeout = window.setTimeout(() => finish(new Error('在线地图加载超时')), 10000)
+    script.addEventListener('load', loaded, { once: true })
+    script.addEventListener('error', failed, { once: true })
+    if (!existing) {
+      script.async = true
+      script.src = `https://map.qq.com/api/gljs?v=1.exp&key=${encodeURIComponent(key)}`
+      document.head.appendChild(script)
+    }
+  })
+  loaderPromise = promise.catch((error: unknown) => {
+    loaderPromise = null
+    throw error
+  })
+  return loaderPromise
 }
 
 interface MapViewProps {
