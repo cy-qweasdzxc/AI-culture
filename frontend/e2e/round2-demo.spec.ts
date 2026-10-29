@@ -1,21 +1,44 @@
 import { expect, test } from '@playwright/test'
 
-test('城市状态、规则推荐、儿童简单任务、权威积分与刷新恢复', async ({ page }) => {
+test('城市状态、规则推荐、儿童简单任务、权威积分与刷新恢复', async ({ page }, info) => {
   await page.goto('/theme')
+  const catalog = page.locator('#city-catalog')
+  const capture = async (name: string) => {
+    await page.evaluate(() => new Promise<void>(done => {
+      document.documentElement.style.scrollBehavior = 'auto'
+      window.scrollTo(0, 0)
+      requestAnimationFrame(() => requestAnimationFrame(() => done()))
+    }))
+    await page.screenshot({ path: info.outputPath(`${name}.png`), fullPage: true, animations: 'disabled' })
+  }
   try {
-    await page.getByRole('button', {name:/北京 · 建设中/}).click()
-    await expect(page.getByText('故宫博物院', {exact:true})).toBeVisible()
-    await expect(page.getByText(/尚未开放完整剧情/)).toBeVisible()
-    await expect(page.getByRole('link',{name:'选择这条完整路线'})).toHaveCount(0)
+    await catalog.getByRole('button', {name:/北京 · 筹备中/}).click()
+    await expect(catalog.getByText('故宫博物院', {exact:true})).toBeVisible()
+    await expect(catalog.getByText(/尚未开放完整剧情/)).toBeVisible()
+    await expect(catalog.getByRole('link',{name:'选择这条完整路线'})).toHaveCount(0)
+    await capture('city-beijing')
     for (const name of ['西安','成都']) {
-      await page.getByRole('button',{name:new RegExp(`${name} · 建设中`)}).click()
-      await expect(page.getByRole('link',{name:'原始资料来源'})).toHaveCount(3)
+      await catalog.getByRole('button',{name:new RegExp(`${name} · 筹备中`)}).click()
+      await expect(catalog.getByRole('link',{name:'原始资料来源'})).toHaveCount(3)
+      await capture(`city-${name}`)
     }
-    await page.getByRole('button',{name:/苏州 · 已开放/}).click()
-    await page.getByLabel('可用时间',{exact:true}).selectOption('30')
-    await page.getByRole('button',{name:'推荐可用路线'}).click()
-    await expect(page.getByText(/实际游览时间：未知/).first()).toBeVisible()
-    await page.getByRole('link',{name:'选择这条完整路线'}).click()
+    await catalog.getByRole('button',{name:/苏州 · 已开放/}).click()
+    await catalog.getByLabel('可用时间',{exact:true}).selectOption('30')
+    const recommendationResponse = page.waitForResponse(response =>
+      response.url().endsWith('/api/routes/recommend') && response.request().method() === 'POST',
+    )
+    await catalog.getByRole('button',{name:'推荐可用路线'}).click()
+    const recommended = await recommendationResponse
+    expect(recommended.ok()).toBe(true)
+    const recommendation = await recommended.json()
+    expect(recommendation).toMatchObject({ provider: 'rules', model_calls: 0, city_id: 'suzhou' })
+    expect(recommendation.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ route_id: 'suzhou-classic', preview_only: false }),
+    ]))
+    const recommendedRoute = catalog.getByRole('link',{name:'选择角色，开始旅程', exact: true})
+    await expect(recommendedRoute).toBeVisible()
+    await capture('recommended-route')
+    await recommendedRoute.click()
     await page.getByLabel('适合人群',{exact:true}).selectOption('child')
     await expect(page.getByLabel('任务难度',{exact:true})).toHaveValue('easy')
     await page.getByRole('radio',{name:/沈观澜/}).click()
@@ -34,6 +57,7 @@ test('城市状态、规则推荐、儿童简单任务、权威积分与刷新�
     await page.getByRole('radio',{name:/水陆并行，河街相邻/}).check()
     await page.getByRole('button',{name:'提交答案'}).click()
     await expect(page.getByRole('status').filter({hasText:/本次获得 \+/})).toBeVisible()
+    await capture('child-task-completed')
     const report = await (await page.request.get('/api/report')).json()
     await expect(page.getByTestId('journey-timeline')).toContainText(`游戏积分 ${report.knowledgeScore}`)
     await page.reload()
@@ -48,6 +72,7 @@ test('城市状态、规则推荐、儿童简单任务、权威积分与刷新�
     await page.reload()
     await expect(page.getByLabel('表达模式',{exact:true})).toHaveValue('student')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+    await capture('settings-restored')
   } finally { await page.request.delete('/api/session', {timeout:5000}).catch(() => {}) }
 })
 

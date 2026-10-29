@@ -34,8 +34,20 @@ async function openPhotoCredits(page: Page) {
   await expect(summary.locator('..')).toHaveAttribute('open', '')
 }
 
+async function capturePage(page: Page, path: string) {
+  await page.evaluate(() => new Promise<void>(done => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, 0)
+    requestAnimationFrame(() => requestAnimationFrame(() => done()))
+  }))
+  await page.screenshot({ path, fullPage: true, animations: 'disabled' })
+}
+
 test('五站图片、许可、示意标记和六种宽度与实际数据一致', async ({ page }, info) => {
   test.setTimeout(120000)
+  // This case verifies schematic markers. Make SDK failure deterministic so
+  // an online map cannot replace the schematic while its markers are checked.
+  await page.route('https://map.qq.com/api/gljs**', route => route.abort())
   let state = await begin(page)
   const planned = await page.request.post('/api/navigation/walking', { data: { journey_id: state.journeyId } })
   expect(planned.ok()).toBeTruthy()
@@ -56,7 +68,7 @@ test('五站图片、许可、示意标记和六种宽度与实际数据一致',
   await expect(page.getByRole('heading', { name: '平江寻梦 · 路线', exact: true })).toBeVisible()
   const map = page.getByRole('group', { name: '文化路线示意图', exact: true })
   await expect(map).toBeVisible()
-  await expect(page.getByText(/当前连线为示意路线/)).toBeVisible()
+  await expect(page.getByText('当前显示路线示意图，点击点位或下方列表继续探索。', { exact: true })).toBeVisible()
   for (const width of [320, 375, 390, 412, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const spot of seed.spots) {
@@ -70,7 +82,7 @@ test('五站图片、许可、示意标记和六种宽度与实际数据一致',
       expect(await marker.locator('span').nth(1).evaluate(node => Number.parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12)
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
-    if (width === 375 || width === 1440) await page.screenshot({ path: info.outputPath(`map-${width}.png`), fullPage: true })
+    if (width === 375 || width === 1440) await capturePage(page, info.outputPath(`map-${width}.png`))
   }
   for (const spot of seed.spots) {
     await map.getByRole('button', { name: `${spot.name}：${({ completed: '已完成', current: '当前点位', discovered: '已发现', undiscovered: '未发现' })[state.spotStatus[spot.id]]}`, exact: true }).click()
@@ -94,7 +106,7 @@ test('五站图片、许可、示意标记和六种宽度与实际数据一致',
       await expect(page.getByText('地点参考介绍')).toBeVisible()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
       if (asset.location_id === 'pingjiang' && (width === 375 || width === 1440))
-        await page.screenshot({ path: info.outputPath(`photo-${width}.png`), fullPage: true })
+        await capturePage(page, info.outputPath(`photo-${width}.png`))
     }
   }
 })
@@ -115,7 +127,7 @@ test('照片 404、示意图网络失败后保留来源并可手动恢复', asyn
   await openPhotoCredits(page)
   await expect(page.getByRole('link', { name: '原始文件页面', exact: true })).toHaveAttribute('href', media[0].source_url)
   await expect(page.getByRole('link', { name: '与周伯对话', exact: true })).toBeVisible()
-  await page.screenshot({ path: info.outputPath('double-image-failure.png'), fullPage: true })
+  await capturePage(page, info.outputPath('double-image-failure.png'))
   await page.unroute('**/assets/places/pingjiang.jpg')
   await page.unroute('**/assets/scenes/pingjiang.webp')
   await page.getByRole('button', { name: '重新加载图片', exact: true }).click()
