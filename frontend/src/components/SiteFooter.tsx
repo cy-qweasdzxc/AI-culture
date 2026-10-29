@@ -1,3 +1,4 @@
+import BackgroundMusic from '@/components/BackgroundMusic'
 import { Link } from 'react-router-dom'
 
 const notices = [
@@ -45,6 +46,7 @@ export default function SiteFooter() {
             </Link>
           </nav>
         </div>
+        <BackgroundMusic />
         <details className="mt-5 border-t border-line pt-2 text-xs text-bluegray">
           <summary className="min-h-11 cursor-pointer py-3 font-medium text-ink-soft">
             内容、出行与隐私说明

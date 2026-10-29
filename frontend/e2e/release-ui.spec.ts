@@ -33,7 +33,7 @@ test('正式展示：公共页面、页脚声明、路线推荐及旧入口兼�
   await expect(page.getByRole('link', { name: '选择角色，开始旅程' })).toBeVisible()
   await checkPage(page)
   const footer = page.getByRole('contentinfo', { name: '网站页脚' })
-  await footer.locator('summary').click()
+  await footer.locator('summary').filter({ hasText: '内容、出行与隐私说明' }).click()
   await expect(footer.getByRole('heading', { name: '内容与来源' })).toBeVisible()
   await expect(footer.getByRole('heading', { name: '出行与隐私' })).toBeVisible()
   await page.screenshot({ path: resolve(screenshots, `${info.project.name}-footer.png`), fullPage: true })
